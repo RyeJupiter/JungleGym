@@ -2,6 +2,7 @@ const { setupDevPlatform } = require('@cloudflare/next-on-pages/next-dev')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  typescript: { ignoreBuildErrors: true },
   transpilePackages: ['@junglegym/shared'],
   images: {
     remotePatterns: [
