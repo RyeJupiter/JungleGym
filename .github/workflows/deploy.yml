@@ -4,8 +4,11 @@ on:
   push:
     branches: [main]
 
+# Cloudflare Pages deploys automatically via its GitHub integration.
+# This workflow only handles Supabase migrations before each deploy.
+
 jobs:
-  deploy-supabase:
+  migrate:
     name: Run Supabase Migrations
     runs-on: ubuntu-latest
     environment: production
@@ -26,51 +29,3 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-
-  deploy-web:
-    name: Deploy Web to Cloudflare Pages
-    runs-on: ubuntu-latest
-    environment: production
-    needs: deploy-supabase
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Enable Corepack (Yarn 4)
-        run: corepack enable
-
-      - name: Get Yarn cache directory
-        id: yarn-cache
-        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
-
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.yarn-cache.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
-      - name: Install dependencies
-        run: yarn install --immutable
-
-      - name: Build for Cloudflare Pages
-        run: yarn workspace @junglegym/web build:cloudflare
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: junglegym
-          directory: apps/web/.vercel/output/static
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
