@@ -1,11 +1,27 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { Database } from '@junglegym/shared'
 
 export async function updateSession(request: NextRequest) {
-  const response = NextResponse.next({ request: { headers: request.headers } })
-  const supabase = createMiddlewareClient<Database>({ req: request, res: response })
-  await supabase.auth.getSession()
-  return response
+  let supabaseResponse = NextResponse.next({ request })
+
+  createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return request.cookies.getAll() },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  return supabaseResponse
 }

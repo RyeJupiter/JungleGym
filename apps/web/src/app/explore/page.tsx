@@ -10,7 +10,7 @@ export default async function ExplorePage({
 }: {
   searchParams: { tag?: string; q?: string }
 }) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   let videoQuery = supabase
     .from('videos')

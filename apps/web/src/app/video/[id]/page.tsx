@@ -8,13 +8,13 @@ import type { Metadata } from 'next'
 type Props = { params: { id: string } }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
   const { data } = await supabase.from('videos').select('title').eq('id', params.id).single()
   return { title: data?.title ?? 'Video' }
 }
 
 export default async function VideoPage({ params }: Props) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   const { data: video } = await supabase
     .from('videos')

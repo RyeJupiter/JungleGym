@@ -6,7 +6,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = { title: 'Live Sessions' }
 
 export default async function SessionsPage() {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   const { data: sessions } = await supabase
     .from('live_sessions')

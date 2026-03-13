@@ -7,7 +7,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = { title: 'Edit Profile' }
 
 export default async function ProfilePage() {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) redirect('/auth/login')
 
