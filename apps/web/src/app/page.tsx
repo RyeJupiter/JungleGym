@@ -31,7 +31,7 @@ export default function HomePage() {
         <section className="pt-44 pb-32 px-6 text-center">
           <div className="max-w-3xl mx-auto">
             <div className="inline-block bg-jungle-800 text-jungle-300 text-xs font-semibold px-4 py-1.5 rounded-full mb-8 tracking-widest uppercase">
-              Minds in motion · Movement is meant to be joyful
+              Minds in motion · Movement is joyful
             </div>
             <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 text-balance leading-none">
               Learn from people
@@ -146,10 +146,10 @@ export default function HomePage() {
           <div className="inline-block bg-jungle-100 text-jungle-700 text-xs font-semibold px-4 py-1.5 rounded-full mb-6 tracking-widest uppercase">
             Minds in motion
           </div>
-          <h2 className="text-4xl font-black mb-4 text-jungle-900">Movement that sharpens the mind</h2>
+          <h2 className="text-4xl font-black mb-4 text-jungle-900">Movement sharpens the mind</h2>
           <p className="text-jungle-700 text-lg mb-12 max-w-2xl mx-auto leading-relaxed">
-            Great movement practice isn&apos;t just physical — it cultivates focus, presence, and awareness.
-            JungleGym teachers bring both disciplines together, so every session leaves you feeling clearer, not just stronger.
+            Movement is physical and it is mental — it cultivates focus, presence, and awareness.
+            JungleGym teachers hold both. Every session leaves you clearer, not just stronger.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
             {[
