@@ -8,16 +8,16 @@ export const metadata: Metadata = { title: 'Upload video' }
 
 export default async function UploadPage() {
   const supabase = await createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) redirect('/auth/login')
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  if (!authUser) redirect('/auth/login')
 
-  const { data: user } = await supabase.from('users').select('role').eq('id', session.user.id).single()
+  const { data: user } = await supabase.from('users').select('role').eq('id', authUser.id).single()
   if (user?.role !== 'creator') redirect('/dashboard')
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('supported_rate, community_rate, abundance_rate')
-    .eq('user_id', session.user.id)
+    .eq('user_id', authUser.id)
     .single()
 
   return (
@@ -37,7 +37,7 @@ export default async function UploadPage() {
           Every video should plant a seed — something learners can go train immediately.
         </p>
         <VideoUploadForm
-          creatorId={session.user.id}
+          creatorId={authUser.id}
           defaultRates={{
             supported: profile?.supported_rate ?? 1,
             community: profile?.community_rate ?? 2,

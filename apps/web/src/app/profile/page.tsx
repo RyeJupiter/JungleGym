@@ -8,13 +8,13 @@ export const metadata: Metadata = { title: 'Edit Profile' }
 
 export default async function ProfilePage() {
   const supabase = await createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) redirect('/auth/login')
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  if (!authUser) redirect('/auth/login')
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
-    .eq('user_id', session.user.id)
+    .eq('user_id', authUser.id)
     .single()
 
   return (
@@ -33,7 +33,7 @@ export default async function ProfilePage() {
         <p className="text-stone-500 mb-8">
           {profile ? `@${profile.username}` : 'Set up your public profile'}
         </p>
-        <ProfileForm profile={profile} userId={session.user.id} />
+        <ProfileForm profile={profile} userId={authUser.id} />
       </div>
     </div>
   )

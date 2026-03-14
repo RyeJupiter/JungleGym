@@ -7,15 +7,13 @@ export const metadata: Metadata = { title: 'Dashboard' }
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient()
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
 
-  if (!session) redirect('/auth/login')
+  if (!authUser) redirect('/auth/login')
 
   const [{ data: profile }, { data: user }] = await Promise.all([
-    supabase.from('profiles').select('*').eq('user_id', session.user.id).single(),
-    supabase.from('users').select('role').eq('id', session.user.id).single(),
+    supabase.from('profiles').select('*').eq('user_id', authUser.id).single(),
+    supabase.from('users').select('role').eq('id', authUser.id).single(),
   ])
 
   const isCreator = user?.role === 'creator'
@@ -26,18 +24,18 @@ export default async function DashboardPage() {
         ? supabase
             .from('videos')
             .select('*', { count: 'exact', head: true })
-            .eq('creator_id', session.user.id)
+            .eq('creator_id', authUser.id)
         : Promise.resolve({ count: 0 }),
       !isCreator
         ? supabase
             .from('purchases')
             .select('*', { count: 'exact', head: true })
-            .eq('user_id', session.user.id)
+            .eq('user_id', authUser.id)
         : Promise.resolve({ count: 0 }),
       supabase
         .from('live_sessions')
         .select('*', { count: 'exact', head: true })
-        .eq('creator_id', session.user.id)
+        .eq('creator_id', authUser.id)
         .gte('scheduled_at', new Date().toISOString())
         .eq('status', 'scheduled'),
     ])

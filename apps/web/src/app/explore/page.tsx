@@ -8,8 +8,9 @@ export const metadata: Metadata = { title: 'Explore' }
 export default async function ExplorePage({
   searchParams,
 }: {
-  searchParams: { tag?: string; q?: string }
+  searchParams: Promise<{ tag?: string; q?: string }>
 }) {
+  const { tag, q } = await searchParams
   const supabase = await createServerSupabaseClient()
 
   let videoQuery = supabase
@@ -19,8 +20,8 @@ export default async function ExplorePage({
     .order('created_at', { ascending: false })
     .limit(30)
 
-  if (searchParams.tag) {
-    videoQuery = videoQuery.contains('tags', [searchParams.tag])
+  if (tag) {
+    videoQuery = videoQuery.contains('tags', [tag])
   }
 
   const { data: videos } = await videoQuery
@@ -58,29 +59,29 @@ export default async function ExplorePage({
           <Link
             href="/explore"
             className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
-              !searchParams.tag ? 'bg-jungle-900 text-white' : 'bg-jungle-100 text-jungle-800 hover:bg-jungle-200'
+              !tag ? 'bg-jungle-900 text-white' : 'bg-jungle-100 text-jungle-800 hover:bg-jungle-200'
             }`}
           >
             All
           </Link>
-          {FEATURED_TAGS.map((tag) => (
+          {FEATURED_TAGS.map((t) => (
             <Link
-              key={tag}
-              href={`/explore?tag=${tag}`}
+              key={t}
+              href={`/explore?tag=${t}`}
               className={`px-4 py-2 rounded-full text-sm font-semibold capitalize transition-colors ${
-                searchParams.tag === tag
+                tag === t
                   ? 'bg-jungle-700 text-white'
                   : 'bg-jungle-100 text-jungle-800 hover:bg-jungle-200'
               }`}
             >
-              {tag}
+              {t}
             </Link>
           ))}
         </div>
 
         {/* Videos */}
         <h2 className="text-2xl font-black text-jungle-900 mb-6">
-          {searchParams.tag ? `#${searchParams.tag}` : 'Latest videos'}
+          {tag ? `#${tag}` : 'Latest videos'}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-16">
           {(videos ?? []).map((video) => {

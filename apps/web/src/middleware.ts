@@ -15,19 +15,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(url)
   }
 
-  const response = await updateSession(request)
+  const { response, user } = await updateSession(request)
 
   const isProtected = PROTECTED_ROUTES.some((route) => pathname.startsWith(route))
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route))
 
-  // Get session from cookie
-  const sessionCookie = request.cookies.get('sb-access-token')
-
-  if (isProtected && !sessionCookie) {
+  if (isProtected && !user) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 
-  if (isAuthRoute && sessionCookie) {
+  if (isAuthRoute && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 

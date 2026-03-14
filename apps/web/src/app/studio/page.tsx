@@ -8,23 +8,23 @@ export const metadata: Metadata = { title: 'Studio' }
 
 export default async function StudioPage() {
   const supabase = await createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) redirect('/auth/login')
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  if (!authUser) redirect('/auth/login')
 
   const { data: user } = await supabase
-    .from('users').select('role').eq('id', session.user.id).single()
+    .from('users').select('role').eq('id', authUser.id).single()
   if (user?.role !== 'creator') redirect('/dashboard')
 
   const [{ data: videos }, { data: sessions }] = await Promise.all([
     supabase
       .from('videos')
       .select('*')
-      .eq('creator_id', session.user.id)
+      .eq('creator_id', authUser.id)
       .order('created_at', { ascending: false }),
     supabase
       .from('live_sessions')
       .select('*')
-      .eq('creator_id', session.user.id)
+      .eq('creator_id', authUser.id)
       .order('scheduled_at', { ascending: false })
       .limit(5),
   ])

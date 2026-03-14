@@ -15,7 +15,7 @@ export default async function SessionsPage() {
     .gte('scheduled_at', new Date().toISOString())
     .order('scheduled_at', { ascending: true })
 
-  const { data: { session: authSession } } = await supabase.auth.getSession()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -26,7 +26,7 @@ export default async function SessionsPage() {
         <nav className="flex items-center gap-6 text-sm font-medium text-stone-600">
           <Link href="/explore" className="hover:text-stone-900">Explore</Link>
           <Link href="/sessions" className="text-jungle-700 font-bold">Sessions</Link>
-          {authSession ? (
+          {authUser ? (
             <Link href="/dashboard" className="hover:text-stone-900">Dashboard</Link>
           ) : (
             <Link href="/auth/login" className="hover:text-stone-900">Sign in</Link>
@@ -107,7 +107,7 @@ export default async function SessionsPage() {
                     <p className="text-xs text-stone-400">
                       🎁 Gift-based — give freely, no pressure
                     </p>
-                    {isLive && authSession && (
+                    {isLive && authUser && (
                       <GiftButton sessionId={s.id} creatorName={creator?.display_name ?? ''} />
                     )}
                   </div>

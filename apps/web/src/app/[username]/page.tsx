@@ -4,19 +4,21 @@ import Link from 'next/link'
 import { formatPrice, formatDuration } from '@junglegym/shared'
 import type { Metadata } from 'next'
 
-type Props = { params: { username: string } }
+type Props = { params: Promise<{ username: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  return { title: `@${params.username}` }
+  const { username } = await params
+  return { title: `@${username}` }
 }
 
 export default async function CreatorProfilePage({ params }: Props) {
+  const { username } = await params
   const supabase = await createServerSupabaseClient()
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('*, users!user_id(role)')
-    .eq('username', params.username)
+    .eq('username', username)
     .single()
 
   if (!profile) notFound()

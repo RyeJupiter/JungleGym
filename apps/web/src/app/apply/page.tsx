@@ -7,14 +7,14 @@ export const metadata: Metadata = { title: 'Apply to Teach' }
 
 export default async function ApplyPage() {
   const supabase = await createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
 
-  if (!session) redirect('/auth/login')
+  if (!authUser) redirect('/auth/login')
 
   const { data: user } = await supabase
     .from('users')
     .select('role')
-    .eq('id', session.user.id)
+    .eq('id', authUser.id)
     .single()
 
   if (user?.role === 'creator') redirect('/studio')
@@ -22,7 +22,7 @@ export default async function ApplyPage() {
   const { data: existing } = await supabase
     .from('teacher_applications')
     .select('status')
-    .eq('user_id', session.user.id)
+    .eq('user_id', authUser.id)
     .single()
 
   return (
@@ -53,7 +53,7 @@ export default async function ApplyPage() {
             </p>
           </div>
         ) : (
-          <ApplyToTeachForm userId={session.user.id} />
+          <ApplyToTeachForm userId={authUser.id} />
         )}
       </div>
     </main>

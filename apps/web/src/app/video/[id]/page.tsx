@@ -5,34 +5,36 @@ import { formatPrice, formatDuration } from '@junglegym/shared'
 import { PurchaseButton } from '@/components/video/PurchaseButton'
 import type { Metadata } from 'next'
 
-type Props = { params: { id: string } }
+type Props = { params: Promise<{ id: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
   const supabase = await createServerSupabaseClient()
-  const { data } = await supabase.from('videos').select('title').eq('id', params.id).single()
+  const { data } = await supabase.from('videos').select('title').eq('id', id).single()
   return { title: data?.title ?? 'Video' }
 }
 
 export default async function VideoPage({ params }: Props) {
+  const { id } = await params
   const supabase = await createServerSupabaseClient()
 
   const { data: video } = await supabase
     .from('videos')
     .select('*, profiles!creator_id(display_name, username, photo_url, bio, tags)')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('published', true)
     .single()
 
   if (!video) notFound()
 
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { user } } = await supabase.auth.getUser()
 
   // Check if learner already purchased this
-  const { data: purchase } = session
+  const { data: purchase } = user
     ? await supabase
         .from('purchases')
         .select('tier')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .eq('video_id', video.id)
         .maybeSingle()
     : { data: null }
@@ -142,7 +144,7 @@ export default async function VideoPage({ params }: Props) {
                 priceSupported={video.price_supported}
                 priceCommunity={video.price_community}
                 priceAbundance={video.price_abundance}
-                isLoggedIn={!!session}
+                isLoggedIn={!!user}
               />
             )}
           </div>
