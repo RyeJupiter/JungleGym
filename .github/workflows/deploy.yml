@@ -5,36 +5,10 @@ on:
     branches: [main]
 
 jobs:
-  migrate:
-    name: Run Supabase Migrations
-    runs-on: ubuntu-latest
-    environment: production
-    # Skip gracefully if Supabase secrets aren't configured yet
-    if: ${{ secrets.SUPABASE_PROJECT_REF != '' }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Run migrations
-        run: |
-          supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
-          supabase db push
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-
   deploy:
     name: Build & Deploy to Cloudflare Workers
     runs-on: ubuntu-latest
     environment: production
-    # Run deploy independently — don't block on migrations
-    if: always()
 
     steps:
       - name: Checkout
