@@ -1,6 +1,6 @@
 # JungleGym 🌿
 
-A **distributed personal training platform** connecting clients with certified trainers — built as a Turborepo monorepo.
+**Where minds and bodies in motion learn how to empower each other.** JungleGym connects learners with vetted movement teachers — built as a Turborepo monorepo.
 
 ## Apps & Packages
 
