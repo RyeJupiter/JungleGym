@@ -31,7 +31,7 @@ export default function HomePage() {
         <section className="pt-44 pb-32 px-6 text-center">
           <div className="max-w-3xl mx-auto">
             <div className="inline-block bg-jungle-800 text-jungle-300 text-xs font-semibold px-4 py-1.5 rounded-full mb-8 tracking-widest uppercase">
-              Movement is meant to be joyful
+              Minds in motion · Movement is meant to be joyful
             </div>
             <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 text-balance leading-none">
               Learn from people
@@ -40,7 +40,7 @@ export default function HomePage() {
             </h1>
             <p className="text-lg text-jungle-300 mb-10 max-w-xl mx-auto text-balance leading-relaxed">
               Skill-based videos and live sessions from vetted teachers.
-              Every piece gives you something to train today.
+              Every piece gives you something to train — body and mind — today.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
@@ -136,6 +136,41 @@ export default function HomePage() {
                 <span className="font-black text-jungle-900">$22.00</span>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Minds in motion */}
+      <section className="py-20 px-6 bg-jungle-50">
+        <div className="max-w-5xl mx-auto text-center">
+          <div className="inline-block bg-jungle-100 text-jungle-700 text-xs font-semibold px-4 py-1.5 rounded-full mb-6 tracking-widest uppercase">
+            Minds in motion
+          </div>
+          <h2 className="text-4xl font-black mb-4 text-jungle-900">Movement that sharpens the mind</h2>
+          <p className="text-jungle-700 text-lg mb-12 max-w-2xl mx-auto leading-relaxed">
+            Great movement practice isn&apos;t just physical — it cultivates focus, presence, and awareness.
+            JungleGym teachers bring both disciplines together, so every session leaves you feeling clearer, not just stronger.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+            {[
+              {
+                heading: 'Intentional Practice',
+                body: 'Every class is designed with a clear skill focus. You leave knowing what you worked on and why.',
+              },
+              {
+                heading: 'Presence Over Performance',
+                body: 'No leaderboards, no comparison. Just you, your body, and a teacher guiding you inward.',
+              },
+              {
+                heading: 'Learn to Feel',
+                body: 'Teachers narrate sensation, not just shape. You build proprioception alongside strength.',
+              },
+            ].map((item) => (
+              <div key={item.heading} className="bg-white rounded-2xl p-6 border border-jungle-100 shadow-sm">
+                <h3 className="font-bold text-jungle-900 mb-2">{item.heading}</h3>
+                <p className="text-jungle-600 text-sm leading-relaxed">{item.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
