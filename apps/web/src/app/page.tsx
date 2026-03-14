@@ -148,23 +148,23 @@ export default function HomePage() {
           </div>
           <h2 className="text-4xl font-black mb-4 text-jungle-900">Where minds and bodies learn to empower each other</h2>
           <p className="text-jungle-700 text-lg mb-12 max-w-2xl mx-auto leading-relaxed">
-            Movement is joyful. It is also intelligent. When mind and body move together,
-            they teach each other — focus deepens strength, strength steadies focus.
-            JungleGym is where that learning happens.
+            When bodies mimic each other, understanding follows naturally.
+            You feel what the teacher feels. You learn from the way they flow.
+            That is how movement knowledge passes — not through instruction alone, but through shared motion.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
             {[
               {
-                heading: 'Intentional Practice',
-                body: 'Every class is designed with a clear skill focus. You leave knowing what you worked on and why.',
+                heading: 'Bodies Mirror Bodies',
+                body: 'Watch someone move with ease and your body begins to understand. Mimicry is the oldest form of learning.',
               },
               {
-                heading: 'Presence Over Performance',
-                body: 'No leaderboards, no comparison. Just you, your body, and a teacher guiding you inward.',
+                heading: 'Feel What They Feel',
+                body: 'Movement carries sensation across the space between people. When you follow the flow, empathy is physical.',
               },
               {
-                heading: 'Learn to Feel',
-                body: 'Teachers narrate sensation, not just shape. You build proprioception alongside strength.',
+                heading: 'Learn from the Flow',
+                body: 'The way a teacher moves holds more information than words. JungleGym teachers move so you can read them.',
               },
             ].map((item) => (
               <div key={item.heading} className="bg-white rounded-2xl p-6 border border-jungle-100 shadow-sm">
