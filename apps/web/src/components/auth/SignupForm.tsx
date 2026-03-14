@@ -25,7 +25,7 @@ export function SignupForm() {
         password,
         options: {
           data: { display_name: displayName, role: 'learner' },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin}/auth/callback`,
         },
       })
       if (signUpError) throw signUpError

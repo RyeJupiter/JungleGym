@@ -31,7 +31,7 @@ export default function HomePage() {
         <section className="pt-44 pb-32 px-6 text-center">
           <div className="max-w-3xl mx-auto">
             <div className="inline-block bg-jungle-800 text-jungle-300 text-xs font-semibold px-4 py-1.5 rounded-full mb-8 tracking-widest uppercase">
-              Movement is meant to be joyful
+              Where minds and bodies in motion empower each other
             </div>
             <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 text-balance leading-none">
               Learn from people
@@ -39,8 +39,8 @@ export default function HomePage() {
               <span className="text-jungle-400">who love to move</span>
             </h1>
             <p className="text-lg text-jungle-300 mb-10 max-w-xl mx-auto text-balance leading-relaxed">
-              Skill-based videos and live sessions from vetted teachers.
-              Every piece gives you something to train today.
+              A picture speaks a thousand words. Bodies communicate through movement —
+              the language of the body. You&apos;re here to expand your vocabulary.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
@@ -136,6 +136,42 @@ export default function HomePage() {
                 <span className="font-black text-jungle-900">$22.00</span>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Minds in motion */}
+      <section className="py-20 px-6 bg-jungle-50">
+        <div className="max-w-5xl mx-auto text-center">
+          <div className="inline-block bg-jungle-100 text-jungle-700 text-xs font-semibold px-4 py-1.5 rounded-full mb-6 tracking-widest uppercase">
+            Minds and bodies in motion
+          </div>
+          <h2 className="text-4xl font-black mb-4 text-jungle-900">Where minds and bodies learn to empower each other</h2>
+          <p className="text-jungle-700 text-lg mb-12 max-w-2xl mx-auto leading-relaxed">
+            When bodies mimic each other, understanding follows naturally.
+            You feel what the teacher feels. You learn from the way they flow.
+            That is how movement knowledge passes — not through instruction alone, but through shared motion.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+            {[
+              {
+                heading: 'Bodies Mirror Bodies',
+                body: 'Watch someone move with ease and your body begins to understand. Mimicry is the oldest form of learning.',
+              },
+              {
+                heading: 'Feel What They Feel',
+                body: 'Movement carries sensation across the space between people. When you follow the flow, empathy is physical.',
+              },
+              {
+                heading: 'Learn from the Flow',
+                body: 'The way a teacher moves holds more information than words. JungleGym teachers move so you can read them.',
+              },
+            ].map((item) => (
+              <div key={item.heading} className="bg-white rounded-2xl p-6 border border-jungle-100 shadow-sm">
+                <h3 className="font-bold text-jungle-900 mb-2">{item.heading}</h3>
+                <p className="text-jungle-600 text-sm leading-relaxed">{item.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
