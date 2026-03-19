@@ -22,14 +22,18 @@ export default async function VideoPage({ params }: Props) {
 
   const { data: video } = await supabase
     .from('videos')
-    .select('*, profiles!creator_id(display_name, username, photo_url, bio, tags)')
+    .select('*')
     .eq('id', id)
     .eq('published', true)
     .single()
 
   if (!video) notFound()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const [{ data: { user } }, { data: profileRows }] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from('profiles').select('display_name, username, photo_url, bio, tags').eq('user_id', video.creator_id).limit(1),
+  ])
+  const creator = profileRows?.[0] ?? null
 
   // Check if learner already purchased this
   const { data: purchase } = user
@@ -42,7 +46,6 @@ export default async function VideoPage({ params }: Props) {
     : { data: null }
 
   const hasAccess = video.is_free || !!purchase
-  const creator = video.profiles as { display_name: string; username: string; photo_url: string | null; bio: string | null; tags: string[] } | null
 
   // Generate signed URL for private video bucket
   let videoPlaybackUrl: string | null = null
