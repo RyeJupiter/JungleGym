@@ -44,6 +44,19 @@ export default async function VideoPage({ params }: Props) {
   const hasAccess = video.is_free || !!purchase
   const creator = video.profiles as { display_name: string; username: string; photo_url: string | null; bio: string | null; tags: string[] } | null
 
+  // Generate signed URL for private video bucket
+  let videoPlaybackUrl: string | null = null
+  if (hasAccess && video.video_url) {
+    if (video.video_url.startsWith('http')) {
+      videoPlaybackUrl = video.video_url
+    } else {
+      const { data: signed } = await supabase.storage
+        .from('videos')
+        .createSignedUrl(video.video_url, 3600)
+      videoPlaybackUrl = signed?.signedUrl ?? null
+    }
+  }
+
   return (
     <div className="min-h-screen bg-stone-50">
       <header className="bg-white border-b border-stone-200 px-6 h-16 flex items-center justify-between">
@@ -59,9 +72,9 @@ export default async function VideoPage({ params }: Props) {
         {/* Video player / locked state */}
         <div className="bg-stone-900 rounded-2xl overflow-hidden mb-8 aspect-video flex items-center justify-center relative">
           {hasAccess ? (
-            video.video_url ? (
+            videoPlaybackUrl ? (
               <video
-                src={video.video_url}
+                src={videoPlaybackUrl}
                 controls
                 className="w-full h-full"
                 poster={video.thumbnail_url ?? undefined}

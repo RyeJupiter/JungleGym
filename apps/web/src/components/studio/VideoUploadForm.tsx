@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { calculateTierPrices, formatPrice } from '@junglegym/shared'
@@ -17,44 +17,143 @@ export function VideoUploadForm({
   const [tags, setTags] = useState('')
   const [isFree, setIsFree] = useState(false)
   const [durationSecs, setDurationSecs] = useState('')
+  const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+  const [progress, setProgress] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const videoInputRef = useRef<HTMLInputElement>(null)
+  const thumbInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createBrowserSupabaseClient()
 
   const duration = parseInt(durationSecs) || 0
   const prices = duration > 0 ? calculateTierPrices(duration, defaultRates) : null
 
+  function handleVideoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setVideoFile(file)
+    const url = URL.createObjectURL(file)
+    const el = document.createElement('video')
+    el.preload = 'metadata'
+    el.onloadedmetadata = () => {
+      setDurationSecs(Math.round(el.duration).toString())
+      URL.revokeObjectURL(url)
+    }
+    el.src = url
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!isFree && !prices) {
+      setError('Enter a duration or upload a file to calculate pricing.')
+      return
+    }
     setLoading(true)
     setError(null)
+
     try {
-      const { error } = await supabase.from('videos').insert({
+      const videoId = crypto.randomUUID()
+      let videoStoragePath: string | null = null
+      let thumbnailPublicUrl: string | null = null
+
+      if (videoFile) {
+        setProgress('Uploading video…')
+        const ext = videoFile.name.split('.').pop()
+        const path = `${creatorId}/${videoId}.${ext}`
+        const { error: uploadError } = await supabase.storage
+          .from('videos')
+          .upload(path, videoFile, { cacheControl: '3600' })
+        if (uploadError) throw uploadError
+        videoStoragePath = path
+      }
+
+      if (thumbnailFile) {
+        setProgress('Uploading thumbnail…')
+        const ext = thumbnailFile.name.split('.').pop()
+        const path = `${creatorId}/${videoId}.${ext}`
+        const { error: thumbError } = await supabase.storage
+          .from('thumbnails')
+          .upload(path, thumbnailFile, { cacheControl: '3600' })
+        if (thumbError) throw thumbError
+        const { data: { publicUrl } } = supabase.storage.from('thumbnails').getPublicUrl(path)
+        thumbnailPublicUrl = publicUrl
+      }
+
+      setProgress('Saving…')
+      const { error: insertError } = await supabase.from('videos').insert({
+        id: videoId,
         creator_id: creatorId,
         title,
         description: description || null,
-        tags: tags ? tags.split(',').map((t) => t.trim().toLowerCase()) : [],
+        tags: tags ? tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean) : [],
         duration_seconds: duration || null,
         is_free: isFree,
         price_supported: (!isFree && prices) ? prices.supported : null,
         price_community: (!isFree && prices) ? prices.community : null,
         price_abundance: (!isFree && prices) ? prices.abundance : null,
+        video_url: videoStoragePath,
+        thumbnail_url: thumbnailPublicUrl,
         published: false,
       })
-      if (error) throw error
+      if (insertError) throw insertError
+
       router.push('/studio')
       router.refresh()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to create video')
+      setError(err instanceof Error ? err.message : 'Upload failed')
     } finally {
       setLoading(false)
+      setProgress(null)
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-stone-200 p-8 space-y-5">
       {error && <p className="bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</p>}
+
+      <div>
+        <label className="block text-sm font-medium text-stone-700 mb-1">Video file</label>
+        <input
+          ref={videoInputRef}
+          type="file"
+          accept="video/mp4,video/webm,video/quicktime"
+          onChange={handleVideoFile}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => videoInputRef.current?.click()}
+          className="w-full border-2 border-dashed border-stone-200 hover:border-jungle-400 rounded-xl py-8 text-sm text-stone-400 hover:text-jungle-600 transition-colors"
+        >
+          {videoFile
+            ? <span className="text-stone-700 font-medium">{videoFile.name}</span>
+            : 'Click to select video (MP4, WebM, MOV · up to 5 GB)'}
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-stone-700 mb-1">
+          Thumbnail <span className="text-stone-400 font-normal">(optional)</span>
+        </label>
+        <input
+          ref={thumbInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={(e) => setThumbnailFile(e.target.files?.[0] ?? null)}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => thumbInputRef.current?.click()}
+          className="w-full border-2 border-dashed border-stone-200 hover:border-jungle-400 rounded-xl py-4 text-sm text-stone-400 hover:text-jungle-600 transition-colors"
+        >
+          {thumbnailFile
+            ? <span className="text-stone-700 font-medium">{thumbnailFile.name}</span>
+            : 'Click to select thumbnail image'}
+        </button>
+      </div>
 
       <div>
         <label className="block text-sm font-medium text-stone-700 mb-1">Title *</label>
@@ -83,29 +182,21 @@ export function VideoUploadForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">
-          Video duration (seconds)
-        </label>
+        <label className="block text-sm font-medium text-stone-700 mb-1">Duration (seconds)</label>
         <input
           type="number" value={durationSecs} onChange={(e) => setDurationSecs(e.target.value)}
-          min="1" className={inputClass} placeholder="600"
+          min="1" className={inputClass} placeholder="Auto-detected from file"
         />
-        <p className="text-xs text-stone-400 mt-1">
-          Used to calculate fun prices (~$1–3/min)
-        </p>
+        <p className="text-xs text-stone-400 mt-1">Auto-filled when you select a video file</p>
       </div>
 
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={() => setIsFree(!isFree)}
-          className={`relative inline-flex h-6 w-11 rounded-full transition-colors ${
-            isFree ? 'bg-jungle-500' : 'bg-stone-300'
-          }`}
+          className={`relative inline-flex h-6 w-11 rounded-full transition-colors ${isFree ? 'bg-jungle-500' : 'bg-stone-300'}`}
         >
-          <span className={`inline-block w-5 h-5 rounded-full bg-white shadow transform transition-transform mt-0.5 ${
-            isFree ? 'translate-x-5' : 'translate-x-0.5'
-          }`} />
+          <span className={`inline-block w-5 h-5 rounded-full bg-white shadow transform transition-transform mt-0.5 ${isFree ? 'translate-x-5' : 'translate-x-0.5'}`} />
         </button>
         <span className="text-sm font-medium text-stone-700">Free video</span>
       </div>
@@ -125,9 +216,6 @@ export function VideoUploadForm({
               </div>
             ))}
           </div>
-          <p className="text-xs text-jungle-600 mt-2">
-            Prices auto-calculated from video length (~$1–3/min).
-          </p>
         </div>
       )}
 
@@ -135,10 +223,10 @@ export function VideoUploadForm({
         type="submit" disabled={loading}
         className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
       >
-        {loading ? 'Saving...' : 'Save as draft'}
+        {loading ? (progress ?? 'Uploading…') : 'Save as draft'}
       </button>
       <p className="text-xs text-stone-400 text-center">
-        Your video will be saved as a draft. Publish it from the Studio when it&apos;s ready.
+        Saved as draft — publish from Studio when ready.
       </p>
     </form>
   )

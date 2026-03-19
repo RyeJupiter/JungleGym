@@ -38,6 +38,7 @@ export default async function StudioPage() {
         <nav className="flex items-center gap-6 text-sm font-medium text-stone-600">
           <Link href="/explore" className="hover:text-stone-900">Explore</Link>
           <Link href="/dashboard" className="hover:text-stone-900">Dashboard</Link>
+          <Link href="/studio/settings" className="hover:text-stone-900">Settings</Link>
         </nav>
       </header>
 
