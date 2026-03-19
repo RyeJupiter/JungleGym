@@ -2,8 +2,44 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import * as tus from 'tus-js-client'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { calculateTierPrices, formatPrice } from '@junglegym/shared'
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+
+async function uploadVideoResumable(
+  file: File,
+  path: string,
+  accessToken: string,
+  onProgress: (pct: number) => void,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const upload = new tus.Upload(file, {
+      endpoint: `${SUPABASE_URL}/storage/v1/upload/resumable`,
+      retryDelays: [0, 3000, 5000, 10000, 20000],
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        'x-upsert': 'false',
+      },
+      uploadDataDuringCreation: true,
+      removeFingerprintOnSuccess: true,
+      metadata: {
+        bucketName: 'videos',
+        objectName: path,
+        contentType: file.type,
+        cacheControl: '3600',
+      },
+      chunkSize: 6 * 1024 * 1024, // 6 MB chunks
+      onError: reject,
+      onProgress: (bytesUploaded, bytesTotal) => {
+        onProgress(Math.round((bytesUploaded / bytesTotal) * 100))
+      },
+      onSuccess: () => resolve(),
+    })
+    upload.start()
+  })
+}
 
 export function VideoUploadForm({
   creatorId,
@@ -19,6 +55,7 @@ export function VideoUploadForm({
   const [durationSecs, setDurationSecs] = useState('')
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+  const [priceOverrides, setPriceOverrides] = useState<{ supported: string; community: string; abundance: string } | null>(null)
   const [progress, setProgress] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,7 +65,16 @@ export function VideoUploadForm({
   const supabase = createBrowserSupabaseClient()
 
   const duration = parseInt(durationSecs) || 0
-  const prices = duration > 0 ? calculateTierPrices(duration, defaultRates) : null
+  const calculatedPrices = duration > 0 ? calculateTierPrices(duration, defaultRates) : null
+
+  // Sync overrides when calculated prices change (but don't overwrite manual edits)
+  const prices = priceOverrides
+    ? {
+        supported: parseFloat(priceOverrides.supported) || calculatedPrices?.supported || 0,
+        community: parseFloat(priceOverrides.community) || calculatedPrices?.community || 0,
+        abundance: parseFloat(priceOverrides.abundance) || calculatedPrices?.abundance || 0,
+      }
+    : calculatedPrices
 
   function handleVideoFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -38,7 +84,10 @@ export function VideoUploadForm({
     const el = document.createElement('video')
     el.preload = 'metadata'
     el.onloadedmetadata = () => {
-      setDurationSecs(Math.round(el.duration).toString())
+      const secs = Math.round(el.duration).toString()
+      setDurationSecs(secs)
+      // Reset price overrides so new auto-calculated prices show
+      setPriceOverrides(null)
       URL.revokeObjectURL(url)
     }
     el.src = url
@@ -59,13 +108,14 @@ export function VideoUploadForm({
       let thumbnailPublicUrl: string | null = null
 
       if (videoFile) {
-        setProgress('Uploading video…')
+        setProgress('Uploading video… 0%')
         const ext = videoFile.name.split('.').pop()
         const path = `${creatorId}/${videoId}.${ext}`
-        const { error: uploadError } = await supabase.storage
-          .from('videos')
-          .upload(path, videoFile, { cacheControl: '3600' })
-        if (uploadError) throw uploadError
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) throw new Error('Not authenticated')
+        await uploadVideoResumable(videoFile, path, session.access_token, (pct) => {
+          setProgress(`Uploading video… ${pct}%`)
+        })
         videoStoragePath = path
       }
 
@@ -201,20 +251,51 @@ export function VideoUploadForm({
         <span className="text-sm font-medium text-stone-700">Free video</span>
       </div>
 
-      {!isFree && prices && (
-        <div className="bg-jungle-50 border border-jungle-100 rounded-xl p-4">
-          <p className="text-sm font-semibold text-jungle-800 mb-2">Auto-calculated fun prices</p>
-          <div className="grid grid-cols-3 gap-3 text-center">
-            {[
-              { label: 'Supported', price: prices.supported },
-              { label: 'Community', price: prices.community },
-              { label: 'Abundance', price: prices.abundance },
-            ].map(({ label, price }) => (
-              <div key={label} className="bg-white rounded-lg p-3 border border-jungle-100">
-                <p className="text-xs text-stone-500">{label}</p>
-                <p className="font-black text-jungle-800">{formatPrice(price)}</p>
-              </div>
-            ))}
+      {!isFree && calculatedPrices && (
+        <div className="bg-jungle-50 border border-jungle-100 rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-jungle-800">Prices</p>
+            {priceOverrides && (
+              <button
+                type="button"
+                onClick={() => setPriceOverrides(null)}
+                className="text-xs text-jungle-500 hover:text-jungle-700"
+              >
+                Reset to auto
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {([
+              { key: 'supported', label: 'Supported' },
+              { key: 'community', label: 'Community' },
+              { key: 'abundance', label: 'Abundance' },
+            ] as const).map(({ key, label }) => {
+              const auto = calculatedPrices[key]
+              const val = priceOverrides?.[key] ?? String(auto)
+              return (
+                <div key={key}>
+                  <label className="block text-xs text-jungle-600 font-medium mb-1">{label}</label>
+                  <div className="relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400 text-sm">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      value={val}
+                      onChange={(e) => setPriceOverrides((prev) => ({
+                        supported: prev?.supported ?? String(calculatedPrices.supported),
+                        community: prev?.community ?? String(calculatedPrices.community),
+                        abundance: prev?.abundance ?? String(calculatedPrices.abundance),
+                        [key]: e.target.value,
+                      }))}
+                      className="w-full rounded-lg border border-jungle-200 bg-white pl-6 pr-2 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-jungle-400"
+                    />
+                  </div>
+                  {!priceOverrides && <p className="text-xs text-jungle-400 mt-0.5 text-center">auto</p>}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
