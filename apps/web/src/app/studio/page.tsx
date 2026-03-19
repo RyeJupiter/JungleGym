@@ -1,7 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { formatPrice } from '@junglegym/shared'
+import { VideoRow } from '@/components/studio/VideoRow'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Studio' }
@@ -73,43 +73,7 @@ export default async function StudioPage() {
           ) : (
             <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
               {videos!.map((v, i) => (
-                <div
-                  key={v.id}
-                  className={`flex items-center justify-between px-5 py-4 ${i > 0 ? 'border-t border-stone-100' : ''}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-8 rounded bg-stone-100 overflow-hidden flex items-center justify-center text-xs">
-                      {v.thumbnail_url ? (
-                        <img src={v.thumbnail_url} alt="" className="w-full h-full object-cover" />
-                      ) : '🌿'}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-stone-900 text-sm">{v.title}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {v.is_free ? (
-                          <span className="text-xs bg-jungle-50 text-jungle-700 px-2 py-0.5 rounded-full font-medium">Free</span>
-                        ) : (
-                          <span className="text-xs text-stone-400">
-                            from {v.price_supported ? formatPrice(v.price_supported) : '—'}
-                          </span>
-                        )}
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          v.published
-                            ? 'bg-green-50 text-green-700'
-                            : 'bg-stone-100 text-stone-500'
-                        }`}>
-                          {v.published ? 'Published' : 'Draft'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <Link
-                    href={`/studio/video/${v.id}/edit`}
-                    className="text-xs text-stone-400 hover:text-stone-700 font-medium"
-                  >
-                    Edit
-                  </Link>
-                </div>
+                <VideoRow key={v.id} video={v} index={i} />
               ))}
             </div>
           )}

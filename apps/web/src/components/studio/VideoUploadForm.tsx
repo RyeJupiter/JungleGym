@@ -64,6 +64,7 @@ export function VideoUploadForm({
   const [durationSecs, setDurationSecs] = useState('')
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
   const [priceOverrides, setPriceOverrides] = useState<{ supported: string; community: string; abundance: string } | null>(null)
   const [uploadPct, setUploadPct] = useState<number | null>(null)
   const [progress, setProgress] = useState<string | null>(null)
@@ -179,165 +180,172 @@ export function VideoUploadForm({
     abortRef.current?.abort()
   }
 
+  const fileSizeMB = videoFile ? (videoFile.size / 1024 / 1024).toFixed(0) : null
+  const durationDisplay = duration > 0
+    ? duration >= 60
+      ? `${Math.floor(duration / 60)}m ${duration % 60}s`
+      : `${duration}s`
+    : null
+
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-stone-200 p-8 space-y-5">
-      {error && <p className="bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</p>}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {error && <p className="bg-red-50 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</p>}
 
-      <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">Video file</label>
-        <input
-          ref={videoInputRef}
-          type="file"
-          accept="video/mp4,video/webm,video/quicktime"
-          onChange={handleVideoFile}
-          className="hidden"
-        />
-        <button
-          type="button"
-          onClick={() => videoInputRef.current?.click()}
-          className="w-full border-2 border-dashed border-stone-200 hover:border-jungle-400 rounded-xl py-8 text-sm text-stone-400 hover:text-jungle-600 transition-colors"
-        >
-          {videoFile
-            ? <span className="text-stone-700 font-medium">{videoFile.name}</span>
-            : 'Click to select video (MP4, WebM, MOV · up to 5 GB)'}
-        </button>
+      {/* Drop zones */}
+      <div className="grid grid-cols-5 gap-3">
+        {/* Video — 4 cols */}
+        <div className="col-span-4">
+          <input ref={videoInputRef} type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleVideoFile} className="hidden" />
+          <button
+            type="button"
+            onClick={() => videoInputRef.current?.click()}
+            className={`w-full rounded-2xl border-2 border-dashed transition-colors py-10 text-center ${
+              videoFile
+                ? 'border-jungle-300 bg-jungle-50'
+                : 'border-stone-200 hover:border-jungle-300 bg-white hover:bg-jungle-50/40'
+            }`}
+          >
+            {videoFile ? (
+              <div className="space-y-1">
+                <p className="text-2xl">🎬</p>
+                <p className="text-sm font-semibold text-jungle-800 truncate px-4">{videoFile.name}</p>
+                <p className="text-xs text-stone-400">{fileSizeMB} MB{durationDisplay ? ` · ${durationDisplay}` : ''}</p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <p className="text-2xl">🎬</p>
+                <p className="text-sm font-semibold text-stone-500">Drop video here</p>
+                <p className="text-xs text-stone-400">MP4, WebM, MOV · up to 5 GB</p>
+              </div>
+            )}
+          </button>
+        </div>
+
+        {/* Thumbnail — 1 col */}
+        <div className="col-span-1">
+          <input ref={thumbInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => {
+                const file = e.target.files?.[0] ?? null
+                setThumbnailFile(file)
+                if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview)
+                setThumbnailPreview(file ? URL.createObjectURL(file) : null)
+              }} className="hidden" />
+          <button
+            type="button"
+            onClick={() => thumbInputRef.current?.click()}
+            className={`w-full h-full rounded-2xl border-2 border-dashed transition-colors overflow-hidden ${
+              thumbnailFile
+                ? 'border-jungle-300'
+                : 'border-stone-200 hover:border-jungle-300 bg-white hover:bg-jungle-50/40'
+            }`}
+          >
+            {thumbnailPreview ? (
+              <img
+                src={thumbnailPreview}
+                alt="Thumbnail preview"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-1 h-full py-6">
+                <p className="text-xl">🖼️</p>
+                <p className="text-xs text-stone-400 text-center leading-tight">Thumbnail</p>
+              </div>
+            )}
+          </button>
+        </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">
-          Thumbnail <span className="text-stone-400 font-normal">(optional)</span>
-        </label>
-        <input
-          ref={thumbInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={(e) => setThumbnailFile(e.target.files?.[0] ?? null)}
-          className="hidden"
-        />
-        <button
-          type="button"
-          onClick={() => thumbInputRef.current?.click()}
-          className="w-full border-2 border-dashed border-stone-200 hover:border-jungle-400 rounded-xl py-4 text-sm text-stone-400 hover:text-jungle-600 transition-colors"
-        >
-          {thumbnailFile
-            ? <span className="text-stone-700 font-medium">{thumbnailFile.name}</span>
-            : 'Click to select thumbnail image'}
-        </button>
+      {/* Details */}
+      <div className="bg-white rounded-2xl border border-stone-200 p-6 space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">Title *</label>
+          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className={inputClass} placeholder="Kettlebell Swing Masterclass" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">Description</label>
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} placeholder="What will learners take away?" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">Tags <span className="text-stone-400 font-normal">— comma-separated</span></label>
+          <input type="text" value={tags} onChange={(e) => setTags(e.target.value)} className={inputClass} placeholder="strength, kettlebell, beginner" />
+        </div>
+        {!videoFile && (
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Duration <span className="text-stone-400 font-normal">(seconds — auto-filled from file)</span></label>
+            <input type="number" value={durationSecs} onChange={(e) => setDurationSecs(e.target.value)} min="1" className={inputClass} placeholder="600" />
+          </div>
+        )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">Title *</label>
-        <input
-          type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-          required className={inputClass} placeholder="Kettlebell Swing Masterclass"
-        />
-      </div>
+      {/* Pricing */}
+      <div className="bg-white rounded-2xl border border-stone-200 p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-stone-700">Pricing</span>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <span className="text-sm text-stone-500">Free</span>
+            <button
+              type="button"
+              onClick={() => setIsFree(!isFree)}
+              className={`relative inline-flex h-5 w-9 rounded-full transition-colors ${isFree ? 'bg-jungle-500' : 'bg-stone-300'}`}
+            >
+              <span className={`inline-block w-4 h-4 rounded-full bg-white shadow transform transition-transform mt-0.5 ${isFree ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            </button>
+          </label>
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">Description</label>
-        <textarea
-          value={description} onChange={(e) => setDescription(e.target.value)}
-          rows={3} className={inputClass}
-          placeholder="What will learners take away? What seed are you planting?"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">Tags</label>
-        <input
-          type="text" value={tags} onChange={(e) => setTags(e.target.value)}
-          className={inputClass} placeholder="strength, kettlebell, beginner"
-        />
-        <p className="text-xs text-stone-400 mt-1">Comma-separated</p>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">Duration (seconds)</label>
-        <input
-          type="number" value={durationSecs} onChange={(e) => setDurationSecs(e.target.value)}
-          min="1" className={inputClass} placeholder="Auto-detected from file"
-        />
-        <p className="text-xs text-stone-400 mt-1">Auto-filled when you select a video file</p>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => setIsFree(!isFree)}
-          className={`relative inline-flex h-6 w-11 rounded-full transition-colors ${isFree ? 'bg-jungle-500' : 'bg-stone-300'}`}
-        >
-          <span className={`inline-block w-5 h-5 rounded-full bg-white shadow transform transition-transform mt-0.5 ${isFree ? 'translate-x-5' : 'translate-x-0.5'}`} />
-        </button>
-        <span className="text-sm font-medium text-stone-700">Free video</span>
-      </div>
-
-      {!isFree && calculatedPrices && (
-        <div className="bg-jungle-50 border border-jungle-100 rounded-xl p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-jungle-800">Prices</p>
+        {!isFree && calculatedPrices && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-3 gap-3">
+              {([
+                { key: 'supported', label: 'Supported' },
+                { key: 'community', label: 'Community' },
+                { key: 'abundance', label: 'Abundance' },
+              ] as const).map(({ key, label }) => {
+                const val = priceOverrides?.[key] ?? String(calculatedPrices[key])
+                return (
+                  <div key={key}>
+                    <label className="block text-xs text-stone-500 mb-1">{label}</label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400 text-sm">$</span>
+                      <input
+                        type="number" step="0.01" min="0.01" value={val}
+                        onChange={(e) => setPriceOverrides((prev) => ({
+                          supported: prev?.supported ?? String(calculatedPrices.supported),
+                          community: prev?.community ?? String(calculatedPrices.community),
+                          abundance: prev?.abundance ?? String(calculatedPrices.abundance),
+                          [key]: e.target.value,
+                        }))}
+                        className="w-full rounded-lg border border-stone-200 bg-stone-50 pl-6 pr-2 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-jungle-400"
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
             {priceOverrides && (
-              <button
-                type="button"
-                onClick={() => setPriceOverrides(null)}
-                className="text-xs text-jungle-500 hover:text-jungle-700"
-              >
-                Reset to auto
+              <button type="button" onClick={() => setPriceOverrides(null)} className="text-xs text-stone-400 hover:text-jungle-600 transition-colors">
+                ↩ Reset to auto-calculated
               </button>
             )}
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            {([
-              { key: 'supported', label: 'Supported' },
-              { key: 'community', label: 'Community' },
-              { key: 'abundance', label: 'Abundance' },
-            ] as const).map(({ key, label }) => {
-              const auto = calculatedPrices[key]
-              const val = priceOverrides?.[key] ?? String(auto)
-              return (
-                <div key={key}>
-                  <label className="block text-xs text-jungle-600 font-medium mb-1">{label}</label>
-                  <div className="relative">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400 text-sm">$</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      value={val}
-                      onChange={(e) => setPriceOverrides((prev) => ({
-                        supported: prev?.supported ?? String(calculatedPrices.supported),
-                        community: prev?.community ?? String(calculatedPrices.community),
-                        abundance: prev?.abundance ?? String(calculatedPrices.abundance),
-                        [key]: e.target.value,
-                      }))}
-                      className="w-full rounded-lg border border-jungle-200 bg-white pl-6 pr-2 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-jungle-400"
-                    />
-                  </div>
-                  {!priceOverrides && <p className="text-xs text-jungle-400 mt-0.5 text-center">auto</p>}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
+        )}
 
+        {!isFree && !calculatedPrices && (
+          <p className="text-xs text-stone-400">Add a video file or enter duration to calculate prices.</p>
+        )}
+      </div>
+
+      {/* Submit / progress */}
       {loading && uploadPct !== null ? (
-        <div className="space-y-2">
+        <div className="bg-white rounded-2xl border border-stone-200 p-6 space-y-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-stone-600 font-medium">{progress ?? 'Uploading…'}</span>
-            <span className="text-stone-400">{uploadPct}%</span>
+            <span className="font-medium text-stone-700">{progress ?? 'Uploading…'}</span>
+            <span className="text-stone-400 tabular-nums">{uploadPct}%</span>
           </div>
-          <div className="w-full bg-stone-200 rounded-full h-2">
-            <div
-              className="bg-jungle-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${uploadPct}%` }}
-            />
+          <div className="w-full bg-stone-100 rounded-full h-1.5">
+            <div className="bg-jungle-500 h-1.5 rounded-full transition-all duration-200" style={{ width: `${uploadPct}%` }} />
           </div>
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="w-full text-sm text-stone-400 hover:text-red-500 transition-colors py-1"
-          >
-            Cancel upload
+          <button type="button" onClick={handleCancel} className="text-xs text-stone-400 hover:text-red-500 transition-colors">
+            Cancel
           </button>
         </div>
       ) : (
@@ -345,12 +353,9 @@ export function VideoUploadForm({
           type="submit" disabled={loading}
           className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
         >
-          {loading ? (progress ?? 'Saving…') : 'Save as draft'}
+          {loading ? 'Saving…' : 'Save as draft'}
         </button>
       )}
-      <p className="text-xs text-stone-400 text-center">
-        Saved as draft — publish from Studio when ready.
-      </p>
     </form>
   )
 }
