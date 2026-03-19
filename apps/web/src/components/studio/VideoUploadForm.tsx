@@ -13,6 +13,7 @@ async function uploadVideoResumable(
   path: string,
   accessToken: string,
   onProgress: (pct: number) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const upload = new tus.Upload(file, {
@@ -22,7 +23,7 @@ async function uploadVideoResumable(
         authorization: `Bearer ${accessToken}`,
         'x-upsert': 'false',
       },
-      uploadDataDuringCreation: true,
+      uploadDataDuringCreation: false, // keep creation request tiny — just metadata
       removeFingerprintOnSuccess: true,
       metadata: {
         bucketName: 'videos',
@@ -30,13 +31,21 @@ async function uploadVideoResumable(
         contentType: file.type,
         cacheControl: '3600',
       },
-      chunkSize: 6 * 1024 * 1024, // 6 MB chunks
-      onError: reject,
+      chunkSize: 6 * 1024 * 1024,
+      onError: (err) => reject(new Error(err instanceof Error ? err.message : String(err))),
       onProgress: (bytesUploaded, bytesTotal) => {
-        onProgress(Math.round((bytesUploaded / bytesTotal) * 100))
+        if (bytesTotal > 0) onProgress(Math.round((bytesUploaded / bytesTotal) * 100))
       },
       onSuccess: () => resolve(),
     })
+
+    if (signal) {
+      signal.addEventListener('abort', () => {
+        upload.abort()
+        reject(new Error('Upload cancelled'))
+      })
+    }
+
     upload.start()
   })
 }
@@ -56,11 +65,13 @@ export function VideoUploadForm({
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [priceOverrides, setPriceOverrides] = useState<{ supported: string; community: string; abundance: string } | null>(null)
+  const [uploadPct, setUploadPct] = useState<number | null>(null)
   const [progress, setProgress] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
   const thumbInputRef = useRef<HTMLInputElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
   const router = useRouter()
   const supabase = createBrowserSupabaseClient()
 
@@ -101,6 +112,8 @@ export function VideoUploadForm({
     }
     setLoading(true)
     setError(null)
+    setUploadPct(null)
+    abortRef.current = new AbortController()
 
     try {
       const videoId = crypto.randomUUID()
@@ -108,14 +121,15 @@ export function VideoUploadForm({
       let thumbnailPublicUrl: string | null = null
 
       if (videoFile) {
-        setProgress('Uploading video… 0%')
+        setProgress('Uploading video…')
+        setUploadPct(0)
         const ext = videoFile.name.split('.').pop()
         const path = `${creatorId}/${videoId}.${ext}`
         const { data: { session } } = await supabase.auth.getSession()
         if (!session) throw new Error('Not authenticated')
         await uploadVideoResumable(videoFile, path, session.access_token, (pct) => {
-          setProgress(`Uploading video… ${pct}%`)
-        })
+          setUploadPct(pct)
+        }, abortRef.current.signal)
         videoStoragePath = path
       }
 
@@ -156,7 +170,13 @@ export function VideoUploadForm({
     } finally {
       setLoading(false)
       setProgress(null)
+      setUploadPct(null)
+      abortRef.current = null
     }
+  }
+
+  function handleCancel() {
+    abortRef.current?.abort()
   }
 
   return (
@@ -300,12 +320,34 @@ export function VideoUploadForm({
         </div>
       )}
 
-      <button
-        type="submit" disabled={loading}
-        className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
-      >
-        {loading ? (progress ?? 'Uploading…') : 'Save as draft'}
-      </button>
+      {loading && uploadPct !== null ? (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-stone-600 font-medium">{progress ?? 'Uploading…'}</span>
+            <span className="text-stone-400">{uploadPct}%</span>
+          </div>
+          <div className="w-full bg-stone-200 rounded-full h-2">
+            <div
+              className="bg-jungle-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${uploadPct}%` }}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="w-full text-sm text-stone-400 hover:text-red-500 transition-colors py-1"
+          >
+            Cancel upload
+          </button>
+        </div>
+      ) : (
+        <button
+          type="submit" disabled={loading}
+          className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
+        >
+          {loading ? (progress ?? 'Saving…') : 'Save as draft'}
+        </button>
+      )}
       <p className="text-xs text-stone-400 text-center">
         Saved as draft — publish from Studio when ready.
       </p>
