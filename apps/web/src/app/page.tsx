@@ -100,9 +100,9 @@ export default function HomePage() {
             <p className="text-xs font-semibold text-jungle-500 uppercase tracking-widest mb-3">Example: 10-minute kettlebell class</p>
             <div className="grid grid-cols-3 gap-3">
               {[
-                { emoji: '🌱', tier: 'Supported', rate: '$1/min', price: '$9.99' },
-                { emoji: '🌿', tier: 'Community', rate: '$2/min', price: '$19.99' },
-                { emoji: '🌳', tier: 'Abundance', rate: '$3/min', price: '$29.99' },
+                { emoji: '🌱', tier: 'Supported', rate: '$1/min', price: '$10' },
+                { emoji: '🌿', tier: 'Community', rate: '$2/min', price: '$20' },
+                { emoji: '🌳', tier: 'Abundance', rate: '$3/min', price: '$40' },
               ].map((t) => (
                 <div key={t.tier} className="bg-jungle-50 rounded-xl p-3">
                   <div className="text-2xl mb-1">{t.emoji}</div>
@@ -112,7 +112,7 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-            <p className="text-xs text-stone-400 mt-3">Prices round down to the nearest fun number. You never pay more than the rate suggests.</p>
+            <p className="text-xs text-stone-400 mt-3">Clean round numbers. No $9.99 games here.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
