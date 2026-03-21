@@ -163,6 +163,7 @@ Davin and Rye work in tandem. To avoid conflicts:
 **Claude Code commit/push behavior:**
 - **Commit after every meaningful change** — don't batch up work before committing
 - **Do NOT push unless explicitly told to** — wait for "push", "push it", "go ahead and push", etc. before running `git push`
+- **Reason**: Cloudflare Pages is linked to GitHub — every push triggers a full redeploy of the live site, so pushes should be intentional and batched
 
 **Note on repo rename**: The repo was previously `JungleGym-` (with trailing dash). The rename cleared origin's git history. Davin synced via `git reset --hard origin/main` on 2026-03-21 to align with Rye's 12-commit history.
 
