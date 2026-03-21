@@ -1,6 +1,10 @@
 import Link from 'next/link'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
   return (
     <div className="min-h-screen">
 
@@ -17,15 +21,23 @@ export default function HomePage() {
             <Link href="/sessions" className="text-sm text-jungle-300 hover:text-white font-medium transition-colors">
               Sessions
             </Link>
-            <Link href="/auth/login" className="text-sm text-jungle-300 hover:text-white font-medium px-4 py-2 transition-colors">
-              Sign in
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="bg-earth-400 hover:bg-earth-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-            >
-              Join free
-            </Link>
+            {user ? (
+              <Link href="/dashboard" className="bg-earth-400 hover:bg-earth-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link href="/auth/login" className="text-sm text-jungle-300 hover:text-white font-medium px-4 py-2 transition-colors">
+                  Sign in
+                </Link>
+                <Link
+                  href="/auth/signup"
+                  className="bg-earth-400 hover:bg-earth-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                >
+                  Join free
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>

@@ -18,7 +18,7 @@ export default async function CreatorProfilePage({ params }: Props) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('*, users!user_id(role)')
+    .select('*')
     .eq('username', username)
     .single()
 

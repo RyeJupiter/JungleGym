@@ -15,7 +15,6 @@ export default async function ProfilePage() {
     supabase.from('profiles').select('*').eq('user_id', authUser.id).single(),
     supabase.from('users').select('role').eq('id', authUser.id).single(),
   ])
-
   const isCreator = userRow?.role === 'creator'
 
   return (
