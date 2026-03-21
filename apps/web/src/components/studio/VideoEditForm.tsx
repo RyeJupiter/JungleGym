@@ -97,13 +97,14 @@ export function VideoEditForm({ video }: { video: Video }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">Video URL</label>
-          <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className={inputClass} placeholder="https://..." />
+          <label className="block text-sm font-medium text-stone-700 mb-1">Video storage path</label>
+          <input type="text" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className={inputClass} placeholder="creator_id/video_id.mp4" />
+          <p className="text-xs text-stone-400 mt-1">Storage path from the videos bucket (e.g. <code>abc123/video.mp4</code>)</p>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-1">Thumbnail URL</label>
-          <input type="url" value={thumbnailUrl} onChange={(e) => setThumbnailUrl(e.target.value)} className={inputClass} placeholder="https://..." />
+          <input type="text" value={thumbnailUrl} onChange={(e) => setThumbnailUrl(e.target.value)} className={inputClass} placeholder="https://..." />
         </div>
 
         {!video.is_free && (

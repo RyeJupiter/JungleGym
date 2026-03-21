@@ -1,7 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { LogoutButton } from '@/components/LogoutButton'
+import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Dashboard' }
@@ -18,7 +18,6 @@ export default async function DashboardPage() {
   ])
 
   const isCreator = user?.role === 'creator'
-  const isAdmin = ['rye.seekins@gmail.com', 'davis@earthpulse.dev'].includes(authUser.email ?? '')
 
   const [{ count: videoCount }, { count: purchaseCount }, { count: sessionCount }] =
     await Promise.all([
@@ -44,19 +43,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="bg-jungle-900 border-b border-jungle-800 px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="font-black text-xl text-white">
-          jungle<span className="text-jungle-400">gym</span>
-        </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium text-jungle-300">
-          <Link href="/explore" className="hover:text-white transition-colors">Explore</Link>
-          <Link href="/sessions" className="hover:text-white transition-colors">Sessions</Link>
-          {isCreator && <Link href="/studio" className="hover:text-white transition-colors">Studio</Link>}
-          <Link href="/profile" className="hover:text-white transition-colors">Profile</Link>
-          {isAdmin && <Link href="/admin" className="hover:text-white transition-colors text-jungle-500">Admin</Link>}
-          <LogoutButton className="hover:text-white transition-colors" />
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="max-w-5xl mx-auto px-6 py-12">
         <div className="mb-10">

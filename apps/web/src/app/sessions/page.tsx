@@ -1,7 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import Link from 'next/link'
 import { GiftButton } from '@/components/session/GiftButton'
 import { AddSessionToCalendarButton } from '@/components/session/AddSessionToCalendarButton'
+import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Live Sessions' }
@@ -20,20 +20,7 @@ export default async function SessionsPage() {
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <header className="bg-white border-b border-stone-200 px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="font-black text-xl text-jungle-800">
-          jungle<span className="text-jungle-500">gym</span>
-        </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium text-stone-600">
-          <Link href="/explore" className="hover:text-stone-900">Explore</Link>
-          <Link href="/sessions" className="text-jungle-700 font-bold">Sessions</Link>
-          {authUser ? (
-            <Link href="/dashboard" className="hover:text-stone-900">Dashboard</Link>
-          ) : (
-            <Link href="/auth/login" className="hover:text-stone-900">Sign in</Link>
-          )}
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="max-w-4xl mx-auto px-6 py-12">
         <div className="mb-10">

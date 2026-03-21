@@ -95,11 +95,28 @@ export function VideoUploadForm({
     const url = URL.createObjectURL(file)
     const el = document.createElement('video')
     el.preload = 'metadata'
+    el.muted = true
     el.onloadedmetadata = () => {
-      const secs = Math.round(el.duration).toString()
-      setDurationSecs(secs)
-      // Reset price overrides so new auto-calculated prices show
+      setDurationSecs(Math.round(el.duration).toString())
       setPriceOverrides(null)
+      // Seek to 10% of duration (min 1s) for a more representative frame
+      el.currentTime = Math.min(Math.max(1, el.duration * 0.1), el.duration - 0.1)
+    }
+    el.onseeked = () => {
+      // Only auto-set thumbnail if the user hasn't picked one manually
+      if (!thumbnailFile) {
+        const canvas = document.createElement('canvas')
+        canvas.width = el.videoWidth
+        canvas.height = el.videoHeight
+        canvas.getContext('2d')?.drawImage(el, 0, 0)
+        canvas.toBlob((blob) => {
+          if (!blob) return
+          const thumb = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' })
+          setThumbnailFile(thumb)
+          if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview)
+          setThumbnailPreview(URL.createObjectURL(thumb))
+        }, 'image/jpeg', 0.85)
+      }
       URL.revokeObjectURL(url)
     }
     el.src = url

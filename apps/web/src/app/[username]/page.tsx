@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { formatPrice, formatDuration } from '@junglegym/shared'
+import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
 type Props = { params: Promise<{ username: string }> }
@@ -44,14 +45,7 @@ export default async function CreatorProfilePage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <header className="bg-white border-b border-stone-200 px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="font-black text-xl text-jungle-800">
-          jungle<span className="text-jungle-500">gym</span>
-        </Link>
-        <Link href="/explore" className="text-sm text-stone-600 hover:text-stone-900 font-medium">
-          ← Explore
-        </Link>
-      </header>
+      <Navbar />
 
       <div className="max-w-4xl mx-auto px-6 py-12">
         {/* Profile header */}

@@ -7,7 +7,7 @@ import type { Database } from '@junglegym/shared'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
 
-export function ProfileForm({ profile, userId }: { profile: Profile | null; userId: string }) {
+export function ProfileForm({ profile, userId, isCreator = false }: { profile: Profile | null; userId: string; isCreator?: boolean }) {
   const supabase = createBrowserSupabaseClient()
   const router = useRouter()
   const [saving, setSaving] = useState(false)
@@ -43,10 +43,12 @@ export function ProfileForm({ profile, userId }: { profile: Profile | null; user
         tagline: form.tagline || null,
         location: form.location || null,
         tags: form.tags ? form.tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean) : [],
-        supported_rate: Math.max(1, parseFloat(form.supported_rate) || 1),
-        community_rate: Math.max(1, parseFloat(form.community_rate) || 2),
-        abundance_rate: Math.max(1, parseFloat(form.abundance_rate) || 3),
         updated_at: new Date().toISOString(),
+        ...(isCreator && {
+          supported_rate: Math.max(1, parseFloat(form.supported_rate) || 1),
+          community_rate: Math.max(1, parseFloat(form.community_rate) || 2),
+          abundance_rate: Math.max(1, parseFloat(form.abundance_rate) || 3),
+        }),
       }
       const { error: upsertError } = await supabase
         .from('profiles')
@@ -101,25 +103,27 @@ export function ProfileForm({ profile, userId }: { profile: Profile | null; user
           className={inputClass} placeholder="yoga, strength, mobility, kettlebell" />
       </Field>
 
-      <div>
-        <p className="text-sm font-medium text-stone-700 mb-1">Pricing rates <span className="text-stone-400 font-normal">($ per minute)</span></p>
-        <p className="text-xs text-stone-400 mb-3">Applied to all your videos. Minimum $1 on any tier.</p>
-        <div className="grid grid-cols-3 gap-3">
-          {([
-            { key: 'supported_rate', label: 'Supported' },
-            { key: 'community_rate', label: 'Community' },
-            { key: 'abundance_rate', label: 'Abundance' },
-          ] as const).map(({ key, label }) => (
-            <div key={key} className="text-center">
-              <label className="block text-xs text-stone-500 mb-1">{label}</label>
-              <input type="number" min="1" step="0.25"
-                value={form[key]}
-                onChange={(e) => set(key, e.target.value)}
-                className={`${inputClass} text-center`} />
-            </div>
-          ))}
+      {isCreator && (
+        <div>
+          <p className="text-sm font-medium text-stone-700 mb-1">Pricing rates <span className="text-stone-400 font-normal">($ per minute)</span></p>
+          <p className="text-xs text-stone-400 mb-3">Applied to all your videos. Minimum $1 on any tier.</p>
+          <div className="grid grid-cols-3 gap-3">
+            {([
+              { key: 'supported_rate', label: 'Supported' },
+              { key: 'community_rate', label: 'Community' },
+              { key: 'abundance_rate', label: 'Abundance' },
+            ] as const).map(({ key, label }) => (
+              <div key={key} className="text-center">
+                <label className="block text-xs text-stone-500 mb-1">{label}</label>
+                <input type="number" min="1" step="0.25"
+                  value={form[key]}
+                  onChange={(e) => set(key, e.target.value)}
+                  className={`${inputClass} text-center`} />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <button type="submit" disabled={saving}
         className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">

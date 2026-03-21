@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { formatPrice, formatDuration } from '@junglegym/shared'
+import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Explore' }
@@ -61,25 +62,7 @@ export default async function ExplorePage({
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <header className="bg-jungle-900 border-b border-jungle-800 px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="font-black text-xl text-white">
-          jungle<span className="text-jungle-400">gym</span>
-        </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium text-jungle-300">
-          <Link href="/explore" className="text-white font-bold">Explore</Link>
-          <Link href="/sessions" className="hover:text-white transition-colors">Sessions</Link>
-          {user ? (
-            <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
-          ) : (
-            <>
-              <Link href="/auth/login" className="hover:text-white transition-colors">Sign in</Link>
-              <Link href="/auth/signup" className="bg-earth-400 text-white px-4 py-2 rounded-lg hover:bg-earth-500 transition-colors font-semibold">
-                Join
-              </Link>
-            </>
-          )}
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Search */}

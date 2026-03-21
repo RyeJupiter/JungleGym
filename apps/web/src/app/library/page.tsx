@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { formatDuration, formatPrice } from '@junglegym/shared'
+import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'My Library' }
@@ -19,15 +20,7 @@ export default async function LibraryPage() {
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <header className="bg-white border-b border-stone-200 px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="font-black text-xl text-jungle-800">
-          jungle<span className="text-jungle-500">gym</span>
-        </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium text-stone-600">
-          <Link href="/explore" className="hover:text-stone-900">Explore</Link>
-          <Link href="/dashboard" className="hover:text-stone-900">Dashboard</Link>
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="max-w-5xl mx-auto px-6 py-12">
         <h1 className="text-4xl font-black text-stone-900 mb-10">My Library</h1>

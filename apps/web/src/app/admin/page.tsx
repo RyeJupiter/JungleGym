@@ -1,13 +1,11 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { ApplicationsPanel } from '@/components/admin/ApplicationsPanel'
-import { LogoutButton } from '@/components/LogoutButton'
+import { Navbar } from '@/components/Navbar'
+import { ADMIN_EMAILS } from '@/lib/admin'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Admin' }
-
-const ADMIN_EMAILS = ['rye.seekins@gmail.com', 'davis@earthpulse.dev']
 
 export default async function AdminPage() {
   const supabase = await createServerSupabaseClient()
@@ -25,17 +23,7 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <header className="bg-jungle-900 border-b border-jungle-800 px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="font-black text-xl text-white">
-          jungle<span className="text-jungle-400">gym</span>
-          <span className="text-jungle-600 text-sm font-normal ml-2">admin</span>
-        </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium text-jungle-300">
-          <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
-          <Link href="/studio" className="hover:text-white transition-colors">Studio</Link>
-          <LogoutButton className="hover:text-white transition-colors" />
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="max-w-3xl mx-auto px-6 py-12">
         <h1 className="text-4xl font-black text-stone-900 mb-2">Teacher applications</h1>

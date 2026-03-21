@@ -5,6 +5,7 @@ import { formatPrice, formatDuration } from '@junglegym/shared'
 import { PurchaseButton } from '@/components/video/PurchaseButton'
 import { ShareButton } from '@/components/video/ShareButton'
 import { AddToCalendarButton } from '@/components/video/AddToCalendarButton'
+import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
 type Props = { params: Promise<{ id: string }> }
@@ -62,14 +63,7 @@ export default async function VideoPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <header className="bg-white border-b border-stone-200 px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="font-black text-xl text-jungle-800">
-          jungle<span className="text-jungle-500">gym</span>
-        </Link>
-        <Link href="/explore" className="text-sm text-stone-600 hover:text-stone-900 font-medium">
-          ← Back to explore
-        </Link>
-      </header>
+      <Navbar />
 
       <div className="max-w-4xl mx-auto px-6 py-12">
         {/* Video player / locked state */}

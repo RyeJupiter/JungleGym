@@ -34,14 +34,7 @@ export default function HomePage() {
       <div className="bg-jungle-800 pt-16">
         <section className="pt-28 pb-24 px-6 text-center">
           <div className="max-w-3xl mx-auto">
-            <div className="flex flex-wrap justify-center gap-2 mb-10">
-              {['🧘 yoga', '💪 strength', '🌀 mobility', '🔔 kettlebell', '🌬️ breathwork', '🦋 hip flexors', '🤝 contact dance', '💃 dance lifts'].map((tag) => (
-                <span key={tag} className="bg-jungle-800 text-jungle-300 text-xs font-semibold px-3 py-1.5 rounded-full">
-                  {tag}
-                </span>
-              ))}
-            </div>
-            <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 leading-none">
+                <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 leading-none">
               Move better.
               <br />
               <span className="text-jungle-400">Learn from the best.</span>
@@ -50,7 +43,7 @@ export default function HomePage() {
               Videos and live sessions from vetted movement teachers.
               Every class gives you something real to train — today, not someday.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
               <Link
                 href="/explore"
                 className="bg-earth-400 hover:bg-earth-500 text-white font-bold px-8 py-4 rounded-xl text-lg transition-colors"
@@ -64,6 +57,13 @@ export default function HomePage() {
                 Live sessions
               </Link>
             </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              {[['yoga','🧘 yoga'], ['strength','💪 strength'], ['mobility','🌀 mobility'], ['kettlebell','🔔 kettlebell'], ['breathwork','🌬️ breathwork'], ['hip-flexors','🦋 hip flexors'], ['contact-dance','🤝 contact dance'], ['dance','💃 dance lifts']].map(([slug, label]) => (
+                <Link key={slug} href={`/explore?tag=${slug}`} className="bg-jungle-700/60 hover:bg-jungle-600/80 text-jungle-200 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors">
+                  {label}
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -71,15 +71,15 @@ export default function HomePage() {
         <section className="pb-20 px-6">
           <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
             {[
-              { emoji: '🔍', title: 'Find a teacher', body: 'Browse by style — yoga, kettlebell, mobility, breathwork, and more.' },
-              { emoji: '🎬', title: 'Watch & train', body: '100% goes to the teacher. We suggest a 10% optional tip to keep the lights on — you set it.' },
-              { emoji: '🎁', title: 'Join live sessions', body: 'Real-time classes, gift-based. Give freely — 100% goes to the teacher.' },
+              { emoji: '🔍', title: 'Find a teacher', body: 'Browse by style — yoga, kettlebell, mobility, breathwork, and more.', href: '/explore' },
+              { emoji: '🎬', title: 'Watch & train', body: '100% goes to the teacher. We suggest a 10% optional tip to keep the lights on — you set it.', href: '/explore' },
+              { emoji: '🎁', title: 'Join live sessions', body: 'Real-time classes, gift-based. Give freely — 100% goes to the teacher.', href: '/sessions' },
             ].map((step) => (
-              <div key={step.title} className="bg-jungle-800/60 rounded-2xl p-6 border border-jungle-700">
+              <Link key={step.title} href={step.href} className="bg-jungle-800/60 hover:bg-jungle-700/80 rounded-2xl p-6 border border-jungle-700 hover:border-jungle-500 transition-colors block">
                 <div className="text-4xl mb-3">{step.emoji}</div>
                 <h3 className="font-bold text-white mb-1">{step.title}</h3>
                 <p className="text-jungle-400 text-sm leading-relaxed">{step.body}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
