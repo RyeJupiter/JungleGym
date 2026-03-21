@@ -11,7 +11,7 @@ export async function middleware(request: NextRequest) {
   // Rewrite /@username → /username so the [username] route handles it
   if (pathname.startsWith('/@')) {
     const url = request.nextUrl.clone()
-    url.pathname = pathname.slice(1) // strip the leading @
+    url.pathname = '/' + pathname.slice(2) // strip the leading @
     return NextResponse.rewrite(url)
   }
 
