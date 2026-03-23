@@ -157,7 +157,7 @@ export default async function HomePage() {
                 emoji: '🌳',
                 tier: 'Abundance',
                 tagline: 'Pay it forward',
-                desc: "When you're doing well, this is how you spread it. 100% goes to the teacher. They feel this one.",
+                desc: "When you're doing well, this is how you spread it. They feel this one.",
                 badge: '$3/min',
                 bg: 'bg-jungle-100',
                 border: 'border-jungle-400',
@@ -175,7 +175,9 @@ export default async function HomePage() {
             ))}
           </div>
 
-          <div className="text-center mt-8 space-y-1">
+          <div className="text-center mt-8 space-y-2">
+            <p className="text-jungle-900 text-sm font-bold">100% of every purchase goes directly to the teacher.</p>
+            <p className="text-jungle-500 text-sm">At checkout, a 10% donation to the JungleGym platform is optionally suggested — you can set it to zero, no questions asked.</p>
             <p className="text-jungle-700 text-sm font-semibold">Every creator offers one free video. No account needed to watch it.</p>
             <p className="text-jungle-500 text-sm">You can also share any video you own with one friend — on us.</p>
           </div>
