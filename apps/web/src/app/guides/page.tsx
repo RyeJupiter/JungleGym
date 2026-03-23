@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServiceSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
@@ -6,7 +6,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = { title: 'Movement Guides' }
 
 export default async function GuidesPage() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = createServiceSupabaseClient()
 
   const { data: creatorUsers } = await supabase
     .from('users')
