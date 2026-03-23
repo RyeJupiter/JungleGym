@@ -52,12 +52,12 @@ export default async function HomePage() {
         <section className="pt-28 pb-24 px-6 text-center">
           <div className="max-w-3xl mx-auto">
                 <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 leading-none">
-              Move better.
+              Welcome to JungleGym.
               <br />
-              <span className="text-jungle-400">Learn from the best.</span>
+              <span className="text-jungle-400">Let's learn & play.</span>
             </h1>
             <p className="text-lg text-jungle-300 mb-10 max-w-xl mx-auto leading-relaxed">
-              Videos and live sessions from vetted movement teachers.
+              Explore movement classes from vetted teachers below.
               Every class gives you something real to train — today, not someday.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
@@ -106,7 +106,8 @@ export default async function HomePage() {
       <section className="py-20 px-6 bg-stone-50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="text-4xl font-black text-jungle-900 mb-3">Pay once. Own it forever.</h2>
+            <p className="text-xs font-semibold text-jungle-500 uppercase tracking-widest mb-3">Radical Transparency</p>
+            <h2 className="text-4xl font-black text-jungle-900 mb-3">Here's how the money flows.</h2>
             <p className="text-jungle-600 max-w-xl mx-auto text-lg">
               Every video is priced by the minute. A 10-minute class costs about as much as a coffee — and it's yours permanently.
             </p>
