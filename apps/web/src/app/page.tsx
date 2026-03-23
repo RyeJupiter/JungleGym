@@ -57,7 +57,7 @@ export default async function HomePage() {
               <span className="text-jungle-400">Let's learn & play.</span>
             </h1>
             <p className="text-lg text-jungle-300 mb-10 max-w-xl mx-auto leading-relaxed">
-              Explore movement classes from vetted teachers below.
+              Movement classes from skilled guides.
               Every class gives you something real to train — today, not someday.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
