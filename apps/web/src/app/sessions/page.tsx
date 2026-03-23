@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 import { GiftButton } from '@/components/session/GiftButton'
 import { AddSessionToCalendarButton } from '@/components/session/AddSessionToCalendarButton'
 import { Navbar } from '@/components/Navbar'
