@@ -109,7 +109,7 @@ export default async function HomePage() {
             <p className="text-xs font-semibold text-jungle-500 uppercase tracking-widest mb-3">Radical Transparency</p>
             <h2 className="text-4xl font-black text-jungle-900 mb-3">Here's how the money flows.</h2>
             <p className="text-jungle-600 max-w-xl mx-auto text-lg">
-              Every video is priced by the minute. A 10-minute class costs about as much as a coffee — and it's yours permanently.
+              Buy classes, yours permanently. Every video is priced by the minute — choose the price that feels right for you.
             </p>
           </div>
 
