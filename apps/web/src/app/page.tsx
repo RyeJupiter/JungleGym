@@ -58,7 +58,7 @@ export default async function HomePage() {
             </h1>
             <p className="text-lg text-jungle-300 mb-10 max-w-xl mx-auto leading-relaxed">
               Movement classes from skilled guides.
-              Every class gives you something real to train — today, not someday.
+              Every class leaves you with something your body didn't have before.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
               <Link
