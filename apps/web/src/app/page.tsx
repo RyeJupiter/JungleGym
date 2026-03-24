@@ -16,10 +16,10 @@ export default async function HomePage() {
           </span>
           <div className="flex items-center gap-3">
             <Link href="/explore" className="text-sm text-jungle-300 hover:text-white font-medium transition-colors">
-              Explore
+              Classes
             </Link>
-            <Link href="/sessions" className="text-sm text-jungle-300 hover:text-white font-medium transition-colors">
-              Sessions
+            <Link href="/guides" className="text-sm text-jungle-300 hover:text-white font-medium transition-colors">
+              Guides
             </Link>
             {user ? (
               <>

@@ -1,4 +1,4 @@
-import { createServiceSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
@@ -6,22 +6,13 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = { title: 'Movement Guides' }
 
 export default async function GuidesPage() {
-  const supabase = createServiceSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
-  const { data: creatorUsers } = await supabase
-    .from('users')
-    .select('id')
-    .eq('role', 'creator')
-
-  const creatorIds = (creatorUsers ?? []).map((u) => u.id)
-
-  const { data: guides } = creatorIds.length > 0
-    ? await supabase
-        .from('profiles')
-        .select('username, display_name, photo_url, bio, tags')
-        .in('user_id', creatorIds)
-        .order('display_name', { ascending: true })
-    : { data: [] }
+  const { data: guides } = await supabase
+    .from('profiles')
+    .select('username, display_name, photo_url, bio, tags')
+    .not('supported_rate', 'is', null)
+    .order('display_name', { ascending: true })
 
   return (
     <div className="min-h-screen bg-stone-50">
