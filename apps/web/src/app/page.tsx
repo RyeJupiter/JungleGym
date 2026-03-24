@@ -130,7 +130,6 @@ export default async function HomePage() {
                 </div>
               ))}
             </div>
-            <p className="text-xs text-stone-400 mt-3">Clean round numbers. No $9.99 games here.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
