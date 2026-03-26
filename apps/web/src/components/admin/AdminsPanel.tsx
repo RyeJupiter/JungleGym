@@ -9,13 +9,7 @@ export type SiteAdmin = {
   added_at: string
 }
 
-export function AdminsPanel({
-  admins,
-  hardcodedAdmins,
-}: {
-  admins: SiteAdmin[]
-  hardcodedAdmins: string[]
-}) {
+export function AdminsPanel({ admins }: { admins: SiteAdmin[] }) {
   const [newEmail, setNewEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -46,23 +40,6 @@ export function AdminsPanel({
       {error && (
         <p className="bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</p>
       )}
-
-      {/* Permanent admins */}
-      <div>
-        <h2 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-3">
-          Permanent (hardcoded)
-        </h2>
-        <div className="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100">
-          {hardcodedAdmins.map((email) => (
-            <div key={email} className="flex items-center justify-between px-5 py-4">
-              <span className="text-stone-900 text-sm font-medium">{email}</span>
-              <span className="text-xs text-stone-400 bg-stone-100 px-2.5 py-1 rounded-full">
-                always admin
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Dynamic admins */}
       <div>

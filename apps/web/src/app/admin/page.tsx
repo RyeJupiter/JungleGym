@@ -6,6 +6,7 @@ import type { SiteAdmin } from '@/components/admin/AdminsPanel'
 import { Navbar } from '@/components/Navbar'
 import { ADMIN_EMAILS } from '@/lib/admin'
 import Link from 'next/link'
+
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Admin' }
@@ -127,7 +128,7 @@ export default async function AdminPage({
         )}
 
         {tab === 'admins' && (
-          <AdminsPanel admins={siteAdmins} hardcodedAdmins={ADMIN_EMAILS} />
+          <AdminsPanel admins={siteAdmins} />
         )}
       </div>
     </div>
