@@ -86,10 +86,18 @@ export function HeroSection({
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="flex-shrink-0 text-right">
+            {/* Stats + edit CTA */}
+            <div className="flex-shrink-0 text-right flex flex-col items-end gap-2">
               <p className={`text-xl font-black ${theme.textPrimary}`}>{videoCount}</p>
               <p className={`${theme.accent} text-xs`}>{videoCount === 1 ? 'video' : 'videos'}</p>
+              {isOwnProfile && !editing && (
+                <Link
+                  href={`/@${profile.username}?edit=true`}
+                  className="bg-jungle-700 hover:bg-jungle-600 text-jungle-200 text-xs font-semibold px-4 py-2 rounded-lg border border-jungle-600 transition-colors"
+                >
+                  Edit treehouse
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -156,6 +164,17 @@ export function HeroSection({
           </p>
 
           {hasPaidVideos && <RatesBar rates={rates} theme={theme} className="justify-center mt-6" />}
+
+          {isOwnProfile && !editing && (
+            <div className="mt-4">
+              <Link
+                href={`/@${profile.username}?edit=true`}
+                className="inline-block bg-jungle-700 hover:bg-jungle-600 text-jungle-200 text-xs font-semibold px-4 py-2 rounded-lg border border-jungle-600 transition-colors"
+              >
+                Edit treehouse
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     )
