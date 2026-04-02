@@ -70,7 +70,7 @@ export default async function LibraryPage() {
             href={isCreator ? '/studio' : '#library'}
           />
           <StatCard label="Upcoming sessions" value={String(sessionCount ?? 0)} href="/sessions" />
-          <StatCard label="Edit profile" value="→" href="/profile" />
+          <StatCard label="Settings" value="→" href="/settings" />
         </div>
 
         {/* Creator: studio callout */}

@@ -100,7 +100,7 @@ export function NavLinks({ isLoggedIn, isCreator, isAdmin, photoUrl, username }:
                   )}
                   <div className="border-t border-jungle-700">
                     <Link
-                      href="/profile"
+                      href="/settings"
                       onClick={() => setDropdownOpen(false)}
                       className="flex items-center gap-2.5 px-4 py-3 text-sm text-jungle-400 hover:bg-jungle-700 hover:text-jungle-200 transition-colors"
                     >
@@ -158,7 +158,7 @@ export function NavLinks({ isLoggedIn, isCreator, isAdmin, photoUrl, username }:
                   <Link href={`/@${username}`} className={mobileClsBlock(`/@${username}`)}>My Profile</Link>
                 )}
                 {isAdmin && <Link href="/admin" className={mobileClsBlock('/admin')}>Admin</Link>}
-                <Link href="/profile" className={mobileClsBlock('/profile')}>Settings</Link>
+                <Link href="/settings" className={mobileClsBlock('/settings')}>Settings</Link>
                 <LogoutButton className="block w-full text-left px-4 py-3 text-base font-medium text-jungle-400 hover:bg-jungle-700 hover:text-jungle-200 rounded-xl transition-colors" />
               </div>
             </>
