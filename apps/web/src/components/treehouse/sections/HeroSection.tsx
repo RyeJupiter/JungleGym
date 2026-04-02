@@ -377,9 +377,8 @@ function EditableText({
       suppressContentEditableWarning
       onBlur={(e) => onChange?.(e.currentTarget.textContent ?? '')}
       data-placeholder={placeholder}
-      style={!value ? { color: 'rgba(255,255,255,0.3)' } : undefined}
     >
-      {value || placeholder}
+      {value}
     </Tag>
   )
 }

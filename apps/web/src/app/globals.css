@@ -18,3 +18,11 @@
     text-wrap: balance;
   }
 }
+
+/* Treehouse inline editor placeholder */
+[contenteditable][data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: text;
+}
