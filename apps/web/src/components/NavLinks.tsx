@@ -10,9 +10,10 @@ interface Props {
   isCreator: boolean
   isAdmin: boolean
   photoUrl: string | null
+  username: string | null
 }
 
-export function NavLinks({ isLoggedIn, isCreator, isAdmin, photoUrl }: Props) {
+export function NavLinks({ isLoggedIn, isCreator, isAdmin, photoUrl, username }: Props) {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -76,23 +77,35 @@ export function NavLinks({ isLoggedIn, isCreator, isAdmin, photoUrl }: Props) {
 
               {dropdownOpen && (
                 <div className="absolute right-0 mt-2 w-44 bg-jungle-800 border border-jungle-700 rounded-xl shadow-xl overflow-hidden z-50">
-                  <Link
-                    href="/profile"
-                    onClick={() => setDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-3 text-sm text-jungle-200 hover:bg-jungle-700 transition-colors"
-                  >
-                    Profile
-                  </Link>
-                  {isAdmin && (
+                  {username && (
                     <Link
-                      href="/admin"
+                      href={`/@${username}`}
                       onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-3 text-sm text-jungle-500 hover:bg-jungle-700 transition-colors"
+                      className="flex items-center gap-2.5 px-4 py-3 text-sm text-jungle-200 hover:bg-jungle-700 transition-colors"
                     >
-                      Admin
+                      My Profile
                     </Link>
                   )}
+                  {isAdmin && (
+                    <>
+                      <div className="border-t border-jungle-700" />
+                      <Link
+                        href="/admin"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-3 text-sm text-jungle-500 hover:bg-jungle-700 transition-colors"
+                      >
+                        Admin
+                      </Link>
+                    </>
+                  )}
                   <div className="border-t border-jungle-700">
+                    <Link
+                      href="/profile"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-3 text-sm text-jungle-400 hover:bg-jungle-700 hover:text-jungle-200 transition-colors"
+                    >
+                      Settings
+                    </Link>
                     <LogoutButton className="w-full text-left px-4 py-3 text-sm text-jungle-400 hover:bg-jungle-700 hover:text-jungle-200 transition-colors" />
                   </div>
                 </div>
@@ -141,8 +154,11 @@ export function NavLinks({ isLoggedIn, isCreator, isAdmin, photoUrl }: Props) {
               <Link href="/library" className={mobileClsBlock('/library')}>Library</Link>
               {isCreator && <Link href="/studio" className={mobileClsBlock('/studio')}>Studio</Link>}
               <div className="border-t border-jungle-800 mt-2 pt-2 space-y-1">
-                <Link href="/profile" className={mobileClsBlock('/profile')}>Profile</Link>
+                {username && (
+                  <Link href={`/@${username}`} className={mobileClsBlock(`/@${username}`)}>My Profile</Link>
+                )}
                 {isAdmin && <Link href="/admin" className={mobileClsBlock('/admin')}>Admin</Link>}
+                <Link href="/profile" className={mobileClsBlock('/profile')}>Settings</Link>
                 <LogoutButton className="block w-full text-left px-4 py-3 text-base font-medium text-jungle-400 hover:bg-jungle-700 hover:text-jungle-200 rounded-xl transition-colors" />
               </div>
             </>

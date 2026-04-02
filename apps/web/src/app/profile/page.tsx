@@ -4,7 +4,7 @@ import { ProfileForm } from '@/components/profile/ProfileForm'
 import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Edit Profile' }
+export const metadata: Metadata = { title: 'Settings' }
 
 export default async function ProfilePage() {
   const supabase = await createServerSupabaseClient()
@@ -22,7 +22,7 @@ export default async function ProfilePage() {
       <Navbar />
 
       <div className="max-w-2xl mx-auto px-6 py-12">
-        <h1 className="text-3xl font-black text-stone-900 mb-2">Edit profile</h1>
+        <h1 className="text-3xl font-black text-stone-900 mb-2">Settings</h1>
         <p className="text-stone-500 mb-8">
           {profile ? `@${profile.username}` : 'Set up your public profile'}
         </p>

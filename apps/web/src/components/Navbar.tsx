@@ -10,15 +10,18 @@ export async function Navbar() {
   let isCreator = false
   let isAdmin = false
   let photoUrl: string | null = null
+  let username: string | null = null
 
   if (authUser) {
     const [{ data: user }, { data: profile }] = await Promise.all([
       supabase.from('users').select('role').eq('id', authUser.id).single(),
-      supabase.from('profiles').select('photo_url').eq('user_id', authUser.id).single(),
+      supabase.from('profiles').select('photo_url, username').eq('user_id', authUser.id).single(),
     ])
     isCreator = user?.role === 'creator'
     isAdmin = ADMIN_EMAILS.includes(authUser.email ?? '')
     photoUrl = profile?.photo_url ?? null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    username = (profile as any)?.username ?? null
   }
 
   return (
@@ -26,7 +29,7 @@ export async function Navbar() {
       <Link href="/" className="font-black text-xl text-white">
         jungle<span className="text-jungle-400">gym</span>
       </Link>
-      <NavLinks isLoggedIn={!!authUser} isCreator={isCreator} isAdmin={isAdmin} photoUrl={photoUrl} />
+      <NavLinks isLoggedIn={!!authUser} isCreator={isCreator} isAdmin={isAdmin} photoUrl={photoUrl} username={username} />
     </header>
   )
 }
