@@ -156,7 +156,7 @@ function ConfirmationCard({
 
 // ── Main panel ───────────────────────────────────────────────────────────────
 
-export function AdminsPanel({ admins }: { admins: SiteAdmin[] }) {
+export function AdminsPanel({ admins, superadminEmails }: { admins: SiteAdmin[]; superadminEmails: string[] }) {
   const [selected, setSelected] = useState<UserSearchResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -177,10 +177,27 @@ export function AdminsPanel({ admins }: { admins: SiteAdmin[] }) {
     <div className="space-y-8">
       {error && <p className="bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</p>}
 
+      {/* Superadmins — hardcoded, read-only */}
+      <div>
+        <h2 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-3">
+          Superadmins <span className="text-stone-300 font-normal normal-case tracking-normal">(hardcoded · can manage admins + creators)</span>
+        </h2>
+        <div className="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100">
+          {superadminEmails.map((email) => (
+            <div key={email} className="flex items-center justify-between px-5 py-4 gap-4">
+              <p className="text-stone-900 text-sm font-medium">{email}</p>
+              <span className="text-xs bg-jungle-100 text-jungle-700 font-semibold px-2.5 py-1 rounded-full flex-shrink-0">
+                superadmin
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Dynamic admins */}
       <div>
         <h2 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-3">
-          Dynamic admins
+          Admins <span className="text-stone-300 font-normal normal-case tracking-normal">(can manage creators)</span>
         </h2>
         {admins.length === 0 ? (
           <div className="bg-white rounded-2xl border border-stone-200 p-10 text-center text-stone-400">

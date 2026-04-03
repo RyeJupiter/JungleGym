@@ -1,8 +1,14 @@
 -- ============================================================
 -- site_admins table + RLS
--- Allows the two hardcoded admins and any dynamic admins to
--- manage the table via the regular anon/auth client — no
--- service role key required for admin management.
+--
+-- Two tiers of admin:
+--   superadmin — hardcoded in ADMIN_EMAILS (lib/admin.ts)
+--                can manage site_admins + creators
+--   admin      — rows in this table
+--                can manage creators only
+--
+-- RLS enforces the write restriction at the DB level so no
+-- server-side code path can accidentally bypass it.
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS public.site_admins (
@@ -13,20 +19,29 @@ CREATE TABLE IF NOT EXISTS public.site_admins (
 
 ALTER TABLE public.site_admins ENABLE ROW LEVEL SECURITY;
 
--- Hardcoded admins OR existing dynamic admins can do anything
-CREATE POLICY "site_admins: admins only"
-  ON public.site_admins
-  FOR ALL
+-- SELECT:
+--   superadmins can see all rows (needed to list admins in the UI)
+--   any authenticated user can see their own row (needed for auth check)
+CREATE POLICY "site_admins: select"
+  ON public.site_admins FOR SELECT
   TO authenticated
   USING (
     auth.email() IN ('rye.seekkins@gmail.com', 'davis@earthpulse.dev')
-    OR EXISTS (
-      SELECT 1 FROM public.site_admins sa WHERE sa.email = auth.email()
-    )
-  )
+    OR auth.email() = email
+  );
+
+-- INSERT: superadmins only
+CREATE POLICY "site_admins: insert"
+  ON public.site_admins FOR INSERT
+  TO authenticated
   WITH CHECK (
     auth.email() IN ('rye.seekkins@gmail.com', 'davis@earthpulse.dev')
-    OR EXISTS (
-      SELECT 1 FROM public.site_admins sa WHERE sa.email = auth.email()
-    )
+  );
+
+-- DELETE: superadmins only
+CREATE POLICY "site_admins: delete"
+  ON public.site_admins FOR DELETE
+  TO authenticated
+  USING (
+    auth.email() IN ('rye.seekkins@gmail.com', 'davis@earthpulse.dev')
   );

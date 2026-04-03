@@ -42,6 +42,8 @@ export default async function AdminPage({
   }
   if (!isAdmin) redirect('/dashboard')
 
+  const isSuperAdmin = ADMIN_EMAILS.includes(authUser.email ?? '')
+
   const { tab = 'applications' } = await searchParams
 
   // Always fetch pending count for the tab badge
@@ -234,8 +236,8 @@ export default async function AdminPage({
         photoUrl: p?.photo_url ?? null,
       }
     })
-  } else {
-    // cookie-based client works here — RLS allows authenticated admins to read
+  } else if (tab === 'admins' && isSuperAdmin) {
+    // Only superadmins reach this branch — RLS also enforces this at DB level
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase as any)
@@ -295,16 +297,18 @@ export default async function AdminPage({
           >
             Metrics
           </Link>
-          <Link
-            href="/admin?tab=admins"
-            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
-              tab === 'admins'
-                ? 'bg-white text-stone-900 shadow-sm'
-                : 'text-stone-500 hover:text-stone-700'
-            }`}
-          >
-            Admins
-          </Link>
+          {isSuperAdmin && (
+            <Link
+              href="/admin?tab=admins"
+              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                tab === 'admins'
+                  ? 'bg-white text-stone-900 shadow-sm'
+                  : 'text-stone-500 hover:text-stone-700'
+              }`}
+            >
+              Admins
+            </Link>
+          )}
         </div>
 
         {tab === 'applications' && (
@@ -335,8 +339,8 @@ export default async function AdminPage({
           <MetricsPanel data={metricsData} />
         )}
 
-        {tab === 'admins' && (
-          <AdminsPanel admins={siteAdmins} />
+        {tab === 'admins' && isSuperAdmin && (
+          <AdminsPanel admins={siteAdmins} superadminEmails={ADMIN_EMAILS} />
         )}
       </div>
     </div>

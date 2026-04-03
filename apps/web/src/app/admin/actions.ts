@@ -4,14 +4,16 @@ import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/s
 import { ADMIN_EMAILS } from '@/lib/admin'
 import { revalidatePath } from 'next/cache'
 
+// ── Auth helpers ─────────────────────────────────────────────────────────────
+
+// Any admin (superadmin or regular admin)
 async function assertCallerIsAdmin() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user?.email) throw new Error('Not authenticated')
-  if (ADMIN_EMAILS.includes(user.email)) return
+  if (ADMIN_EMAILS.includes(user.email)) return  // superadmin fast-path
 
-  // RLS on site_admins only returns rows the caller is allowed to see,
-  // so a non-admin gets null back — no service role key needed.
+  // RLS returns only the caller's own row — non-admins get null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data } = await (supabase as any)
     .from('site_admins')
@@ -19,6 +21,14 @@ async function assertCallerIsAdmin() {
     .eq('email', user.email)
     .maybeSingle()
   if (!data) throw new Error('Not authorized')
+}
+
+// Superadmins only (hardcoded list) — required for managing site_admins
+async function assertCallerIsSuperAdmin() {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.email) throw new Error('Not authenticated')
+  if (!ADMIN_EMAILS.includes(user.email)) throw new Error('Not authorized — superadmin required')
 }
 
 // ── Shared type ──────────────────────────────────────────────────────────────
@@ -32,7 +42,7 @@ export type UserSearchResult = {
   photoUrl: string | null
 }
 
-// ── User search ──────────────────────────────────────────────────────────────
+// ── User search (any admin) ───────────────────────────────────────────────────
 
 export async function searchUsers(query: string): Promise<{ results: UserSearchResult[]; error?: string }> {
   try {
@@ -55,7 +65,7 @@ export async function searchUsers(query: string): Promise<{ results: UserSearchR
         .limit(8),
     ])
 
-    // Collect unique user IDs from both searches
+    // Collect unique user IDs (two-step — FK joins unreliable per CLAUDE.md)
     const allIds = [
       ...new Set([
         ...((profileMatches ?? []) as any[]).map((p) => p.user_id),
@@ -64,7 +74,6 @@ export async function searchUsers(query: string): Promise<{ results: UserSearchR
     ]
     if (allIds.length === 0) return { results: [] }
 
-    // Fetch complete data for all matched IDs (two-step — FK joins unreliable)
     const [{ data: users }, { data: profiles }] = await Promise.all([
       svc.from('users').select('id, email, role').in('id', allIds),
       svc.from('profiles').select('user_id, display_name, username, photo_url').in('user_id', allIds),
@@ -90,7 +99,7 @@ export async function searchUsers(query: string): Promise<{ results: UserSearchR
   }
 }
 
-// ── Creator role management ──────────────────────────────────────────────────
+// ── Creator role management (any admin) ──────────────────────────────────────
 
 export async function setCreatorRole(userId: string, isCreator: boolean): Promise<{ error?: string }> {
   try {
@@ -108,15 +117,16 @@ export async function setCreatorRole(userId: string, isCreator: boolean): Promis
   }
 }
 
+// ── Admin management (superadmin only) ───────────────────────────────────────
+
 export async function addSiteAdmin(email: string): Promise<{ error?: string }> {
   try {
     const supabase = await createServerSupabaseClient()
-    await assertCallerIsAdmin()
+    await assertCallerIsSuperAdmin()
     const normalized = email.toLowerCase().trim()
     if (!normalized) return { error: 'Email is required' }
 
     const { data: { user } } = await supabase.auth.getUser()
-    // Use cookie-based client — RLS policy allows authenticated admins to insert
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
       .from('site_admins')
@@ -133,8 +143,7 @@ export async function addSiteAdmin(email: string): Promise<{ error?: string }> {
 export async function removeSiteAdmin(email: string): Promise<{ error?: string }> {
   try {
     const supabase = await createServerSupabaseClient()
-    await assertCallerIsAdmin()
-    // Use cookie-based client — RLS policy allows authenticated admins to delete
+    await assertCallerIsSuperAdmin()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
       .from('site_admins')
