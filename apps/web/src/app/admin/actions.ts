@@ -10,8 +10,10 @@ async function assertCallerIsAdmin() {
   if (!user?.email) throw new Error('Not authenticated')
   if (ADMIN_EMAILS.includes(user.email)) return
 
+  // RLS on site_admins only returns rows the caller is allowed to see,
+  // so a non-admin gets null back — no service role key needed.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (createServiceSupabaseClient() as any)
+  const { data } = await (supabase as any)
     .from('site_admins')
     .select('email')
     .eq('email', user.email)
@@ -108,15 +110,15 @@ export async function setCreatorRole(userId: string, isCreator: boolean): Promis
 
 export async function addSiteAdmin(email: string): Promise<{ error?: string }> {
   try {
+    const supabase = await createServerSupabaseClient()
     await assertCallerIsAdmin()
     const normalized = email.toLowerCase().trim()
     if (!normalized) return { error: 'Email is required' }
 
-    const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
-
+    // Use cookie-based client — RLS policy allows authenticated admins to insert
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (createServiceSupabaseClient() as any)
+    const { error } = await (supabase as any)
       .from('site_admins')
       .insert({ email: normalized, added_by: user?.email ?? null })
 
@@ -130,10 +132,11 @@ export async function addSiteAdmin(email: string): Promise<{ error?: string }> {
 
 export async function removeSiteAdmin(email: string): Promise<{ error?: string }> {
   try {
+    const supabase = await createServerSupabaseClient()
     await assertCallerIsAdmin()
-
+    // Use cookie-based client — RLS policy allows authenticated admins to delete
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (createServiceSupabaseClient() as any)
+    const { error } = await (supabase as any)
       .from('site_admins')
       .delete()
       .eq('email', email)

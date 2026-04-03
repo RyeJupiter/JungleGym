@@ -28,8 +28,9 @@ export default async function AdminPage({
   let isAdmin = ADMIN_EMAILS.includes(authUser.email ?? '')
   if (!isAdmin) {
     try {
+      // cookie-based client — RLS returns a row only if caller is an admin
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (createServiceSupabaseClient() as any)
+      const { data } = await (supabase as any)
         .from('site_admins')
         .select('email')
         .eq('email', authUser.email ?? '')
@@ -234,9 +235,10 @@ export default async function AdminPage({
       }
     })
   } else {
+    // cookie-based client works here — RLS allows authenticated admins to read
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (createServiceSupabaseClient() as any)
+      const { data } = await (supabase as any)
         .from('site_admins')
         .select('email, added_by, added_at')
         .order('added_at', { ascending: true })
