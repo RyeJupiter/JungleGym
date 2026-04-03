@@ -3,8 +3,10 @@ import { redirect } from 'next/navigation'
 import { ApplicationsPanel } from '@/components/admin/ApplicationsPanel'
 import { AdminsPanel } from '@/components/admin/AdminsPanel'
 import type { SiteAdmin } from '@/components/admin/AdminsPanel'
+import { CreatorsPanel } from '@/components/admin/CreatorsPanel'
 import { MetricsPanel } from '@/components/admin/MetricsPanel'
 import type { MetricsData } from '@/components/admin/MetricsPanel'
+import type { UserSearchResult } from '@/app/admin/actions'
 import { Navbar } from '@/components/Navbar'
 import { ADMIN_EMAILS } from '@/lib/admin'
 import Link from 'next/link'
@@ -51,6 +53,7 @@ export default async function AdminPage({
   let applications: any[] = []
   let siteAdmins: SiteAdmin[] = []
   let metricsData: MetricsData | null = null
+  let creators: UserSearchResult[] = []
 
   if (tab === 'applications') {
     const { data } = await supabase
@@ -205,6 +208,31 @@ export default async function AdminPage({
       payouts,
       recentPurchases: recentPurchasesList,
     }
+  } else if (tab === 'creators') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const svc = createServiceSupabaseClient() as any
+    const { data: creatorUsers } = await svc
+      .from('users').select('id, email, role').eq('role', 'creator')
+    const creatorIds = ((creatorUsers ?? []) as any[]).map((u) => u.id)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let creatorProfiles: any[] = []
+    if (creatorIds.length > 0) {
+      const { data } = await svc
+        .from('profiles').select('user_id, display_name, username, photo_url').in('user_id', creatorIds)
+      creatorProfiles = data ?? []
+    }
+    const profileMap = new Map(creatorProfiles.map((p: any) => [p.user_id, p]))
+    creators = ((creatorUsers ?? []) as any[]).map((u) => {
+      const p = profileMap.get(u.id)
+      return {
+        userId: u.id,
+        email: u.email ?? '',
+        role: u.role ?? 'creator',
+        displayName: p?.display_name ?? null,
+        username: p?.username ?? null,
+        photoUrl: p?.photo_url ?? null,
+      }
+    })
   } else {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -246,6 +274,16 @@ export default async function AdminPage({
             )}
           </Link>
           <Link
+            href="/admin?tab=creators"
+            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+              tab === 'creators'
+                ? 'bg-white text-stone-900 shadow-sm'
+                : 'text-stone-500 hover:text-stone-700'
+            }`}
+          >
+            Creators
+          </Link>
+          <Link
             href="/admin?tab=metrics"
             className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
               tab === 'metrics'
@@ -285,6 +323,10 @@ export default async function AdminPage({
               </section>
             )}
           </>
+        )}
+
+        {tab === 'creators' && (
+          <CreatorsPanel initialCreators={creators} />
         )}
 
         {tab === 'metrics' && metricsData && (
