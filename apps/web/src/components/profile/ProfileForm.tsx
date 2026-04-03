@@ -81,15 +81,33 @@ export function ProfileForm({ profile, userId, email, isCreator }: Props) {
 
   // ── Delete account ────────────────────────────────────────────────────────
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteStep, setDeleteStep] = useState<'warn' | 'confirm'>('warn')
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  function openDeleteModal() {
+    setDeleteStep('warn')
+    setDeleteConfirm('')
+    setDeleteError(null)
+    setShowDeleteModal(true)
+  }
+
+  function closeDeleteModal() {
+    setShowDeleteModal(false)
+    setDeleteConfirm('')
+    setDeleteError(null)
+  }
 
   async function handleDeleteAccount() {
     setDeleting(true)
     setDeleteError(null)
     try {
-      const res = await fetch('/api/account/delete', { method: 'DELETE' })
+      const res = await fetch('/api/account/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: deleteConfirmHandle }),
+      })
       if (!res.ok) {
         const body = await res.json()
         throw new Error(body.error ?? 'Failed to delete account')
@@ -228,56 +246,92 @@ export function ProfileForm({ profile, userId, email, isCreator }: Props) {
         </p>
         <button
           type="button"
-          onClick={() => setShowDeleteModal(true)}
+          onClick={openDeleteModal}
           className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
         >
           Delete account
         </button>
       </section>
 
-      {/* Delete confirmation modal */}
+      {/* Delete confirmation modal — two-step */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 space-y-5">
-            <h3 className="text-xl font-black text-stone-900">Delete your account?</h3>
-            <p className="text-sm text-stone-600 leading-relaxed">
-              This will permanently delete your account, profile, and all your data.{' '}
-              <strong className="text-stone-900">This cannot be undone.</strong>
-            </p>
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">
-                Type <span className="font-mono font-bold text-stone-900">@{deleteConfirmHandle}</span> to confirm
-              </label>
-              <input
-                type="text"
-                value={deleteConfirm}
-                onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(null) }}
-                className={inputClass}
-                placeholder={`@${deleteConfirmHandle}`}
-                autoFocus
-              />
-            </div>
-            {deleteError && (
-              <p className="text-sm bg-red-50 text-red-700 px-3 py-2 rounded-lg">{deleteError}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={closeDeleteModal}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 space-y-5" onClick={(e) => e.stopPropagation()}>
+
+            {deleteStep === 'warn' ? (
+              <>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-stone-900">Are you sure?</h3>
+                    <p className="text-sm text-stone-500 mt-0.5">This action is permanent and cannot be reversed.</p>
+                  </div>
+                </div>
+                <ul className="text-sm text-stone-600 space-y-1.5 bg-red-50 rounded-xl px-4 py-3">
+                  <li>Your account and login will be deleted</li>
+                  <li>Your public profile will be removed</li>
+                  <li>All your videos and purchases will be gone</li>
+                  <li className="font-semibold text-red-700">There is no undo</li>
+                </ul>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={closeDeleteModal}
+                    className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold py-2.5 rounded-lg text-sm transition-colors"
+                  >
+                    No, keep my account
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteStep('confirm')}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
+                  >
+                    Yes, I'm sure
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-xl font-black text-stone-900">Final confirmation</h3>
+                <p className="text-sm text-stone-600 leading-relaxed">
+                  Type <span className="font-mono font-bold text-stone-900">@{deleteConfirmHandle}</span> below to permanently delete your account.
+                </p>
+                <input
+                  type="text"
+                  value={deleteConfirm}
+                  onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(null) }}
+                  className={inputClass}
+                  placeholder={`@${deleteConfirmHandle}`}
+                  autoFocus
+                />
+                {deleteError && (
+                  <p className="text-sm bg-red-50 text-red-700 px-3 py-2 rounded-lg">{deleteError}</p>
+                )}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={closeDeleteModal}
+                    disabled={deleting}
+                    className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold py-2.5 rounded-lg text-sm transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteAccount}
+                    disabled={deleting || deleteConfirm !== `@${deleteConfirmHandle}`}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors disabled:opacity-40"
+                  >
+                    {deleting ? 'Deleting…' : 'Delete forever'}
+                  </button>
+                </div>
+              </>
             )}
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => { setShowDeleteModal(false); setDeleteConfirm(''); setDeleteError(null) }}
-                disabled={deleting}
-                className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold py-2.5 rounded-lg text-sm transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteAccount}
-                disabled={deleting || deleteConfirm !== `@${deleteConfirmHandle}`}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors disabled:opacity-40"
-              >
-                {deleting ? 'Deleting…' : 'Delete forever'}
-              </button>
-            </div>
+
           </div>
         </div>
       )}
