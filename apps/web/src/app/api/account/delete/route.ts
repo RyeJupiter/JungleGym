@@ -31,8 +31,13 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: 'Username does not match' }, { status: 403 })
   }
 
-  // 3. All checks passed — delete the account
-  const admin = createServiceSupabaseClient()
+  // 3. All checks passed — delete the account (requires service role key)
+  let admin
+  try {
+    admin = createServiceSupabaseClient()
+  } catch {
+    return NextResponse.json({ error: 'Account deletion is temporarily unavailable' }, { status: 503 })
+  }
   const { error } = await admin.auth.admin.deleteUser(user.id)
 
   if (error) {

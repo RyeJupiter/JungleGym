@@ -1,4 +1,4 @@
-import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { AdminsPanel } from '@/components/admin/AdminsPanel'
 import type { SiteAdmin } from '@/components/admin/AdminsPanel'
@@ -19,7 +19,6 @@ export default async function AdminPage({
 }: {
   searchParams: Promise<{ tab?: string }>
 }) {
-  try {
   const supabase = await createServerSupabaseClient()
   const { data: { user: authUser } } = await supabase.auth.getUser()
   if (!authUser) redirect('/auth/login')
@@ -66,16 +65,14 @@ export default async function AdminPage({
       .order('created_at', { ascending: false })
     applications = appsData ?? []
 
-    // Fetch creators (two-step — service role for users table)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const svc = createServiceSupabaseClient() as any
-    const { data: creatorUsers } = await svc
+    // Fetch creators (two-step — regular client, same as metrics tab)
+    const { data: creatorUsers } = await supabase
       .from('users').select('id, email, role').eq('role', 'creator')
     const creatorIds = ((creatorUsers ?? []) as any[]).map((u) => u.id)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let creatorProfiles: any[] = []
     if (creatorIds.length > 0) {
-      const { data } = await svc
+      const { data } = await supabase
         .from('profiles').select('user_id, display_name, username, photo_url').in('user_id', creatorIds)
       creatorProfiles = data ?? []
     }
@@ -314,16 +311,4 @@ export default async function AdminPage({
       </div>
     </div>
   )
-  } catch (err) {
-    return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl border border-red-200 p-8 max-w-xl w-full space-y-4">
-          <h1 className="text-lg font-bold text-red-700">Admin Debug</h1>
-          <pre className="text-sm text-stone-700 whitespace-pre-wrap break-all">
-            {err instanceof Error ? `${err.message}\n\n${err.stack}` : String(err)}
-          </pre>
-        </div>
-      </div>
-    )
-  }
 }

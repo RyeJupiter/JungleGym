@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { ADMIN_EMAILS } from '@/lib/admin'
 import { revalidatePath } from 'next/cache'
 
@@ -50,16 +50,15 @@ export async function searchUsers(query: string): Promise<{ results: UserSearchR
     const q = query.trim()
     if (!q) return { results: [] }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const svc = createServiceSupabaseClient() as any
+    const supabase = await createServerSupabaseClient()
 
     // Search profiles (name/username) and users (email) in parallel
     const [{ data: profileMatches }, { data: emailMatches }] = await Promise.all([
-      svc.from('profiles')
+      supabase.from('profiles')
         .select('user_id, display_name, username, photo_url')
         .or(`display_name.ilike.%${q}%,username.ilike.%${q}%`)
         .limit(8),
-      svc.from('users')
+      supabase.from('users')
         .select('id, email, role')
         .ilike('email', `%${q}%`)
         .limit(8),
@@ -75,8 +74,8 @@ export async function searchUsers(query: string): Promise<{ results: UserSearchR
     if (allIds.length === 0) return { results: [] }
 
     const [{ data: users }, { data: profiles }] = await Promise.all([
-      svc.from('users').select('id, email, role').in('id', allIds),
-      svc.from('profiles').select('user_id, display_name, username, photo_url').in('user_id', allIds),
+      supabase.from('users').select('id, email, role').in('id', allIds),
+      supabase.from('profiles').select('user_id, display_name, username, photo_url').in('user_id', allIds),
     ])
 
     const profileMap = new Map(((profiles ?? []) as any[]).map((p) => [p.user_id, p]))
@@ -104,8 +103,9 @@ export async function searchUsers(query: string): Promise<{ results: UserSearchR
 export async function setCreatorRole(userId: string, isCreator: boolean): Promise<{ error?: string }> {
   try {
     await assertCallerIsAdmin()
+    const supabase = await createServerSupabaseClient()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (createServiceSupabaseClient() as any)
+    const { error } = await (supabase as any)
       .from('users')
       .update({ role: isCreator ? 'creator' : 'learner' })
       .eq('id', userId)
