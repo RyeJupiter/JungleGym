@@ -59,6 +59,7 @@ type Props = {
   editing?: boolean
   onFieldChange?: (field: string, value: string) => void
   onSectionDataChange?: (sectionId: string, data: Record<string, unknown>) => void
+  onPhotoChange?: (file: File | null, previewUrl: string | null) => void
 }
 
 export function SectionRenderer({
@@ -68,6 +69,7 @@ export function SectionRenderer({
   editing = false,
   onFieldChange,
   onSectionDataChange,
+  onPhotoChange,
 }: Props) {
   if (!section.visible && !editing) return null
 
@@ -87,6 +89,7 @@ export function SectionRenderer({
             variant={(section.variant as HeroVariant) ?? 'default'}
             editing={editing}
             onFieldChange={onFieldChange}
+            onPhotoChange={onPhotoChange}
           />
         </div>
       )

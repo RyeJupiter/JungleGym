@@ -1,54 +1,14 @@
 import Link from 'next/link'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { Navbar } from '@/components/Navbar'
 
 export default async function HomePage() {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
   return (
     <div className="min-h-screen">
 
-      {/* Nav */}
-      <header className="fixed top-0 inset-x-0 z-50 bg-jungle-900/95 backdrop-blur border-b border-jungle-800">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <span className="font-black text-xl tracking-tight text-white">
-            jungle<span className="text-jungle-400">gym</span>
-          </span>
-          <div className="flex items-center gap-3">
-            <Link href="/explore" className="text-sm text-jungle-300 hover:text-white font-medium transition-colors">
-              Classes
-            </Link>
-            <Link href="/guides" className="text-sm text-jungle-300 hover:text-white font-medium transition-colors">
-              Guides
-            </Link>
-            {user ? (
-              <>
-                <Link href="/library" className="text-sm text-jungle-300 hover:text-white font-medium transition-colors">
-                  Library
-                </Link>
-                <Link href="/settings" className="bg-earth-400 hover:bg-earth-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
-                  Profile
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link href="/auth/login" className="text-sm text-jungle-300 hover:text-white font-medium px-4 py-2 transition-colors">
-                  Sign in
-                </Link>
-                <Link
-                  href="/auth/signup"
-                  className="bg-earth-400 hover:bg-earth-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-                >
-                  Join free
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero */}
-      <div className="bg-jungle-800 pt-16">
+      <div className="bg-jungle-800">
         <section className="pt-28 pb-24 px-6 text-center">
           <div className="max-w-3xl mx-auto">
                 <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 leading-none">

@@ -34,6 +34,7 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
   const router = useRouter()
   const [config, setConfig] = useState<TreehouseConfig>(initialConfig)
   const [profileEdits, setProfileEdits] = useState<Record<string, string>>({})
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
 
   const theme = THEME_MAP[config.theme]
@@ -82,6 +83,12 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
     setProfileEdits((prev) => ({ ...prev, [field]: value }))
   }, [])
 
+  // ── Photo change ──
+  const handlePhotoChange = useCallback((file: File | null, previewUrl: string | null) => {
+    setPhotoFile(file)
+    setProfileEdits((prev) => ({ ...prev, photo_url: previewUrl ?? '' }))
+  }, [])
+
   // ── Section data edits ──
   const handleSectionDataChange = useCallback((sectionId: string, newData: Record<string, unknown>) => {
     setConfig((prev) => ({
@@ -105,6 +112,23 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
       if (profileEdits.display_name !== undefined) updatePayload.display_name = profileEdits.display_name
       if (profileEdits.tagline !== undefined) updatePayload.tagline = profileEdits.tagline || null
       if (profileEdits.bio !== undefined) updatePayload.bio = profileEdits.bio || null
+
+      // Upload photo if changed
+      if (profileEdits.photo_url !== undefined) {
+        if (photoFile) {
+          const ext = photoFile.name.split('.').pop()
+          const path = `${data.profile.user_id}/avatar.${ext}`
+          const { error: uploadError } = await supabase.storage
+            .from('profile-photos')
+            .upload(path, photoFile, { cacheControl: '3600', upsert: true })
+          if (uploadError) throw uploadError
+          const { data: { publicUrl } } = supabase.storage.from('profile-photos').getPublicUrl(path)
+          updatePayload.photo_url = publicUrl
+        } else {
+          // photo was removed
+          updatePayload.photo_url = null
+        }
+      }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.from('profiles') as any)
@@ -134,6 +158,7 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
       ...(profileEdits.display_name !== undefined ? { display_name: profileEdits.display_name } : {}),
       ...(profileEdits.tagline !== undefined ? { tagline: profileEdits.tagline || null } : {}),
       ...(profileEdits.bio !== undefined ? { bio: profileEdits.bio || null } : {}),
+      ...(profileEdits.photo_url !== undefined ? { photo_url: profileEdits.photo_url || null } : {}),
     },
   }
 
@@ -177,6 +202,7 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
                   editing
                   onFieldChange={handleFieldChange}
                   onSectionDataChange={handleSectionDataChange}
+                  onPhotoChange={handlePhotoChange}
                 />
               </SortableSection>
             )

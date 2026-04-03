@@ -1,3 +1,6 @@
+'use client'
+
+import { useRef } from 'react'
 import Link from 'next/link'
 import type { ThemeClasses } from '../themes'
 import type { HeroVariant } from '../config'
@@ -25,6 +28,7 @@ type HeroProps = {
   variant: HeroVariant
   editing?: boolean
   onFieldChange?: (field: string, value: string) => void
+  onPhotoChange?: (file: File | null, previewUrl: string | null) => void
 }
 
 export function HeroSection({
@@ -37,7 +41,18 @@ export function HeroSection({
   variant,
   editing = false,
   onFieldChange,
+  onPhotoChange,
 }: HeroProps) {
+  const photoInputRef = useRef<HTMLInputElement>(null)
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const previewUrl = URL.createObjectURL(file)
+    onPhotoChange?.(file, previewUrl)
+    e.target.value = ''
+  }
+
   const rates = {
     supported: Number(profile.supported_rate),
     community: Number(profile.community_rate),
@@ -50,12 +65,28 @@ export function HeroSection({
         <div className="relative max-w-5xl mx-auto px-6 py-8">
           <div className="flex items-center gap-4">
             {/* Avatar */}
-            <div className="w-16 h-16 rounded-xl overflow-hidden bg-jungle-700 border-2 border-jungle-500/40 flex-shrink-0 flex items-center justify-center">
-              {profile.photo_url ? (
-                <img src={profile.photo_url} alt={profile.display_name} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-2xl select-none">🌿</span>
+            <div
+              className={`relative flex-shrink-0${editing ? ' group cursor-pointer' : ''}`}
+              onClick={editing ? () => photoInputRef.current?.click() : undefined}
+            >
+              <div className="w-16 h-16 rounded-xl overflow-hidden bg-jungle-700 border-2 border-jungle-500/40 flex items-center justify-center">
+                {profile.photo_url ? (
+                  <img src={profile.photo_url} alt={profile.display_name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-2xl select-none">🌿</span>
+                )}
+              </div>
+              {editing && (
+                <div className="absolute inset-0 rounded-xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-0.5">
+                  <span className="text-white text-xs font-semibold">{profile.photo_url ? 'Change' : 'Add photo'}</span>
+                  {profile.photo_url && (
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onPhotoChange?.(null, null) }} className="text-red-300 text-xs hover:text-red-200">
+                      Remove
+                    </button>
+                  )}
+                </div>
               )}
+              {editing && <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFileChange} />}
             </div>
 
             {/* Identity inline */}
@@ -112,15 +143,31 @@ export function HeroSection({
         <div className="relative max-w-5xl mx-auto px-6 py-12 text-center">
           {/* Avatar centered */}
           <div className="flex justify-center mb-4">
-            <div className="w-28 h-28 rounded-2xl overflow-hidden bg-jungle-700 border-2 border-jungle-500/40 shadow-xl flex items-center justify-center relative">
-              {profile.photo_url ? (
-                <img src={profile.photo_url} alt={profile.display_name} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-5xl select-none">🌿</span>
-              )}
+            <div
+              className={`relative${editing ? ' group cursor-pointer' : ''}`}
+              onClick={editing ? () => photoInputRef.current?.click() : undefined}
+            >
+              <div className="w-28 h-28 rounded-2xl overflow-hidden bg-jungle-700 border-2 border-jungle-500/40 shadow-xl flex items-center justify-center">
+                {profile.photo_url ? (
+                  <img src={profile.photo_url} alt={profile.display_name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-5xl select-none">🌿</span>
+                )}
+              </div>
               {hasLiveSession && (
                 <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-jungle-800" title="Live now" />
               )}
+              {editing && (
+                <div className="absolute inset-0 rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-0.5">
+                  <span className="text-white text-xs font-semibold">{profile.photo_url ? 'Change' : 'Add photo'}</span>
+                  {profile.photo_url && (
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onPhotoChange?.(null, null) }} className="text-red-300 text-xs hover:text-red-200">
+                      Remove
+                    </button>
+                  )}
+                </div>
+              )}
+              {editing && <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFileChange} />}
             </div>
           </div>
 
@@ -194,7 +241,10 @@ export function HeroSection({
 
         <div className="flex flex-col sm:flex-row items-start gap-6">
           {/* Avatar */}
-          <div className="relative flex-shrink-0">
+          <div
+            className={`relative flex-shrink-0${editing ? ' group cursor-pointer' : ''}`}
+            onClick={editing ? () => photoInputRef.current?.click() : undefined}
+          >
             <div className="w-28 h-28 rounded-2xl overflow-hidden bg-jungle-700 border-2 border-jungle-500/40 shadow-xl flex items-center justify-center">
               {profile.photo_url ? (
                 <img src={profile.photo_url} alt={profile.display_name} className="w-full h-full object-cover" />
@@ -205,6 +255,17 @@ export function HeroSection({
             {hasLiveSession && (
               <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-jungle-800" title="Live now" />
             )}
+            {editing && (
+              <div className="absolute inset-0 rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-0.5">
+                <span className="text-white text-xs font-semibold">{profile.photo_url ? 'Change' : 'Add photo'}</span>
+                {profile.photo_url && (
+                  <button type="button" onClick={(e) => { e.stopPropagation(); onPhotoChange?.(null, null) }} className="text-red-300 text-xs hover:text-red-200">
+                    Remove
+                  </button>
+                )}
+              </div>
+            )}
+            {editing && <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFileChange} />}
           </div>
 
           {/* Identity */}
