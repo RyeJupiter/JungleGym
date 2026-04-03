@@ -47,10 +47,10 @@ export function TreehouseRenderer({ config, data }: Props) {
             </Link>
           </p>
           <Link
-            href="/explore"
+            href="/guides"
             className={`${theme.textMuted} hover:${theme.textSecondary} text-xs font-medium transition-colors`}
           >
-            Explore more creators →
+            Explore More Guides →
           </Link>
         </div>
       </div>

@@ -1,6 +1,5 @@
 import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { ApplicationsPanel } from '@/components/admin/ApplicationsPanel'
 import { AdminsPanel } from '@/components/admin/AdminsPanel'
 import type { SiteAdmin } from '@/components/admin/AdminsPanel'
 import { CreatorsPanel } from '@/components/admin/CreatorsPanel'
@@ -44,9 +43,9 @@ export default async function AdminPage({
 
   const isSuperAdmin = ADMIN_EMAILS.includes(authUser.email ?? '')
 
-  const { tab = 'applications' } = await searchParams
+  const { tab = 'creators' } = await searchParams
 
-  // Always fetch pending count for the tab badge
+  // Always fetch pending count for the creators tab badge
   const { count: pendingCount } = await supabase
     .from('teacher_applications')
     .select('*', { count: 'exact', head: true })
@@ -58,12 +57,39 @@ export default async function AdminPage({
   let metricsData: MetricsData | null = null
   let creators: UserSearchResult[] = []
 
-  if (tab === 'applications') {
-    const { data } = await supabase
+  if (tab === 'creators') {
+    // Fetch applications
+    const { data: appsData } = await supabase
       .from('teacher_applications')
       .select('*, users(email), profiles(display_name, username)')
       .order('created_at', { ascending: false })
-    applications = data ?? []
+    applications = appsData ?? []
+
+    // Fetch creators (two-step — service role for users table)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const svc = createServiceSupabaseClient() as any
+    const { data: creatorUsers } = await svc
+      .from('users').select('id, email, role').eq('role', 'creator')
+    const creatorIds = ((creatorUsers ?? []) as any[]).map((u) => u.id)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let creatorProfiles: any[] = []
+    if (creatorIds.length > 0) {
+      const { data } = await svc
+        .from('profiles').select('user_id, display_name, username, photo_url').in('user_id', creatorIds)
+      creatorProfiles = data ?? []
+    }
+    const profileMap = new Map(creatorProfiles.map((p: any) => [p.user_id, p]))
+    creators = ((creatorUsers ?? []) as any[]).map((u) => {
+      const p = profileMap.get(u.id)
+      return {
+        userId: u.id,
+        email: u.email ?? '',
+        role: u.role ?? 'creator',
+        displayName: p?.display_name ?? null,
+        username: p?.username ?? null,
+        photoUrl: p?.photo_url ?? null,
+      }
+    })
   } else if (tab === 'metrics') {
     // ── Users ──
     const { data: usersData } = await supabase.from('users').select('id, email, role')
@@ -211,31 +237,6 @@ export default async function AdminPage({
       payouts,
       recentPurchases: recentPurchasesList,
     }
-  } else if (tab === 'creators') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const svc = createServiceSupabaseClient() as any
-    const { data: creatorUsers } = await svc
-      .from('users').select('id, email, role').eq('role', 'creator')
-    const creatorIds = ((creatorUsers ?? []) as any[]).map((u) => u.id)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let creatorProfiles: any[] = []
-    if (creatorIds.length > 0) {
-      const { data } = await svc
-        .from('profiles').select('user_id, display_name, username, photo_url').in('user_id', creatorIds)
-      creatorProfiles = data ?? []
-    }
-    const profileMap = new Map(creatorProfiles.map((p: any) => [p.user_id, p]))
-    creators = ((creatorUsers ?? []) as any[]).map((u) => {
-      const p = profileMap.get(u.id)
-      return {
-        userId: u.id,
-        email: u.email ?? '',
-        role: u.role ?? 'creator',
-        displayName: p?.display_name ?? null,
-        username: p?.username ?? null,
-        photoUrl: p?.photo_url ?? null,
-      }
-    })
   } else if (tab === 'admins' && isSuperAdmin) {
     // Only superadmins reach this branch — RLS also enforces this at DB level
     try {
@@ -250,9 +251,6 @@ export default async function AdminPage({
     }
   }
 
-  const pending = applications.filter((a) => a.status === 'pending')
-  const reviewed = applications.filter((a) => a.status !== 'pending')
-
   return (
     <div className="min-h-screen bg-stone-50">
       <Navbar />
@@ -263,29 +261,19 @@ export default async function AdminPage({
         {/* Tab nav */}
         <div className="flex gap-1 mb-10 bg-stone-100 p-1 rounded-xl w-fit">
           <Link
-            href="/admin?tab=applications"
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
-              tab === 'applications'
-                ? 'bg-white text-stone-900 shadow-sm'
-                : 'text-stone-500 hover:text-stone-700'
-            }`}
-          >
-            Applications
-            {(pendingCount ?? 0) > 0 && (
-              <span className="bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full text-xs leading-none">
-                {pendingCount}
-              </span>
-            )}
-          </Link>
-          <Link
             href="/admin?tab=creators"
-            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
               tab === 'creators'
                 ? 'bg-white text-stone-900 shadow-sm'
                 : 'text-stone-500 hover:text-stone-700'
             }`}
           >
             Creators
+            {(pendingCount ?? 0) > 0 && (
+              <span className="bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full text-xs leading-none">
+                {pendingCount}
+              </span>
+            )}
           </Link>
           <Link
             href="/admin?tab=metrics"
@@ -311,28 +299,8 @@ export default async function AdminPage({
           )}
         </div>
 
-        {tab === 'applications' && (
-          <>
-            <section className="mb-12">
-              <h2 className="text-lg font-bold text-stone-900 mb-4">
-                Pending <span className="text-stone-400 font-normal">({pending.length})</span>
-              </h2>
-              <ApplicationsPanel applications={pending} />
-            </section>
-
-            {reviewed.length > 0 && (
-              <section>
-                <h2 className="text-lg font-bold text-stone-400 mb-4">
-                  Reviewed <span className="font-normal">({reviewed.length})</span>
-                </h2>
-                <ApplicationsPanel applications={reviewed} />
-              </section>
-            )}
-          </>
-        )}
-
         {tab === 'creators' && (
-          <CreatorsPanel initialCreators={creators} />
+          <CreatorsPanel initialCreators={creators} initialApplications={applications} />
         )}
 
         {tab === 'metrics' && metricsData && (
