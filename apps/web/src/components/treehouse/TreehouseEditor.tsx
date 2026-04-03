@@ -112,6 +112,24 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
       if (profileEdits.display_name !== undefined) updatePayload.display_name = profileEdits.display_name
       if (profileEdits.tagline !== undefined) updatePayload.tagline = profileEdits.tagline || null
       if (profileEdits.bio !== undefined) updatePayload.bio = profileEdits.bio || null
+      if (profileEdits.location !== undefined) updatePayload.location = profileEdits.location || null
+      if (profileEdits.tags !== undefined) {
+        updatePayload.tags = profileEdits.tags
+          ? profileEdits.tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean)
+          : []
+      }
+      if (profileEdits.supported_rate !== undefined) {
+        const r = parseFloat(profileEdits.supported_rate)
+        if (!isNaN(r) && r > 0) updatePayload.supported_rate = r
+      }
+      if (profileEdits.community_rate !== undefined) {
+        const r = parseFloat(profileEdits.community_rate)
+        if (!isNaN(r) && r > 0) updatePayload.community_rate = r
+      }
+      if (profileEdits.abundance_rate !== undefined) {
+        const r = parseFloat(profileEdits.abundance_rate)
+        if (!isNaN(r) && r > 0) updatePayload.abundance_rate = r
+      }
 
       // Upload photo if changed
       if (profileEdits.photo_url !== undefined) {
@@ -159,6 +177,15 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
       ...(profileEdits.tagline !== undefined ? { tagline: profileEdits.tagline || null } : {}),
       ...(profileEdits.bio !== undefined ? { bio: profileEdits.bio || null } : {}),
       ...(profileEdits.photo_url !== undefined ? { photo_url: profileEdits.photo_url || null } : {}),
+      ...(profileEdits.location !== undefined ? { location: profileEdits.location || null } : {}),
+      ...(profileEdits.tags !== undefined ? {
+        tags: profileEdits.tags
+          ? profileEdits.tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean)
+          : []
+      } : {}),
+      ...(profileEdits.supported_rate !== undefined ? { supported_rate: parseFloat(profileEdits.supported_rate) || data.profile.supported_rate } : {}),
+      ...(profileEdits.community_rate !== undefined ? { community_rate: parseFloat(profileEdits.community_rate) || data.profile.community_rate } : {}),
+      ...(profileEdits.abundance_rate !== undefined ? { abundance_rate: parseFloat(profileEdits.abundance_rate) || data.profile.abundance_rate } : {}),
     },
   }
 

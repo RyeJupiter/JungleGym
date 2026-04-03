@@ -17,7 +17,7 @@ export default async function StudioSettingsPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('*')
+    .select('user_id, username, supported_rate, community_rate, abundance_rate')
     .eq('user_id', authUser.id)
     .single()
 

@@ -1,38 +1,25 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
 type Profile = {
   user_id: string
-  display_name: string
   username: string
-  bio: string | null
-  tagline: string | null
-  location: string | null
-  tags: string[]
-  photo_url: string | null
   supported_rate: number
   community_rate: number
   abundance_rate: number
 }
 
 export function StudioSettingsForm({ profile }: { profile: Profile }) {
-  const [displayName, setDisplayName] = useState(profile.display_name)
-  const [bio, setBio] = useState(profile.bio ?? '')
-  const [tagline, setTagline] = useState(profile.tagline ?? '')
-  const [location, setLocation] = useState(profile.location ?? '')
-  const [tags, setTags] = useState(profile.tags.join(', '))
-  const [photoUrl, setPhotoUrl] = useState(profile.photo_url ?? '')
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [supportedRate, setSupportedRate] = useState(profile.supported_rate.toString())
   const [communityRate, setCommunityRate] = useState(profile.community_rate.toString())
   const [abundanceRate, setAbundanceRate] = useState(profile.abundance_rate.toString())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
-  const photoInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createBrowserSupabaseClient()
 
@@ -53,32 +40,9 @@ export function StudioSettingsForm({ profile }: { profile: Profile }) {
     }
 
     try {
-      let finalPhotoUrl = photoUrl
-
-      if (photoFile) {
-        const ext = photoFile.name.split('.').pop()
-        const path = `${profile.user_id}/avatar.${ext}`
-        const { error: uploadError } = await supabase.storage
-          .from('profile-photos')
-          .upload(path, photoFile, { cacheControl: '3600', upsert: true })
-        if (uploadError) throw uploadError
-        const { data: { publicUrl } } = supabase.storage.from('profile-photos').getPublicUrl(path)
-        finalPhotoUrl = publicUrl
-      }
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          display_name: displayName,
-          bio: bio || null,
-          tagline: tagline || null,
-          location: location || null,
-          tags: tags ? tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean) : [],
-          photo_url: finalPhotoUrl || null,
-          supported_rate: sRate,
-          community_rate: cRate,
-          abundance_rate: aRate,
-        })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: updateError } = await (supabase.from('profiles') as any)
+        .update({ supported_rate: sRate, community_rate: cRate, abundance_rate: aRate })
         .eq('user_id', profile.user_id)
 
       if (updateError) throw updateError
@@ -92,101 +56,68 @@ export function StudioSettingsForm({ profile }: { profile: Profile }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && <p className="bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</p>}
-      {saved && <p className="bg-jungle-50 text-jungle-700 rounded-lg px-4 py-3 text-sm">Saved ✓</p>}
+    <div className="space-y-6">
 
-      {/* Identity */}
-      <div className="bg-white rounded-2xl border border-stone-200 p-8 space-y-5">
-        <h2 className="font-bold text-stone-900">Identity</h2>
-
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 rounded-full bg-jungle-100 overflow-hidden flex items-center justify-center text-2xl flex-shrink-0">
-            {photoFile
-              ? <img src={URL.createObjectURL(photoFile)} alt="" className="w-full h-full object-cover" />
-              : photoUrl
-              ? <img src={photoUrl} alt="" className="w-full h-full object-cover" />
-              : '🌿'}
-          </div>
-          <div>
-            <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)} className="hidden" />
-            <button type="button" onClick={() => photoInputRef.current?.click()} className="text-sm text-jungle-600 hover:text-jungle-800 font-medium">
-              Change photo
-            </button>
-            <p className="text-xs text-stone-400 mt-0.5">JPG, PNG, WebP · max 5 MB</p>
-          </div>
-        </div>
-
+      {/* Profile identity CTA */}
+      <div className="bg-jungle-50 border border-jungle-200 rounded-2xl p-5 flex items-center justify-between gap-4">
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">Display name *</label>
-          <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required className={inputClass} />
+          <p className="text-sm font-semibold text-jungle-900">Profile identity</p>
+          <p className="text-xs text-jungle-600 mt-0.5">Name, photo, bio, tags, and location are edited on your Treehouse.</p>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">Username</label>
-          <div className="flex items-center gap-2 rounded-lg border border-stone-200 px-3 py-2.5 bg-stone-50 text-sm text-stone-400">
-            <span>@{profile.username}</span>
-            <span className="text-xs ml-auto">(contact support to change)</span>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">Tagline</label>
-          <input type="text" value={tagline} onChange={(e) => setTagline(e.target.value)} className={inputClass} placeholder="Movement educator · Breath coach" />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">Bio</label>
-          <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={4} className={inputClass} placeholder="Tell learners about your practice and your why…" />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">Location</label>
-          <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} placeholder="Los Angeles, CA" />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">Disciplines / tags</label>
-          <input type="text" value={tags} onChange={(e) => setTags(e.target.value)} className={inputClass} placeholder="yoga, breathwork, movement, ideology" />
-          <p className="text-xs text-stone-400 mt-1">Comma-separated — used for discovery</p>
-        </div>
+        <Link
+          href={`/@${profile.username}?edit=true`}
+          className="flex-shrink-0 bg-jungle-700 hover:bg-jungle-600 text-jungle-100 text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+        >
+          Edit Treehouse →
+        </Link>
       </div>
 
       {/* Pricing rates */}
-      <div className="bg-white rounded-2xl border border-stone-200 p-8 space-y-5">
-        <div>
-          <h2 className="font-bold text-stone-900">Pricing rates</h2>
-          <p className="text-sm text-stone-400 mt-0.5">Dollars per minute of video content. Applied to all future uploads.</p>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && <p className="bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</p>}
+        {saved && <p className="bg-jungle-50 text-jungle-700 rounded-lg px-4 py-3 text-sm">Rates saved ✓</p>}
+
+        <div className="bg-white rounded-2xl border border-stone-200 p-8 space-y-5">
+          <div>
+            <h2 className="font-bold text-stone-900">Pricing rates</h2>
+            <p className="text-sm text-stone-400 mt-0.5">Dollars per minute of video content. Applied to all future uploads.</p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { label: 'Supported', emoji: '🌱', hint: '~$1/min', value: supportedRate, onChange: setSupportedRate },
+              { label: 'Community', emoji: '🌿', hint: '~$2/min', value: communityRate, onChange: setCommunityRate },
+              { label: 'Abundance', emoji: '🌳', hint: '~$3/min', value: abundanceRate, onChange: setAbundanceRate },
+            ].map(({ label, emoji, hint, value, onChange }) => (
+              <div key={label}>
+                <label className="block text-xs font-medium text-stone-500 mb-1">
+                  {emoji} {label} <span className="text-stone-400">{hint}</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={value}
+                  onChange={(e) => onChange(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-stone-400">
+            Prices round down to fun numbers ($1.11, $2.22, $3.33, $4.20…)
+          </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: 'Supported', value: supportedRate, onChange: setSupportedRate, hint: '~$1/min' },
-            { label: 'Community', value: communityRate, onChange: setCommunityRate, hint: '~$2/min' },
-            { label: 'Abundance', value: abundanceRate, onChange: setAbundanceRate, hint: '~$3/min' },
-          ].map(({ label, value, onChange, hint }) => (
-            <div key={label}>
-              <label className="block text-xs font-medium text-stone-500 mb-1">{label} <span className="text-stone-400">{hint}</span></label>
-              <input
-                type="number" step="0.01" min="0.01" value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className={inputClass}
-              />
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-stone-400">
-          Prices round down to fun numbers ($1.11, $2.22, $3.33, $4.20…)
-        </p>
-      </div>
-
-      <button
-        type="submit" disabled={loading}
-        className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
-      >
-        {loading ? 'Saving…' : 'Save settings'}
-      </button>
-    </form>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
+        >
+          {loading ? 'Saving…' : 'Save rates'}
+        </button>
+      </form>
+    </div>
   )
 }
 

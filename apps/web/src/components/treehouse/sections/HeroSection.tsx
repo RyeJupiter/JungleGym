@@ -204,13 +204,13 @@ export function HeroSection({
             />
           )}
 
-          <MetaRow profile={profile} theme={theme} />
+          <MetaRow profile={profile} theme={theme} editing={editing} onFieldChange={onFieldChange} />
 
           <p className={`text-xl font-black ${theme.textPrimary} mt-4`}>
             {videoCount} <span className={`${theme.accent} text-sm font-medium`}>{videoCount === 1 ? 'video' : 'videos'}</span>
           </p>
 
-          {hasPaidVideos && <RatesBar rates={rates} theme={theme} className="justify-center mt-6" />}
+          {(hasPaidVideos || editing) && <RatesBar rates={rates} theme={theme} className="justify-center mt-6" editing={editing} onFieldChange={onFieldChange} />}
 
           {isOwnProfile && !editing && (
             <div className="mt-4">
@@ -303,7 +303,7 @@ export function HeroSection({
               />
             )}
 
-            <MetaRow profile={profile} theme={theme} />
+            <MetaRow profile={profile} theme={theme} editing={editing} onFieldChange={onFieldChange} />
           </div>
 
           {/* Stats + edit CTA */}
@@ -323,7 +323,7 @@ export function HeroSection({
           </div>
         </div>
 
-        {hasPaidVideos && <RatesBar rates={rates} theme={theme} className="mt-8" />}
+        {(hasPaidVideos || editing) && <RatesBar rates={rates} theme={theme} className="mt-8" editing={editing} onFieldChange={onFieldChange} />}
       </div>
     </div>
   )
@@ -341,7 +341,52 @@ function HeroOverlay({ theme }: { theme: ThemeClasses }) {
   )
 }
 
-function MetaRow({ profile, theme }: { profile: ProfileData; theme: ThemeClasses }) {
+function MetaRow({
+  profile,
+  theme,
+  editing,
+  onFieldChange,
+}: {
+  profile: ProfileData
+  theme: ThemeClasses
+  editing?: boolean
+  onFieldChange?: (field: string, value: string) => void
+}) {
+  if (editing) {
+    return (
+      <div className="flex flex-wrap items-center gap-3 mt-1">
+        <span className={`${theme.accent} text-xs flex items-center gap-1`}>
+          <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <input
+            type="text"
+            defaultValue={profile.location ?? ''}
+            onBlur={(e) => onFieldChange?.('location', e.currentTarget.value)}
+            placeholder="Add location…"
+            className="bg-transparent border-b border-dashed border-current/50 focus:outline-none focus:border-current text-xs w-32 placeholder-current/40"
+          />
+        </span>
+        <span className={`${theme.textMuted} text-xs`}>·</span>
+        <span className={`${theme.textSecondary} text-xs flex items-center gap-1`}>
+          <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          <input
+            type="text"
+            defaultValue={profile.tags?.join(', ') ?? ''}
+            onBlur={(e) => onFieldChange?.('tags', e.currentTarget.value)}
+            placeholder="yoga, strength, mobility…"
+            className="bg-transparent border-b border-dashed border-current/50 focus:outline-none focus:border-current text-xs w-48 placeholder-current/40"
+          />
+        </span>
+      </div>
+    )
+  }
+
+  if (!profile.location && !profile.tags?.length) return null
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       {profile.location && (
@@ -373,26 +418,45 @@ function RatesBar({
   rates,
   theme,
   className = '',
+  editing,
+  onFieldChange,
 }: {
   rates: { supported: number; community: number; abundance: number }
   theme: ThemeClasses
   className?: string
+  editing?: boolean
+  onFieldChange?: (field: string, value: string) => void
 }) {
   return (
     <div className={`flex flex-wrap gap-3 items-center ${className}`}>
       <span className={`${theme.textMuted} text-xs font-semibold uppercase tracking-wide`}>Rates:</span>
       {[
-        { emoji: '🌱', label: 'Supported', rate: rates.supported },
-        { emoji: '🌿', label: 'Community', rate: rates.community },
-        { emoji: '🌳', label: 'Abundance', rate: rates.abundance },
-      ].map(({ emoji, label, rate }) => (
+        { emoji: '🌱', label: 'Supported', rate: rates.supported, field: 'supported_rate' },
+        { emoji: '🌿', label: 'Community', rate: rates.community, field: 'community_rate' },
+        { emoji: '🌳', label: 'Abundance', rate: rates.abundance, field: 'abundance_rate' },
+      ].map(({ emoji, label, rate, field }) => (
         <span
           key={label}
           className={`flex items-center gap-1.5 ${theme.cardBg} border ${theme.cardBorder} ${theme.textSecondary} text-xs font-medium px-3 py-1.5 rounded-lg`}
         >
           {emoji}
           <span className={theme.textMuted}>{label}</span>
-          <span className={`${theme.textPrimary} font-bold`}>${rate.toFixed(2)}/min</span>
+          {editing ? (
+            <>
+              <span className={`${theme.textMuted} text-xs`}>$</span>
+              <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                defaultValue={rate.toFixed(2)}
+                onBlur={(e) => onFieldChange?.(field, e.currentTarget.value)}
+                className={`w-12 bg-transparent border-b border-dashed border-current/50 focus:outline-none focus:border-current ${theme.textPrimary} font-bold text-xs text-right`}
+              />
+              <span className={`${theme.textMuted} text-xs`}>/min</span>
+            </>
+          ) : (
+            <span className={`${theme.textPrimary} font-bold`}>${rate.toFixed(2)}/min</span>
+          )}
         </span>
       ))}
     </div>
