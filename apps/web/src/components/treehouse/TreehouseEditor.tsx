@@ -16,6 +16,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { compressImage } from '@/lib/compressImage'
 import type { TreehouseConfig, SectionConfig, ThemeKey } from './config'
 import { SINGLETON_SECTIONS } from './config'
 import { THEME_MAP } from './themes'
@@ -134,11 +135,12 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
       // Upload photo if changed
       if (profileEdits.photo_url !== undefined) {
         if (photoFile) {
-          const ext = photoFile.name.split('.').pop()
+          const ready = await compressImage(photoFile, { maxWidth: 800, maxHeight: 800, quality: 0.82 })
+          const ext = ready.name.split('.').pop()
           const path = `${data.profile.user_id}/avatar.${ext}`
           const { error: uploadError } = await supabase.storage
             .from('profile-photos')
-            .upload(path, photoFile, { cacheControl: '3600', upsert: true })
+            .upload(path, ready, { cacheControl: '3600', upsert: true })
           if (uploadError) throw uploadError
           const { data: { publicUrl } } = supabase.storage.from('profile-photos').getPublicUrl(path)
           updatePayload.photo_url = publicUrl

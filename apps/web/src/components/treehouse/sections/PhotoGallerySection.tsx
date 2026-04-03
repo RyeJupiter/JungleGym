@@ -2,6 +2,7 @@
 
 import { useRef } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { compressImage } from '@/lib/compressImage'
 import type { ThemeClasses } from '../themes'
 
 export type GalleryImage = { url: string; caption?: string }
@@ -29,12 +30,13 @@ export function PhotoGallerySection({
     const newImages: GalleryImage[] = [...images]
 
     for (const file of Array.from(files)) {
-      const ext = file.name.split('.').pop() ?? 'jpg'
+      const ready = await compressImage(file, { maxWidth: 2400, maxHeight: 2400, quality: 0.88 })
+      const ext = ready.name.split('.').pop() ?? 'jpg'
       const path = `${userId}/${crypto.randomUUID()}.${ext}`
 
       const { error } = await supabase.storage
         .from('gallery-images')
-        .upload(path, file, { cacheControl: '3600', upsert: false })
+        .upload(path, ready, { cacheControl: '3600', upsert: false })
 
       if (error) {
         alert('Upload failed: ' + error.message)
