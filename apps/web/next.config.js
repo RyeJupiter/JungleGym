@@ -1,3 +1,16 @@
+const fs = require('fs')
+
+// Cloudflare Pages dashboard env vars exist at build time but NOT at runtime
+// (the Workers env only has ASSETS). The @opennextjs/cloudflare adapter bakes
+// .env* files into the worker bundle via next-env.mjs and loads them at runtime.
+// So we write server-only secrets to .env.production.local during the build,
+// which OpenNext picks up and embeds in the final worker.
+if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.CF_PAGES) {
+  const envContent = `SUPABASE_SERVICE_ROLE_KEY=${process.env.SUPABASE_SERVICE_ROLE_KEY}\n`
+  fs.writeFileSync('.env.production.local', envContent)
+  console.log('[next.config] Wrote SUPABASE_SERVICE_ROLE_KEY to .env.production.local for OpenNext')
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: { ignoreBuildErrors: true },
@@ -14,14 +27,6 @@ const nextConfig = {
         hostname: 'junglegym.academy',
       },
     ],
-  },
-  // Cloudflare Pages dashboard env vars are only available at build time.
-  // Next.js's env config inlines these into the bundle via its own DefinePlugin,
-  // which works across all compilation passes (including RSC).
-  // Only server-side code imports createServiceSupabaseClient, so this value
-  // won't appear in client bundles due to tree-shaking.
-  env: {
-    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   },
 }
 
