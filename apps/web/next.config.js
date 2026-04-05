@@ -15,6 +15,19 @@ const nextConfig = {
       },
     ],
   },
+  // Cloudflare Pages dashboard env vars are only available at build time,
+  // not at runtime in the Workers environment. Inline server-only secrets
+  // into the server bundle so they survive into production.
+  webpack: (config, { isServer, webpack }) => {
+    if (isServer && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          'process.env.SUPABASE_SERVICE_ROLE_KEY': JSON.stringify(process.env.SUPABASE_SERVICE_ROLE_KEY),
+        })
+      )
+    }
+    return config
+  },
 }
 
 module.exports = nextConfig
