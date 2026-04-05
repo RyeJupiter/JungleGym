@@ -19,6 +19,8 @@ const nextConfig = {
   // not at runtime in the Workers environment. Inline server-only secrets
   // into the server bundle so they survive into production.
   webpack: (config, { isServer, webpack }) => {
+    const hasKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY
+    console.log(`[next.config] webpack pass — isServer=${isServer}, SUPABASE_SERVICE_ROLE_KEY=${hasKey ? 'SET (' + process.env.SUPABASE_SERVICE_ROLE_KEY.slice(0, 8) + '…)' : 'MISSING'}`)
     if (isServer && process.env.SUPABASE_SERVICE_ROLE_KEY) {
       config.plugins.push(
         new webpack.DefinePlugin({
