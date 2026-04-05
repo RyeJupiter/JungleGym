@@ -2,11 +2,11 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import type { Database } from '@junglegym/shared'
-import { SERVICE_ROLE_KEY } from './_service-key.generated'
 
 export function createServiceSupabaseClient() {
-  if (!SERVICE_ROLE_KEY) throw new Error(`SERVICE_ROLE_KEY is empty | type=${typeof SERVICE_ROLE_KEY} | len=${SERVICE_ROLE_KEY?.length ?? 'null'} | processEnv=${typeof process.env.SUPABASE_SERVICE_ROLE_KEY}`)
-  return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, SERVICE_ROLE_KEY)
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set')
+  return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, key)
 }
 
 export async function createServerSupabaseClient() {
