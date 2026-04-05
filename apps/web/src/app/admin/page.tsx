@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { AdminsPanel } from '@/components/admin/AdminsPanel'
 import type { SiteAdmin } from '@/components/admin/AdminsPanel'
@@ -236,10 +236,10 @@ export default async function AdminPage({
       recentPurchases: recentPurchasesList,
     }
   } else if (tab === 'admins' && isSuperAdmin) {
-    // Only superadmins reach this branch — RLS also enforces this at DB level
     try {
+      const svc = await createServiceSupabaseClient()
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase as any)
+      const { data } = await (svc as any)
         .from('site_admins')
         .select('email, added_by, added_at')
         .order('added_at', { ascending: true })

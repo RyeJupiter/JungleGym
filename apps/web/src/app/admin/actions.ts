@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/supabase/server'
 import { ADMIN_EMAILS } from '@/lib/admin'
 import { revalidatePath } from 'next/cache'
 
@@ -121,14 +121,16 @@ export async function setCreatorRole(userId: string, isCreator: boolean): Promis
 
 export async function addSiteAdmin(email: string): Promise<{ error?: string }> {
   try {
-    const supabase = await createServerSupabaseClient()
     await assertCallerIsSuperAdmin()
     const normalized = email.toLowerCase().trim()
     if (!normalized) return { error: 'Email is required' }
 
+    const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
+
+    const svc = await createServiceSupabaseClient()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
+    const { error } = await (svc as any)
       .from('site_admins')
       .insert({ email: normalized, added_by: user?.email ?? null })
 
@@ -142,10 +144,11 @@ export async function addSiteAdmin(email: string): Promise<{ error?: string }> {
 
 export async function removeSiteAdmin(email: string): Promise<{ error?: string }> {
   try {
-    const supabase = await createServerSupabaseClient()
     await assertCallerIsSuperAdmin()
+
+    const svc = await createServiceSupabaseClient()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
+    const { error } = await (svc as any)
       .from('site_admins')
       .delete()
       .eq('email', email)

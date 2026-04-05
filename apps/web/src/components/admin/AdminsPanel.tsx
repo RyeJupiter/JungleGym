@@ -68,7 +68,7 @@ function UserSearch({ onSelect }: { onSelect: (user: UserSearchResult) => void }
             <button
               key={u.userId}
               type="button"
-              onMouseDown={(e) => e.preventDefault()} // prevent blur before click
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => handleSelect(u)}
               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-stone-50 transition-colors text-left"
             >
@@ -161,6 +161,9 @@ export function AdminsPanel({ admins, superadminEmails }: { admins: SiteAdmin[];
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
+  // Build unified list: superadmins first, then dynamic admins (excluding any overlap)
+  const dynamicOnly = admins.filter((a) => !superadminEmails.includes(a.email))
+
   function handleRemove(email: string) {
     setError(null)
     startTransition(async () => {
@@ -169,20 +172,17 @@ export function AdminsPanel({ admins, superadminEmails }: { admins: SiteAdmin[];
     })
   }
 
-  function handleAdded() {
-    setSelected(null)
-  }
-
   return (
     <div className="space-y-8">
       {error && <p className="bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</p>}
 
-      {/* Superadmins — hardcoded, read-only */}
+      {/* All admins — unified list */}
       <div>
         <h2 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-3">
-          Superadmins <span className="text-stone-300 font-normal normal-case tracking-normal">(hardcoded · can manage admins + creators)</span>
+          Admins <span className="text-stone-300 font-normal normal-case tracking-normal">({superadminEmails.length + dynamicOnly.length})</span>
         </h2>
         <div className="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100">
+          {/* Superadmins — no remove button */}
           {superadminEmails.map((email) => (
             <div key={email} className="flex items-center justify-between px-5 py-4 gap-4">
               <p className="text-stone-900 text-sm font-medium">{email}</p>
@@ -191,42 +191,27 @@ export function AdminsPanel({ admins, superadminEmails }: { admins: SiteAdmin[];
               </span>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Dynamic admins */}
-      <div>
-        <h2 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-3">
-          Admins <span className="text-stone-300 font-normal normal-case tracking-normal">(can manage creators)</span>
-        </h2>
-        {admins.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-stone-200 p-10 text-center text-stone-400">
-            <p className="text-3xl mb-3">👤</p>
-            <p className="font-medium">No dynamic admins added yet</p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100">
-            {admins.map((admin) => (
-              <div key={admin.email} className="flex items-center justify-between px-5 py-4 gap-4">
-                <div className="min-w-0">
-                  <p className="text-stone-900 text-sm font-medium">{admin.email}</p>
-                  {admin.added_by && (
-                    <p className="text-xs text-stone-400 mt-0.5">
-                      Added by {admin.added_by} · {new Date(admin.added_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </p>
-                  )}
-                </div>
-                <button
-                  onClick={() => handleRemove(admin.email)}
-                  disabled={isPending}
-                  className="text-xs font-semibold text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
-                >
-                  Remove
-                </button>
+          {/* Dynamic admins — removable */}
+          {dynamicOnly.map((admin) => (
+            <div key={admin.email} className="flex items-center justify-between px-5 py-4 gap-4">
+              <div className="min-w-0">
+                <p className="text-stone-900 text-sm font-medium">{admin.email}</p>
+                {admin.added_by && (
+                  <p className="text-xs text-stone-400 mt-0.5">
+                    Added by {admin.added_by} · {new Date(admin.added_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
+                )}
               </div>
-            ))}
-          </div>
-        )}
+              <button
+                onClick={() => handleRemove(admin.email)}
+                disabled={isPending}
+                className="text-xs font-semibold text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Add admin */}
@@ -239,7 +224,7 @@ export function AdminsPanel({ admins, superadminEmails }: { admins: SiteAdmin[];
           <ConfirmationCard
             user={selected}
             onClose={() => setSelected(null)}
-            onAdded={handleAdded}
+            onAdded={() => setSelected(null)}
           />
         )}
       </div>
