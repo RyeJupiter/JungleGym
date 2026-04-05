@@ -50,15 +50,16 @@ export async function searchUsers(query: string): Promise<{ results: UserSearchR
     const q = query.trim()
     if (!q) return { results: [] }
 
-    const supabase = await createServerSupabaseClient()
+    // Service role bypasses RLS — needed because users table is "own record only"
+    const svc = await createServiceSupabaseClient()
 
     // Search profiles (name/username) and users (email) in parallel
     const [{ data: profileMatches }, { data: emailMatches }] = await Promise.all([
-      supabase.from('profiles')
+      svc.from('profiles')
         .select('user_id, display_name, username, photo_url')
         .or(`display_name.ilike.%${q}%,username.ilike.%${q}%`)
         .limit(8),
-      supabase.from('users')
+      svc.from('users')
         .select('id, email, role')
         .ilike('email', `%${q}%`)
         .limit(8),
@@ -74,8 +75,8 @@ export async function searchUsers(query: string): Promise<{ results: UserSearchR
     if (allIds.length === 0) return { results: [] }
 
     const [{ data: users }, { data: profiles }] = await Promise.all([
-      supabase.from('users').select('id, email, role').in('id', allIds),
-      supabase.from('profiles').select('user_id, display_name, username, photo_url').in('user_id', allIds),
+      svc.from('users').select('id, email, role').in('id', allIds),
+      svc.from('profiles').select('user_id, display_name, username, photo_url').in('user_id', allIds),
     ])
 
     const profileMap = new Map(((profiles ?? []) as any[]).map((p) => [p.user_id, p]))
@@ -103,9 +104,10 @@ export async function searchUsers(query: string): Promise<{ results: UserSearchR
 export async function setCreatorRole(userId: string, isCreator: boolean): Promise<{ error?: string }> {
   try {
     await assertCallerIsAdmin()
-    const supabase = await createServerSupabaseClient()
+    // Service role bypasses RLS — needed because users table is "own record only"
+    const svc = await createServiceSupabaseClient()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
+    const { error } = await (svc as any)
       .from('users')
       .update({ role: isCreator ? 'creator' : 'learner' })
       .eq('id', userId)

@@ -65,14 +65,15 @@ export default async function AdminPage({
       .order('created_at', { ascending: false })
     applications = appsData ?? []
 
-    // Fetch creators (two-step — regular client, same as metrics tab)
-    const { data: creatorUsers } = await supabase
+    // Fetch creators (two-step — service role bypasses users RLS)
+    const svc = await createServiceSupabaseClient()
+    const { data: creatorUsers } = await svc
       .from('users').select('id, email, role').eq('role', 'creator')
     const creatorIds = ((creatorUsers ?? []) as any[]).map((u) => u.id)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let creatorProfiles: any[] = []
     if (creatorIds.length > 0) {
-      const { data } = await supabase
+      const { data } = await svc
         .from('profiles').select('user_id, display_name, username, photo_url').in('user_id', creatorIds)
       creatorProfiles = data ?? []
     }
@@ -89,8 +90,9 @@ export default async function AdminPage({
       }
     })
   } else if (tab === 'metrics') {
-    // ── Users ──
-    const { data: usersData } = await supabase.from('users').select('id, email, role')
+    // ── Users (service role to bypass "own record only" RLS) ──
+    const svcMetrics = await createServiceSupabaseClient()
+    const { data: usersData } = await svcMetrics.from('users').select('id, email, role')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const users: any[] = usersData ?? []
     const creators = users.filter((u) => u.role === 'creator')
