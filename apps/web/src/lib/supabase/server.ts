@@ -2,13 +2,11 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import type { Database } from '@junglegym/shared'
+import { SERVICE_ROLE_KEY } from './_service-key.generated'
 
 export function createServiceSupabaseClient() {
-  // Cloudflare Pages env vars are build-time only. The service role key is
-  // inlined into the server bundle via DefinePlugin in next.config.js.
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set')
-  return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, key)
+  if (!SERVICE_ROLE_KEY) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set')
+  return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, SERVICE_ROLE_KEY)
 }
 
 export async function createServerSupabaseClient() {
