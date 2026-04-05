@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cloudflare": "npx @opennextjs/cloudflare build && node scripts/inject-env.js",
+    "build:cloudflare": "npx @opennextjs/cloudflare build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
