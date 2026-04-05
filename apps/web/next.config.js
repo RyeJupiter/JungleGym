@@ -15,20 +15,13 @@ const nextConfig = {
       },
     ],
   },
-  // Cloudflare Pages dashboard env vars are only available at build time,
-  // not at runtime in the Workers environment. Inline server-only secrets
-  // into the server bundle so they survive into production.
-  webpack: (config, { isServer, webpack }) => {
-    const hasKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY
-    console.log(`[next.config] webpack pass — isServer=${isServer}, SUPABASE_SERVICE_ROLE_KEY=${hasKey ? 'SET (' + process.env.SUPABASE_SERVICE_ROLE_KEY.slice(0, 8) + '…)' : 'MISSING'}`)
-    if (isServer && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      config.plugins.push(
-        new webpack.DefinePlugin({
-          'process.env.SUPABASE_SERVICE_ROLE_KEY': JSON.stringify(process.env.SUPABASE_SERVICE_ROLE_KEY),
-        })
-      )
-    }
-    return config
+  // Cloudflare Pages dashboard env vars are only available at build time.
+  // Next.js's env config inlines these into the bundle via its own DefinePlugin,
+  // which works across all compilation passes (including RSC).
+  // Only server-side code imports createServiceSupabaseClient, so this value
+  // won't appear in client bundles due to tree-shaking.
+  env: {
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   },
 }
 
