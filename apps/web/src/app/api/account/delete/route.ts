@@ -34,7 +34,7 @@ export async function DELETE(req: Request) {
   // 3. All checks passed — delete the account (requires service role key)
   let admin
   try {
-    admin = createServiceSupabaseClient()
+    admin = await createServiceSupabaseClient()
   } catch {
     return NextResponse.json({ error: 'Account deletion is temporarily unavailable' }, { status: 503 })
   }
