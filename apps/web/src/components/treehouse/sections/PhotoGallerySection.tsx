@@ -58,15 +58,18 @@ export function PhotoGallerySection({
     onImagesChange?.(next)
   }
 
-  // View mode
+  // View mode — horizontal scroll carousel
   if (!editing) {
     if (images.length === 0) return null
     return (
       <section className="mb-12">
-        <h2 className={`text-xl font-black ${theme.textPrimary} mb-5`}>Gallery</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <h2 className={`text-xl font-black ${theme.textPrimary} mb-5 px-6 max-w-5xl mx-auto`}>Gallery</h2>
+        <div className="flex gap-3 overflow-x-auto px-6 pb-3 snap-x snap-mandatory scrollbar-none" style={{ scrollbarWidth: 'none' }}>
           {images.map((img, i) => (
-            <div key={i} className={`aspect-square rounded-xl overflow-hidden border ${theme.cardBorder}`}>
+            <div
+              key={i}
+              className={`flex-shrink-0 w-64 h-64 sm:w-72 sm:h-72 rounded-2xl overflow-hidden border ${theme.cardBorder} snap-start`}
+            >
               <img src={img.url} alt={img.caption ?? ''} className="w-full h-full object-cover" />
             </div>
           ))}
