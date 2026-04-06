@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { formatPrice, calculateGiftTotal } from '@junglegym/shared'
+import { formatPrice, calculateGiftTotal, PLATFORM_FEE_PCT } from '@junglegym/shared'
 import type { PriceTier } from '@junglegym/shared'
 
 const TIER_LABELS: Record<PriceTier, { label: string; desc: string }> = {
@@ -10,8 +10,6 @@ const TIER_LABELS: Record<PriceTier, { label: string; desc: string }> = {
   community: { label: 'Community', desc: 'Chip in a little more' },
   abundance: { label: 'Abundance', desc: "You're thriving — share it" },
 }
-
-const TIP_PRESETS = [0, 10, 20, 50, 100]
 
 export function PurchaseButton({
   videoId,
@@ -27,7 +25,6 @@ export function PurchaseButton({
   isLoggedIn: boolean
 }) {
   const [selectedTier, setSelectedTier] = useState<PriceTier>('community')
-  const [tipPct, setTipPct] = useState(10)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -39,7 +36,7 @@ export function PurchaseButton({
   }
 
   const selectedPrice = prices[selectedTier] ?? 0
-  const { platformAmount, total } = calculateGiftTotal(selectedPrice, tipPct)
+  const { platformAmount, total } = calculateGiftTotal(selectedPrice)
 
   async function handlePurchase() {
     if (!isLoggedIn) {
@@ -53,7 +50,7 @@ export function PurchaseButton({
       const res = await fetch('/api/checkout/video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoId, tier: selectedTier, tipPct }),
+        body: JSON.stringify({ videoId, tier: selectedTier }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Checkout failed')
@@ -69,7 +66,6 @@ export function PurchaseButton({
       <h3 className="font-bold text-stone-900 text-sm">Choose your tier</h3>
       {error && <p className="text-red-600 text-xs">{error}</p>}
 
-      {/* Tier picker */}
       <div className="space-y-2">
         {(Object.entries(TIER_LABELS) as [PriceTier, { label: string; desc: string }][]).map(
           ([tier, { label, desc }]) => {
@@ -99,50 +95,15 @@ export function PurchaseButton({
         )}
       </div>
 
-      {/* Platform donation */}
-      <div className="bg-stone-50 rounded-xl p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-bold text-stone-700">Donate to the jungle gym? 🌿</p>
-          <p className="text-xs text-stone-400">Totally optional</p>
-        </div>
-        <div className="flex gap-2">
-          {TIP_PRESETS.map((pct) => (
-            <button
-              key={pct}
-              type="button"
-              onClick={() => setTipPct(pct)}
-              className={`flex-1 text-xs font-bold py-1.5 rounded-lg transition-colors ${
-                tipPct === pct
-                  ? 'bg-jungle-600 text-white'
-                  : 'bg-white border border-stone-200 text-stone-600 hover:border-jungle-400'
-              }`}
-            >
-              {pct === 0 ? 'None' : `${pct}%`}
-            </button>
-          ))}
-        </div>
-        <input
-          type="range"
-          min={0}
-          max={200}
-          step={5}
-          value={tipPct}
-          onChange={(e) => setTipPct(Number(e.target.value))}
-          className="w-full accent-jungle-500"
-        />
-        <p className="text-xs text-stone-400 text-center">{tipPct}% — {tipPct === 0 ? 'no donation' : tipPct >= 100 ? 'you\'re amazing 🙏' : 'thank you!'}</p>
-      </div>
-
-      {/* Receipt breakdown */}
       {selectedPrice > 0 && (
         <div className="bg-jungle-50 border border-jungle-100 rounded-xl p-4 space-y-1.5 text-sm">
           <div className="flex justify-between text-stone-700">
-            <span>To creator</span>
+            <span>To creator (80%)</span>
             <span className="font-semibold">{formatPrice(selectedPrice)}</span>
           </div>
           <div className="flex justify-between text-stone-500 text-xs">
-            <span>Platform donation ({tipPct}%)</span>
-            <span>{tipPct > 0 ? `+ ${formatPrice(platformAmount)}` : 'None'}</span>
+            <span>JungleGym platform (20%)</span>
+            <span>+ {formatPrice(platformAmount)}</span>
           </div>
           <div className="flex justify-between font-black text-stone-900 pt-1 border-t border-jungle-100">
             <span>You pay</span>
@@ -159,7 +120,7 @@ export function PurchaseButton({
         {loading ? 'Redirecting to checkout…' : isLoggedIn ? 'Unlock this video' : 'Sign in to unlock'}
       </button>
       <p className="text-xs text-stone-400 text-center">
-        100% of the video price goes directly to the creator.
+        80% of the video price goes directly to the creator. {PLATFORM_FEE_PCT}% keeps JungleGym running.
       </p>
     </div>
   )

@@ -51,8 +51,8 @@ export default async function HomePage() {
           <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
             {[
               { emoji: '🔍', title: 'Find a teacher', body: 'Browse by style — yoga, kettlebell, mobility, breathwork, and more.', href: '/explore' },
-              { emoji: '🎬', title: 'Watch & train', body: '100% goes to the teacher. We suggest a 10% optional donation to keep the lights on — you set it.', href: '/explore' },
-              { emoji: '🎁', title: 'Join live sessions', body: 'Real-time classes, gift-based. Give freely — 100% goes to the teacher.', href: '/sessions' },
+              { emoji: '🎬', title: 'Watch & train', body: '80% of every purchase goes directly to the teacher. 20% keeps JungleGym running.', href: '/explore' },
+              { emoji: '🎁', title: 'Join live sessions', body: 'Real-time classes, gift-based. Give freely — 80% goes to the teacher, 20% to the platform.', href: '/sessions' },
             ].map((step) => (
               <Link key={step.title} href={step.href} className="bg-jungle-800/60 hover:bg-jungle-700/80 rounded-2xl p-6 border border-jungle-700 hover:border-jungle-500 transition-colors block">
                 <div className="text-4xl mb-3">{step.emoji}</div>
@@ -71,7 +71,7 @@ export default async function HomePage() {
             <p className="text-xs font-semibold text-jungle-500 uppercase tracking-widest mb-3">Radical Transparency</p>
             <h2 className="text-4xl font-black text-jungle-900 mb-3">Here's how the money flows.</h2>
             <p className="text-jungle-600 max-w-xl mx-auto text-lg">
-              Buy classes, yours permanently. Every video is priced by the minute — choose the price that feels right for you.
+              Buy classes, yours permanently. Every video is priced by the minute — 80% goes to the teacher, 20% keeps JungleGym running.
             </p>
           </div>
 
@@ -137,8 +137,8 @@ export default async function HomePage() {
           </div>
 
           <div className="text-center mt-8 space-y-2">
-            <p className="text-jungle-900 text-sm font-bold">100% of every purchase goes directly to the teacher.</p>
-            <p className="text-jungle-500 text-sm">At checkout, a 10% donation to the JungleGym platform is optionally suggested — you can set it to zero, no questions asked.</p>
+            <p className="text-jungle-900 text-sm font-bold">80% of every purchase goes directly to the teacher. 20% keeps JungleGym running.</p>
+            <p className="text-jungle-500 text-sm">No hidden fees. No optional sliders. Just a clean, honest split.</p>
             <p className="text-jungle-500 text-sm">You can also share any video you own with one friend — on us.</p>
           </div>
 
@@ -167,40 +167,15 @@ export default async function HomePage() {
       </section>
 
       {/* Live sessions */}
-      <section className="py-20 px-6 bg-white">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+      <section className="py-14 px-6 bg-white border-t border-stone-100">
+        <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
-            <h2 className="text-4xl font-black mb-4 text-jungle-900">Live classes run on vibes and generosity</h2>
-            <p className="text-jungle-700 text-lg mb-4 leading-relaxed">
-              Live sessions are gift-based — no price tag, no minimum.{' '}
-              <strong className="text-jungle-900">Every dollar you give goes to the teacher.</strong>{' '}
-              We add a small optional platform donation on top (10% by default, adjustable to zero).
-            </p>
-            <p className="text-jungle-500 text-sm">
-              Real generosity, freely given. That&apos;s the whole vibe.
-            </p>
-            <Link href="/sessions" className="mt-6 inline-block bg-jungle-900 hover:bg-jungle-800 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors">
-              See upcoming sessions →
-            </Link>
+            <h2 className="text-2xl font-black text-jungle-900 mb-1">Live classes, gift-based.</h2>
+            <p className="text-jungle-600 text-sm">Real-time sessions from vetted teachers. Give what you feel — 80% to the teacher, 20% to the platform.</p>
           </div>
-          <div className="bg-jungle-50 rounded-2xl p-8 border border-jungle-100">
-            <p className="text-xs font-semibold text-jungle-500 mb-1 tracking-widest uppercase">Example gift breakdown</p>
-            <div className="text-5xl font-black text-jungle-900 mb-5">$20</div>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-jungle-700">Goes to teacher</span>
-                <span className="font-black text-jungle-900 text-lg">$20.00 🎉</span>
-              </div>
-              <div className="flex justify-between items-center text-jungle-500">
-                <span>Platform donation (10%, you set this)</span>
-                <span className="font-medium">+ $2.00</span>
-              </div>
-              <div className="border-t border-jungle-200 pt-3 flex justify-between items-center">
-                <span className="font-semibold text-jungle-900">You pay total</span>
-                <span className="font-black text-jungle-900 text-xl">$22.00</span>
-              </div>
-            </div>
-          </div>
+          <Link href="/sessions" className="shrink-0 bg-jungle-900 hover:bg-jungle-800 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors whitespace-nowrap">
+            Check out live classes →
+          </Link>
         </div>
       </section>
 

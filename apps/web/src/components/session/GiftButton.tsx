@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
-import { calculateGiftTotal, formatPrice } from '@junglegym/shared'
+import { calculateGiftTotal, formatPrice, PLATFORM_FEE_PCT } from '@junglegym/shared'
 
 export function GiftButton({
   sessionId,
@@ -13,7 +13,6 @@ export function GiftButton({
 }) {
   const [open, setOpen] = useState(false)
   const [creatorAmount, setCreatorAmount] = useState('')
-  const [tipPct, setTipPct] = useState(10)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -21,7 +20,7 @@ export function GiftButton({
   const supabase = createBrowserSupabaseClient()
 
   const rawCreator = parseFloat(creatorAmount) || 0
-  const { platformAmount, total } = calculateGiftTotal(rawCreator, tipPct)
+  const { platformAmount, total } = calculateGiftTotal(rawCreator)
 
   async function handleSend() {
     if (rawCreator <= 0) return
@@ -34,7 +33,7 @@ export function GiftButton({
         session_id: sessionId,
         giver_id: session.user.id,
         creator_amount: rawCreator,
-        platform_tip_pct: tipPct,
+        platform_tip_pct: PLATFORM_FEE_PCT,
         platform_amount: platformAmount,
         total_amount: total,
         message: message || null,
@@ -71,14 +70,14 @@ export function GiftButton({
               <>
                 <h3 className="font-black text-stone-900 text-lg mb-1">Send a gift</h3>
                 <p className="text-stone-500 text-sm mb-6">
-                  100% of your gift goes directly to {creatorName}.
+                  80% goes directly to {creatorName}. 20% keeps JungleGym running.
                 </p>
 
                 {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
 
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-stone-700 mb-1">
-                    Gift to {creatorName}
+                    Gift amount
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">$</span>
@@ -91,27 +90,6 @@ export function GiftButton({
                       className="w-full rounded-lg border border-stone-200 pl-7 pr-3 py-2.5 text-stone-900 focus:outline-none focus:ring-2 focus:ring-jungle-400"
                       placeholder="20"
                     />
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    Platform donation: {tipPct}%
-                    <span className="text-stone-400 font-normal ml-1">(adjustable — even 0%)</span>
-                  </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="30"
-                    step="1"
-                    value={tipPct}
-                    onChange={(e) => setTipPct(Number(e.target.value))}
-                    className="w-full accent-jungle-600"
-                  />
-                  <div className="flex justify-between text-xs text-stone-400 mt-1">
-                    <span>0%</span>
-                    <span>10%</span>
-                    <span>30%</span>
                   </div>
                 </div>
 
@@ -131,11 +109,11 @@ export function GiftButton({
                 {rawCreator > 0 && (
                   <div className="bg-stone-50 rounded-xl p-4 text-sm mb-4 space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-stone-600">To {creatorName}</span>
+                      <span className="text-stone-600">To {creatorName} (80%)</span>
                       <span className="font-bold text-jungle-800">{formatPrice(rawCreator)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-stone-600">Platform donation ({tipPct}%)</span>
+                      <span className="text-stone-600">JungleGym platform (20%)</span>
                       <span className="text-stone-500">{formatPrice(platformAmount)}</span>
                     </div>
                     <div className="flex justify-between border-t border-stone-200 pt-1 mt-1">

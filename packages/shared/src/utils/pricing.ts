@@ -65,11 +65,13 @@ export function formatPrice(dollars: number): string {
   return `$${dollars.toFixed(2)}`
 }
 
-export function calculateGiftTotal(creatorAmount: number, tipPct: number): {
+export const PLATFORM_FEE_PCT = 20
+
+export function calculateGiftTotal(creatorAmount: number): {
   platformAmount: number
   total: number
 } {
-  const platformAmount = Math.round(creatorAmount * (tipPct / 100) * 100) / 100
+  const platformAmount = Math.round(creatorAmount * (PLATFORM_FEE_PCT / 100) * 100) / 100
   return {
     platformAmount,
     total: Math.round((creatorAmount + platformAmount) * 100) / 100,
