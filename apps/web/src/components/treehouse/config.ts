@@ -7,6 +7,7 @@ export type SectionType =
   | 'free_videos'
   | 'paid_videos'
   | 'photo_gallery'
+  | 'bio'
 
 export type ThemeKey = 'jungle' | 'earth' | 'midnight' | 'dawn' | 'stone'
 
@@ -32,6 +33,7 @@ export const SINGLETON_SECTIONS: SectionType[] = [
   'live_sessions',
   'free_videos',
   'paid_videos',
+  'bio',
 ]
 
 // User-friendly labels for each section type
@@ -42,6 +44,7 @@ export const SECTION_LABELS: Record<SectionType, string> = {
   free_videos: 'Free Videos',
   paid_videos: 'Paid Videos',
   photo_gallery: 'Photo Gallery',
+  bio: 'Movement Story',
 }
 
 // Default config — matches the current hardcoded treehouse layout exactly
@@ -75,6 +78,8 @@ export function createSection(type: SectionType, variant?: string): SectionConfi
     type,
     visible: true,
     variant,
-    data: type === 'photo_gallery' ? { images: [] } : undefined,
+    data: type === 'photo_gallery' ? { images: [] }
+        : type === 'bio' ? { title: 'My Movement Story', body: '' }
+        : undefined,
   }
 }

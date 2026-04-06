@@ -38,6 +38,8 @@ export type Database = {
           supported_rate: number
           community_rate: number
           abundance_rate: number
+          instagram_url: string | null
+          website_url: string | null
           created_at: string
           updated_at: string
         }
@@ -54,6 +56,8 @@ export type Database = {
           supported_rate?: number
           community_rate?: number
           abundance_rate?: number
+          instagram_url?: string | null
+          website_url?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -68,6 +72,8 @@ export type Database = {
           supported_rate?: number
           community_rate?: number
           abundance_rate?: number
+          instagram_url?: string | null
+          website_url?: string | null
           updated_at?: string
         }
       }

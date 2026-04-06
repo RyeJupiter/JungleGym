@@ -114,6 +114,8 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
       if (profileEdits.tagline !== undefined) updatePayload.tagline = profileEdits.tagline || null
       if (profileEdits.bio !== undefined) updatePayload.bio = profileEdits.bio || null
       if (profileEdits.location !== undefined) updatePayload.location = profileEdits.location || null
+      if (profileEdits.instagram_url !== undefined) updatePayload.instagram_url = profileEdits.instagram_url || null
+      if (profileEdits.website_url !== undefined) updatePayload.website_url = profileEdits.website_url || null
       if (profileEdits.tags !== undefined) {
         updatePayload.tags = profileEdits.tags
           ? profileEdits.tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean)
@@ -180,6 +182,8 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
       ...(profileEdits.bio !== undefined ? { bio: profileEdits.bio || null } : {}),
       ...(profileEdits.photo_url !== undefined ? { photo_url: profileEdits.photo_url || null } : {}),
       ...(profileEdits.location !== undefined ? { location: profileEdits.location || null } : {}),
+      ...(profileEdits.instagram_url !== undefined ? { instagram_url: profileEdits.instagram_url || null } : {}),
+      ...(profileEdits.website_url !== undefined ? { website_url: profileEdits.website_url || null } : {}),
       ...(profileEdits.tags !== undefined ? {
         tags: profileEdits.tags
           ? profileEdits.tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean)

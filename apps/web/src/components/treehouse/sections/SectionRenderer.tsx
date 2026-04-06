@@ -5,6 +5,7 @@ import { LiveSessionsSection } from './LiveSessionsSection'
 import { VideoGridSection } from './VideoGridSection'
 import { IntroVideoSection } from './IntroVideoSection'
 import { PhotoGallerySection } from './PhotoGallerySection'
+import { BioSection } from './BioSection'
 import type { GalleryImage } from './PhotoGallerySection'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,6 +22,8 @@ export type TreehouseData = {
     supported_rate: number
     community_rate: number
     abundance_rate: number
+    instagram_url: string | null
+    website_url: string | null
   }
   freeVideos: VideoData[]
   paidVideos: VideoData[]
@@ -147,6 +150,19 @@ export function SectionRenderer({
             editing={editing}
             userId={data.profile.user_id}
             onImagesChange={(images) => onSectionDataChange?.(section.id, { images })}
+          />
+        </div>
+      )
+
+    case 'bio':
+      return (
+        <div className={`max-w-5xl mx-auto px-6 ${opacity}`}>
+          <BioSection
+            title={(section.data?.title as string) ?? ''}
+            body={(section.data?.body as string) ?? ''}
+            theme={theme}
+            editing={editing}
+            onChange={(title, body) => onSectionDataChange?.(section.id, { title, body })}
           />
         </div>
       )

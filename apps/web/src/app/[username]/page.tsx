@@ -82,6 +82,8 @@ export default async function TreehousePage({ params }: Props) {
       supported_rate: Number(profile.supported_rate),
       community_rate: Number(profile.community_rate),
       abundance_rate: Number(profile.abundance_rate),
+      instagram_url: profile.instagram_url ?? null,
+      website_url: profile.website_url ?? null,
     },
     freeVideos,
     paidVideos,

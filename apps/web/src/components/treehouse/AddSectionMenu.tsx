@@ -16,6 +16,7 @@ type AddOption = {
 }
 
 const ADD_OPTIONS: AddOption[] = [
+  { type: 'bio', description: 'Share how you came to movement and why it matters to you', emoji: '🌿' },
   { type: 'intro_video', description: 'Upload a video to introduce yourself', emoji: '🎥' },
   { type: 'photo_gallery', description: 'Showcase photos of your practice', emoji: '📸' },
   { type: 'live_sessions', description: 'Show upcoming sessions', emoji: '📅' },
