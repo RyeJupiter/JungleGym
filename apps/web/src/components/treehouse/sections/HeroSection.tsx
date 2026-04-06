@@ -62,12 +62,6 @@ export function HeroSection({
     onPhotoChange?.(croppedFile, previewUrl)
   }
 
-  const rates = {
-    supported: Number(profile.supported_rate),
-    community: Number(profile.community_rate),
-    abundance: Number(profile.abundance_rate),
-  }
-
   const cropModal = cropFile ? (
     <AvatarCropModal
       file={cropFile}
@@ -78,6 +72,7 @@ export function HeroSection({
 
   if (variant === 'compact') {
     return (
+      <>
       <div className={`relative ${theme.heroBg} border-b ${theme.cardBorder}/50`}>
         <div className="relative max-w-5xl mx-auto px-6 py-8">
           <div className="flex items-center gap-4">
@@ -149,11 +144,13 @@ export function HeroSection({
         </div>
       </div>
       {cropModal}
+      </>
     )
   }
 
   if (variant === 'centered') {
     return (
+      <>
       <div className={`relative ${theme.heroBg} border-b ${theme.cardBorder}/50`}>
         <HeroOverlay theme={theme} />
         <div className="relative max-w-5xl mx-auto px-6 py-12 text-center">
@@ -223,8 +220,6 @@ export function HeroSection({
           <MetaRow profile={profile} theme={theme} editing={editing} onFieldChange={onFieldChange} centered />
           <SocialRow profile={profile} theme={theme} editing={editing} onFieldChange={onFieldChange} centered />
 
-          {(hasPaidVideos || editing) && <RatesBar rates={rates} theme={theme} className="justify-center mt-6" editing={editing} onFieldChange={onFieldChange} />}
-
           {isOwnProfile && !editing && (
             <div className="mt-4">
               <Link
@@ -238,6 +233,7 @@ export function HeroSection({
         </div>
       </div>
       {cropModal}
+      </>
     )
   }
 
@@ -333,8 +329,6 @@ export function HeroSection({
             </div>
           )}
         </div>
-
-        {(hasPaidVideos || editing) && <RatesBar rates={rates} theme={theme} className="mt-8" editing={editing} onFieldChange={onFieldChange} />}
       </div>
       {cropModal}
     </div>
