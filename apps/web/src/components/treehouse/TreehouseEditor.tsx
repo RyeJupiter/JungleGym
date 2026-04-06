@@ -57,6 +57,23 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
     })
   }
 
+  // ── Banner ──
+  const handleBannerChange = useCallback((url: string | null) => {
+    setConfig((prev) => ({ ...prev, banner: url }))
+  }, [])
+
+  const handleBannerUpload = useCallback(async (file: File): Promise<string> => {
+    const supabase = createBrowserSupabaseClient()
+    const ext = file.name.split('.').pop() ?? 'jpg'
+    const path = `${data.profile.user_id}/banner.${ext}`
+    const { error } = await supabase.storage
+      .from('profile-banners')
+      .upload(path, file, { cacheControl: '3600', upsert: true })
+    if (error) throw error
+    const { data: { publicUrl } } = supabase.storage.from('profile-banners').getPublicUrl(path)
+    return publicUrl
+  }, [data.profile.user_id])
+
   // ── Section mutations ──
   function updateSection(id: string, update: Partial<SectionConfig>) {
     setConfig((prev) => ({
@@ -109,6 +126,7 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
         treehouse_config: config,
       }
 
+      // Banner is stored inside treehouse_config (already included above via `config`)
       // Include any inline text edits
       if (profileEdits.display_name !== undefined) updatePayload.display_name = profileEdits.display_name
       if (profileEdits.tagline !== undefined) updatePayload.tagline = profileEdits.tagline || null
@@ -196,11 +214,23 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
   }
 
   return (
-    <div className={`min-h-screen ${theme.pageBg}`}>
+    <div className={`relative min-h-screen ${theme.pageBg}`}>
+      {/* Full-page banner background */}
+      {config.banner && (
+        <div
+          className="fixed inset-0 z-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${config.banner})` }}
+        >
+          <div className="absolute inset-0 bg-black/65 backdrop-blur-[2px]" />
+        </div>
+      )}
+      <div className="relative z-10">
       <EditorToolbar
         config={config}
         onThemeChange={(t: ThemeKey) => setConfig((prev) => ({ ...prev, theme: t }))}
         onTemplateApply={(t: TreehouseConfig) => setConfig(t)}
+        onBannerChange={handleBannerChange}
+        onBannerUpload={handleBannerUpload}
         onSave={handleSave}
         onCancel={handleCancel}
         saving={saving}
@@ -247,6 +277,7 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
         currentSections={config.sections}
         onAdd={addSection}
       />
+      </div>  {/* end relative z-10 */}
     </div>
   )
 }

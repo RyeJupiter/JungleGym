@@ -25,6 +25,7 @@ export interface TreehouseConfig {
   version: 1
   theme: ThemeKey
   sections: SectionConfig[]
+  banner?: string | null  // full URL of background image
 }
 
 // Sections backed by DB data — only one of each allowed
