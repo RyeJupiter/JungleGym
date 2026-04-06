@@ -120,11 +120,18 @@ This file is the shared source of truth for all Claude Code instances working in
 ## Roadmap / What's Not Built Yet
 
 ### Payments
-- **Stack:** Stripe (Apple Pay + cards via Payment Element) + PayPal JS SDK (PayPal + Venmo buttons)
-- **Creator payouts:** Stripe Connect Express — `/studio/payouts` onboarding flow
-- **Platform tip** recorded in DB after the fact, not as a checkout line item
-- **What needs building:** Stripe Connect onboarding, server-side payment intent route, checkout UI, Stripe + PayPal webhook handlers → write confirmed purchases to Supabase
-- **Blocked on:** Stripe account + PayPal account credentials from Rye
+- **Stack:** Stripe Checkout (implemented) + PayPal JS SDK (not yet)
+- **What's built (branch rye/stripe-payments):**
+  - `apps/web/src/lib/stripe.ts` — Stripe client singleton
+  - `apps/web/src/app/api/checkout/video/route.ts` — creates Checkout Session for video purchases
+  - `apps/web/src/app/api/checkout/membership/route.ts` — creates $100/month recurring Checkout Session
+  - `apps/web/src/app/api/webhooks/stripe/route.ts` — handles `checkout.session.completed`, `customer.subscription.updated/deleted`
+  - `PurchaseButton` updated to redirect to Stripe instead of writing directly to Supabase
+  - `supabase/migrations/00010_memberships.sql` — memberships + membership_video_picks tables
+  - `supabase/migrations/00011_email_captures.sql` — email captures table
+  - Homepage: Membership section (id="membership") + email capture section added
+- **Env vars needed:** `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (set in Stripe dashboard → Webhooks → add endpoint `/api/webhooks/stripe`)
+- **Still needed:** PayPal JS SDK, Stripe Connect onboarding, video pick UI for members (`/library` or `/membership/picks`), PayPal webhook handler
 
 ### Google OAuth
 - Steps: Google Cloud Console → create OAuth credentials → Supabase Auth → Providers → Google → add creds → "Continue with Google" button in `LoginForm.tsx` and `SignupForm.tsx`
@@ -179,3 +186,4 @@ Davin and Rye work in tandem. To avoid conflicts:
 | 2026-03-21 | Davin | Added Git/Collaboration Workflow section to CLAUDE.md | Established feature branch workflow to prevent future conflicts |
 | 2026-03-21 | Davin | Fixed 7 bugs from Notion tracker (branch davin/bug-fixes) | Profile 404s (two-step query), video edit URL fields, homepage auth nav, Seeds profile save, nav color consistency, tip→donation rename, Dashboard→Library rename |
 | 2026-03-21 | Davin | Built Treehouse page — rich creator profile at `/@username` | Full dark-jungle redesign: hero banner with avatar/bio/tags/location, pricing rates bar, live session cards (with live-now state), free + paid video grids with tier pills, empty state, footer. TypeScript clean. |
+| 2026-04-06 | Rye | Stripe payments + Membership + email capture | Hooked up real Stripe Checkout for video purchases (was writing to Supabase directly with no payment). Added $100/month Membership (6 video picks, 80% to creators). Added email capture form. Branch: rye/stripe-payments. |

@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
+import { MembershipButton } from '@/components/MembershipButton'
+import { EmailCaptureForm } from '@/components/EmailCaptureForm'
 
 export default async function HomePage() {
   return (
@@ -139,6 +141,28 @@ export default async function HomePage() {
             <p className="text-jungle-500 text-sm">At checkout, a 10% donation to the JungleGym platform is optionally suggested — you can set it to zero, no questions asked.</p>
             <p className="text-jungle-500 text-sm">You can also share any video you own with one friend — on us.</p>
           </div>
+
+          {/* Membership */}
+          <div id="membership" className="mt-16 bg-jungle-900 rounded-3xl p-10 text-center">
+            <p className="text-xs font-semibold text-jungle-400 uppercase tracking-widest mb-3">Membership</p>
+            <h3 className="text-3xl font-black text-white mb-3">Six videos. One month. $100.</h3>
+            <p className="text-jungle-300 text-lg mb-2 max-w-lg mx-auto leading-relaxed">
+              Pick any six videos from the catalog and own them for the month.
+              Swap your picks each renewal.
+            </p>
+            <p className="text-jungle-400 text-sm mb-8 max-w-md mx-auto">
+              <strong className="text-jungle-200">80% goes to the creators</strong> whose videos you pick.
+              20% keeps JungleGym running. No hidden fees.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-8 text-sm text-jungle-300">
+              {['Access to any 6 videos', 'Swap picks each month', '80% to creators', 'Cancel any time'].map((f) => (
+                <span key={f} className="flex items-center gap-1.5 justify-center">
+                  <span className="text-jungle-400">✓</span> {f}
+                </span>
+              ))}
+            </div>
+            <MembershipButton />
+          </div>
         </div>
       </section>
 
@@ -177,6 +201,16 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Email capture */}
+      <section className="py-16 px-6 bg-jungle-800 text-center">
+        <div className="max-w-xl mx-auto">
+          <p className="text-xs font-semibold text-jungle-400 uppercase tracking-widest mb-3">Stay in the loop</p>
+          <h2 className="text-2xl font-black text-white mb-2">New teachers. New classes. No spam.</h2>
+          <p className="text-jungle-400 text-sm mb-6">We&apos;ll let you know when something worth moving for drops.</p>
+          <EmailCaptureForm />
         </div>
       </section>
 

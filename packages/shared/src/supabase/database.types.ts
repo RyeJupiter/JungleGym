@@ -133,6 +133,7 @@ export type Database = {
           platform_tip_pct: number
           platform_amount: number
           total_amount: number
+          stripe_payment_intent_id: string | null
           created_at: string
         }
         Insert: {
@@ -144,6 +145,68 @@ export type Database = {
           platform_tip_pct?: number
           platform_amount: number
           total_amount: number
+          stripe_payment_intent_id?: string | null
+          created_at?: string
+        }
+        Update: Record<string, never>
+      }
+      memberships: {
+        Row: {
+          id: string
+          user_id: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          status: string
+          current_period_end: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          status?: string
+          current_period_end?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          status?: string
+          current_period_end?: string | null
+          updated_at?: string
+        }
+      }
+      membership_video_picks: {
+        Row: {
+          id: string
+          membership_id: string
+          user_id: string
+          video_id: string
+          picked_at: string
+        }
+        Insert: {
+          id?: string
+          membership_id: string
+          user_id: string
+          video_id: string
+          picked_at?: string
+        }
+        Update: Record<string, never>
+      }
+      email_captures: {
+        Row: {
+          id: string
+          email: string
+          source: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          source?: string
           created_at?: string
         }
         Update: Record<string, never>

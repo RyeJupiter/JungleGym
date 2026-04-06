@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { formatPrice, calculateGiftTotal } from '@junglegym/shared'
 import type { PriceTier } from '@junglegym/shared'
 
@@ -32,7 +31,6 @@ export function PurchaseButton({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createBrowserSupabaseClient()
 
   const prices: Record<PriceTier, number | null> = {
     supported: priceSupported,
@@ -52,22 +50,16 @@ export function PurchaseButton({
     setLoading(true)
     setError(null)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('Not authenticated')
-      const { error } = await supabase.from('purchases').insert({
-        user_id: session.user.id,
-        video_id: videoId,
-        tier: selectedTier,
-        amount_paid: selectedPrice,
-        platform_tip_pct: tipPct,
-        platform_amount: platformAmount,
-        total_amount: total,
+      const res = await fetch('/api/checkout/video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId, tier: selectedTier, tipPct }),
       })
-      if (error) throw error
-      router.refresh()
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Checkout failed')
+      window.location.href = data.url
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Purchase failed')
-    } finally {
+      setError(err instanceof Error ? err.message : 'Checkout failed')
       setLoading(false)
     }
   }
@@ -164,7 +156,7 @@ export function PurchaseButton({
         disabled={loading}
         className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
       >
-        {loading ? 'Processing...' : isLoggedIn ? 'Unlock this video' : 'Sign in to unlock'}
+        {loading ? 'Redirecting to checkout…' : isLoggedIn ? 'Unlock this video' : 'Sign in to unlock'}
       </button>
       <p className="text-xs text-stone-400 text-center">
         100% of the video price goes directly to the creator.
