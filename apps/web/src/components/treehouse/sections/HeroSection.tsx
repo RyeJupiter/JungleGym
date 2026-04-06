@@ -1,7 +1,8 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
+import { AvatarCropModal } from '@/components/AvatarCropModal'
 import type { ThemeClasses } from '../themes'
 import type { HeroVariant } from '../config'
 
@@ -44,13 +45,19 @@ export function HeroSection({
   onPhotoChange,
 }: HeroProps) {
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const [cropFile, setCropFile] = useState<File | null>(null)
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const previewUrl = URL.createObjectURL(file)
-    onPhotoChange?.(file, previewUrl)
+    setCropFile(file)
     e.target.value = ''
+  }
+
+  function handleCropConfirm(croppedFile: File) {
+    setCropFile(null)
+    const previewUrl = URL.createObjectURL(croppedFile)
+    onPhotoChange?.(croppedFile, previewUrl)
   }
 
   const rates = {
@@ -58,6 +65,14 @@ export function HeroSection({
     community: Number(profile.community_rate),
     abundance: Number(profile.abundance_rate),
   }
+
+  const cropModal = cropFile ? (
+    <AvatarCropModal
+      file={cropFile}
+      onConfirm={handleCropConfirm}
+      onCancel={() => setCropFile(null)}
+    />
+  ) : null
 
   if (variant === 'compact') {
     return (
@@ -117,22 +132,21 @@ export function HeroSection({
               </div>
             </div>
 
-            {/* Stats + edit CTA */}
-            <div className="flex-shrink-0 text-right flex flex-col items-end gap-2">
-              <p className={`text-xl font-black ${theme.textPrimary}`}>{videoCount}</p>
-              <p className={`${theme.accent} text-xs`}>{videoCount === 1 ? 'video' : 'videos'}</p>
-              {isOwnProfile && !editing && (
+            {/* Edit CTA */}
+            {isOwnProfile && !editing && (
+              <div className="flex-shrink-0">
                 <Link
                   href={`/@${profile.username}?edit=true`}
                   className="bg-jungle-700 hover:bg-jungle-600 text-jungle-200 text-xs font-semibold px-4 py-2 rounded-lg border border-jungle-600 transition-colors"
                 >
                   Edit treehouse
                 </Link>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+      {cropModal}
     )
   }
 
@@ -206,10 +220,6 @@ export function HeroSection({
 
           <MetaRow profile={profile} theme={theme} editing={editing} onFieldChange={onFieldChange} />
 
-          <p className={`text-xl font-black ${theme.textPrimary} mt-4`}>
-            {videoCount} <span className={`${theme.accent} text-sm font-medium`}>{videoCount === 1 ? 'video' : 'videos'}</span>
-          </p>
-
           {(hasPaidVideos || editing) && <RatesBar rates={rates} theme={theme} className="justify-center mt-6" editing={editing} onFieldChange={onFieldChange} />}
 
           {isOwnProfile && !editing && (
@@ -224,6 +234,7 @@ export function HeroSection({
           )}
         </div>
       </div>
+      {cropModal}
     )
   }
 
@@ -306,25 +317,22 @@ export function HeroSection({
             <MetaRow profile={profile} theme={theme} editing={editing} onFieldChange={onFieldChange} />
           </div>
 
-          {/* Stats + edit CTA */}
-          <div className="flex-shrink-0 flex flex-col items-end gap-3">
-            <div className="text-right">
-              <p className={`text-2xl font-black ${theme.textPrimary}`}>{videoCount}</p>
-              <p className={`${theme.accent} text-xs`}>{videoCount === 1 ? 'video' : 'videos'}</p>
-            </div>
-            {isOwnProfile && !editing && (
+          {/* Edit CTA */}
+          {isOwnProfile && !editing && (
+            <div className="flex-shrink-0">
               <Link
                 href={`/@${profile.username}?edit=true`}
                 className="bg-jungle-700 hover:bg-jungle-600 text-jungle-200 text-xs font-semibold px-4 py-2 rounded-lg border border-jungle-600 transition-colors"
               >
                 Edit treehouse
               </Link>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {(hasPaidVideos || editing) && <RatesBar rates={rates} theme={theme} className="mt-8" editing={editing} onFieldChange={onFieldChange} />}
       </div>
+      {cropModal}
     </div>
   )
 }
