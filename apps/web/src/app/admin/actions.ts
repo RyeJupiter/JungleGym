@@ -112,7 +112,20 @@ export async function setCreatorRole(userId: string, isCreator: boolean): Promis
       .update({ role: isCreator ? 'creator' : 'learner' })
       .eq('id', userId)
     if (error) return { error: error.message }
+
+    // Sync profiles.supported_rate so guides page stays in sync
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (svc as any)
+      .from('profiles')
+      .update(
+        isCreator
+          ? { supported_rate: 15, community_rate: 25, abundance_rate: 35 }
+          : { supported_rate: null, community_rate: null, abundance_rate: null }
+      )
+      .eq('user_id', userId)
+
     revalidatePath('/admin')
+    revalidatePath('/guides')
     return {}
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to update role' }
@@ -141,6 +154,55 @@ export async function addSiteAdmin(email: string): Promise<{ error?: string }> {
     return {}
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to add admin' }
+  }
+}
+
+export async function approveApplication(appId: string, userId: string): Promise<{ error?: string }> {
+  try {
+    await assertCallerIsAdmin()
+    const svc = await createServiceSupabaseClient()
+
+    // Grant creator role + set default rates
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: roleErr } = await (svc as any)
+      .from('users').update({ role: 'creator' }).eq('id', userId)
+    if (roleErr) return { error: roleErr.message }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (svc as any)
+      .from('profiles')
+      .update({ supported_rate: 15, community_rate: 25, abundance_rate: 35 })
+      .eq('user_id', userId)
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: appErr } = await (svc as any)
+      .from('teacher_applications')
+      .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+      .eq('id', appId)
+    if (appErr) return { error: appErr.message }
+
+    revalidatePath('/admin')
+    revalidatePath('/guides')
+    return {}
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to approve application' }
+  }
+}
+
+export async function rejectApplication(appId: string): Promise<{ error?: string }> {
+  try {
+    await assertCallerIsAdmin()
+    const svc = await createServiceSupabaseClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (svc as any)
+      .from('teacher_applications')
+      .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+      .eq('id', appId)
+    if (error) return { error: error.message }
+    revalidatePath('/admin')
+    return {}
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to reject application' }
   }
 }
 

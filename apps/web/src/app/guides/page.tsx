@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServiceSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
@@ -6,14 +6,25 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = { title: 'Movement Guides' }
 
 export default async function GuidesPage() {
-  const supabase = await createServerSupabaseClient()
+  const svc = createServiceSupabaseClient()
+
+  // Get creator user IDs, then fetch their profiles (two-step — users RLS is own-record-only)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: creatorUsers } = await (svc as any)
+    .from('users')
+    .select('id')
+    .eq('role', 'creator')
+
+  const creatorIds: string[] = ((creatorUsers ?? []) as { id: string }[]).map((u) => u.id)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: guides } = await (supabase as any)
-    .from('profiles')
-    .select('username, display_name, photo_url')
-    .not('supported_rate', 'is', null)
-    .order('display_name', { ascending: true })
+  const { data: guides } = creatorIds.length > 0
+    ? await (svc as any)
+        .from('profiles')
+        .select('username, display_name, photo_url')
+        .in('user_id', creatorIds)
+        .order('display_name', { ascending: true })
+    : { data: [] }
 
   return (
     <div className="min-h-screen bg-stone-50">

@@ -59,15 +59,15 @@ export default async function AdminPage({
   let creators: UserSearchResult[] = []
 
   if (tab === 'creators') {
-    // Fetch applications
-    const { data: appsData } = await supabase
+    // Fetch applications — service role bypasses users RLS for email join
+    const svc = await createServiceSupabaseClient()
+    const { data: appsData } = await svc
       .from('teacher_applications')
       .select('*, users(email), profiles(display_name, username)')
       .order('created_at', { ascending: false })
     applications = appsData ?? []
 
     // Fetch creators (two-step — service role bypasses users RLS)
-    const svc = await createServiceSupabaseClient()
     const { data: creatorUsers } = await svc
       .from('users').select('id, email, role').eq('role', 'creator')
     const creatorIds = ((creatorUsers ?? []) as any[]).map((u) => u.id)

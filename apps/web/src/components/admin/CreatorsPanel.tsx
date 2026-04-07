@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBrowserSupabaseClient } from '@/lib/supabase/client'
-import { searchUsers, setCreatorRole, type UserSearchResult } from '@/app/admin/actions'
+import { searchUsers, setCreatorRole, approveApplication, rejectApplication, type UserSearchResult } from '@/app/admin/actions'
 
 // ── Application type ─────────────────────────────────────────────────────────
 
@@ -247,7 +246,6 @@ function ApplicationsSection({ initialApplications }: { initialApplications: App
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createBrowserSupabaseClient()
 
   const pending = applications.filter((a) => a.status === 'pending')
   const reviewed = applications.filter((a) => a.status !== 'pending')
@@ -255,45 +253,27 @@ function ApplicationsSection({ initialApplications }: { initialApplications: App
   async function approve(app: Application) {
     setLoading(app.id)
     setError(null)
-    try {
-      const { error: roleError } = await supabase
-        .from('users')
-        .update({ role: 'creator' })
-        .eq('id', app.user_id)
-      if (roleError) throw roleError
-
-      const { error: appError } = await supabase
-        .from('teacher_applications')
-        .update({ status: 'approved', reviewed_at: new Date().toISOString() })
-        .eq('id', app.id)
-      if (appError) throw appError
-
+    const result = await approveApplication(app.id, app.user_id)
+    if (result.error) {
+      setError(result.error)
+    } else {
       setApplications((prev) => prev.map((a) => a.id === app.id ? { ...a, status: 'approved' } : a))
       router.refresh()
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to approve')
-    } finally {
-      setLoading(null)
     }
+    setLoading(null)
   }
 
   async function reject(app: Application) {
     setLoading(app.id)
     setError(null)
-    try {
-      const { error: appError } = await supabase
-        .from('teacher_applications')
-        .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
-        .eq('id', app.id)
-      if (appError) throw appError
-
+    const result = await rejectApplication(app.id)
+    if (result.error) {
+      setError(result.error)
+    } else {
       setApplications((prev) => prev.map((a) => a.id === app.id ? { ...a, status: 'rejected' } : a))
       router.refresh()
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to reject')
-    } finally {
-      setLoading(null)
     }
+    setLoading(null)
   }
 
   return (
