@@ -262,6 +262,7 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
                   section={section}
                   data={liveData}
                   theme={theme}
+                  hasBanner={!!config.banner}
                   editing
                   onFieldChange={handleFieldChange}
                   onSectionDataChange={handleSectionDataChange}

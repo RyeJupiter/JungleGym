@@ -33,6 +33,7 @@ export function TreehouseRenderer({ config, data }: Props) {
             section={section}
             data={data}
             theme={theme}
+            hasBanner={!!config.banner}
           />
         ))}
 

@@ -69,6 +69,7 @@ export function resolveConfig(raw: unknown): TreehouseConfig {
     version: 1,
     theme: cfg.theme ?? 'jungle',
     sections: cfg.sections,
+    banner: cfg.banner ?? null,
   }
 }
 

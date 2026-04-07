@@ -59,6 +59,7 @@ type Props = {
   section: SectionConfig
   data: TreehouseData
   theme: ThemeClasses
+  hasBanner?: boolean
   editing?: boolean
   onFieldChange?: (field: string, value: string) => void
   onSectionDataChange?: (sectionId: string, data: Record<string, unknown>) => void
@@ -69,6 +70,7 @@ export function SectionRenderer({
   section,
   data,
   theme,
+  hasBanner = false,
   editing = false,
   onFieldChange,
   onSectionDataChange,
@@ -90,6 +92,7 @@ export function SectionRenderer({
             isOwnProfile={data.isOwnProfile}
             theme={theme}
             variant={(section.variant as HeroVariant) ?? 'default'}
+            hasBanner={hasBanner}
             editing={editing}
             onFieldChange={onFieldChange}
             onPhotoChange={onPhotoChange}

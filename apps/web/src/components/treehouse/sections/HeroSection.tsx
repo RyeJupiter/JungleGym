@@ -29,6 +29,7 @@ type HeroProps = {
   isOwnProfile: boolean
   theme: ThemeClasses
   variant: HeroVariant
+  hasBanner?: boolean
   editing?: boolean
   onFieldChange?: (field: string, value: string) => void
   onPhotoChange?: (file: File | null, previewUrl: string | null) => void
@@ -42,6 +43,7 @@ export function HeroSection({
   isOwnProfile,
   theme,
   variant,
+  hasBanner = false,
   editing = false,
   onFieldChange,
   onPhotoChange,
@@ -73,7 +75,7 @@ export function HeroSection({
   if (variant === 'compact') {
     return (
       <>
-      <div className={`relative ${theme.heroBg} border-b ${theme.cardBorder}/50`}>
+      <div className={`relative ${hasBanner ? 'bg-transparent' : theme.heroBg} border-b ${theme.cardBorder}/50`}>
         <div className="relative max-w-5xl mx-auto px-6 py-8">
           <div className="flex items-center gap-4">
             {/* Avatar */}
@@ -151,7 +153,7 @@ export function HeroSection({
   if (variant === 'centered') {
     return (
       <>
-      <div className={`relative ${theme.heroBg} border-b ${theme.cardBorder}/50`}>
+      <div className={`relative ${hasBanner ? 'bg-transparent' : theme.heroBg} border-b ${theme.cardBorder}/50`}>
         <HeroOverlay theme={theme} />
         <div className="relative max-w-5xl mx-auto px-6 py-12 text-center">
           {/* Avatar centered */}
@@ -239,7 +241,7 @@ export function HeroSection({
 
   // ── Default variant (current layout) ──
   return (
-    <div className={`relative ${theme.heroBg} border-b ${theme.cardBorder}/50`}>
+    <div className={`relative ${hasBanner ? 'bg-transparent' : theme.heroBg} border-b ${theme.cardBorder}/50`}>
       <HeroOverlay theme={theme} />
       <div className="relative max-w-5xl mx-auto px-6 py-12">
         {/* Treehouse label */}
