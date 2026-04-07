@@ -12,7 +12,7 @@ export default async function GuidesPage() {
   const { data: guides } = await (supabase as any)
     .from('profiles')
     .select('username, display_name, photo_url')
-    .eq('role', 'creator')
+    .not('supported_rate', 'is', null)
     .order('display_name', { ascending: true })
 
   return (
