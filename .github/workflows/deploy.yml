@@ -31,10 +31,10 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_SITE_URL: https://junglegym.academy
-          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }} 
-          # STRIPE_SECRET_KEY — migrated to wrangler secret binding (2026-04-08)
-          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
-          # SUPABASE_SERVICE_ROLE_KEY — migrated to wrangler secret binding (2026-04-08)
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+          # Server-side secrets (SUPABASE_SERVICE_ROLE_KEY, STRIPE_SECRET_KEY) are
+          # set via `wrangler secret put` — they're injected at Worker runtime,
+          # not needed at build time.
 
       - name: Deploy with Wrangler
         run: |

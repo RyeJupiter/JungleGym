@@ -1,5 +1,24 @@
 # CLAUDE.md
 
+## CRITICAL: Cloudflare API Key Safety
+
+Cloudflare credentials are stored in `.env.local` as `CLOUDFLARE_API_KEY` + `CLOUDFLARE_EMAIL`. This is Rye's **Global API Key** (not an API Token) — it has full account access. It was entrusted to Davin by his boss — misuse is not an option.
+
+**Auth method:** Global API Key auth requires both env vars:
+```bash
+CLOUDFLARE_API_KEY=<key>  CLOUDFLARE_EMAIL=rye.seekins@gmail.com  npx wrangler <command>
+```
+
+**Account:** `Rye.seekins@gmail.com's Account` — ID `84ab6b52009b008ace23b1a3fb20aef3`
+
+**Rules:**
+1. **NEVER** change any Cloudflare settings without explicit authorization from Davin
+2. **NEVER** read or access the API key until Davin has approved a plan
+3. Before any Cloudflare operation: present a detailed plan of what you intend to do, wait for approval, and only then proceed
+4. When in doubt, ask first
+
+---
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Commands
@@ -33,7 +52,7 @@ npx wrangler deployments list  # Check deploy status
 
 **There is ALSO a Cloudflare Pages project called `junglegym-web`.** It is **vestigial**. It rebuilds on every push because it's still linked to GitHub, but its output does not power production. The Pages project shows up as a "static site" (no Pages Functions) because `.open-next/` only produces assets meaningful to the Worker. Do not waste time debugging it. A future cleanup should delete it entirely.
 
-**Prod env vars live in TWO different places depending on whether they're client-side or server-side. This trips people up constantly.**
+**Prod env vars live in two places depending on whether they're client-side or server-side.**
 
 ### Client-side vars (`NEXT_PUBLIC_*`) → GitHub Actions secrets + deploy.yml build env
 
@@ -49,37 +68,25 @@ Current `NEXT_PUBLIC_*` vars handled this way:
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
 - `NEXT_PUBLIC_SITE_URL` (hardcoded to `https://junglegym.academy` in deploy.yml, not a secret)
 
-### Server-side vars (everything else) → the `.env.local`-smuggling hack in `next.config.js`
+### Server-side vars → Cloudflare Worker secret bindings via `wrangler secret put`
 
-This is weird. Read carefully.
-
-Next.js only inlines `NEXT_PUBLIC_*` env vars into the server bundle. If you reference `process.env.STRIPE_SECRET_KEY` in server code, Next.js does NOT bake the value in — the compiled code still contains a literal lookup that happens at request time. On Cloudflare Workers, `process.env` is empty at request time unless something populates it. Simply putting the secret in the GitHub Actions build env does nothing for runtime.
-
-The workaround (originally Rye's fix for `SUPABASE_SERVICE_ROLE_KEY`) lives in `apps/web/next.config.js`:
-
-1. Before the Next.js build runs, next.config.js checks if certain env vars are present in `process.env` (populated by the GitHub Actions `env:` block)
-2. If they are, it writes them into a `.env.local` file on disk
-3. The Next.js build then sees `.env.local` like any dev would locally, and **OpenNext's adapter bakes `.env*` files into `next-env.mjs`** which is loaded at Worker startup via `populateProcessEnv()`
-4. At request time, `process.env.STRIPE_SECRET_KEY` actually has a value because OpenNext restored it from the bundled `.env.local`
+Server-side secrets are injected at Worker runtime via Cloudflare secret bindings. `@opennextjs/cloudflare` wires these into `process.env` automatically.
 
 **To add a new server-side secret:**
-1. Add it to GitHub → Settings → Secrets and variables → Actions
-2. Add it to the `env:` block under "Build for Cloudflare" in `deploy.yml` so it's available to the build process
-3. Add its name to the `SERVER_SECRETS` array in `apps/web/next.config.js` so it gets written to `.env.local` during the build
-4. Push → the deploy bakes it into the Worker bundle
+1. Run `CLOUDFLARE_API_KEY=<key> CLOUDFLARE_EMAIL=<email> npx wrangler secret put SECRET_NAME --name junglegym`
+2. That's it — no redeploy needed. The value is available at `process.env.SECRET_NAME` immediately.
 
-**Current server-side secrets smuggled via this mechanism:**
+**To rotate a secret:** Same command, new value. Takes effect immediately without a redeploy.
+
+**Current server-side secrets (set via `wrangler secret put`):**
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `STRIPE_SECRET_KEY`
-- `STRIPE_WEBHOOK_SECRET`
 
-**NOT done via `wrangler secret put`.** You might try running `wrangler secret put FOO --name junglegym` — it will succeed and create a Worker secret binding, and in theory OpenNext would read it at runtime. But in practice nothing on this repo uses that path, and `wrangler secret list --name junglegym` currently returns `[]`. Stick with the .env.local hack to match the existing pattern, unless you're deliberately migrating off it.
-
-**This is a cursed pattern and should probably be cleaned up.** A more normal setup would be to run `wrangler secret put` for each secret (maybe scripted in a `npm run secrets:prod` target), which avoids baking secrets into the bundled JavaScript output (which is a mild security concern — your .open-next/worker.js literally contains the secret strings). But migrating requires verifying that OpenNext's runtime actually reads Worker secret bindings correctly, and that's a project of its own.
+**History:** These were previously baked into the Worker bundle via a `.env.local` smuggling hack in `next.config.js` (Rye's original workaround). Migrated to proper Worker bindings on 2026-04-08. The smuggling code has been deleted.
 
 ### CLOUDFLARE_* in deploy.yml
 
-`CLOUDFLARE_API_KEY`, `CLOUDFLARE_EMAIL`, `CLOUDFLARE_ACCOUNT_ID` ARE only needed at build time — they authenticate `wrangler deploy` itself. Those live as GitHub Actions secrets and are referenced in the deploy step's `env:` block. They never need to be Worker secrets.
+`CLOUDFLARE_API_KEY`, `CLOUDFLARE_EMAIL`, `CLOUDFLARE_ACCOUNT_ID` are only needed at deploy time — they authenticate `wrangler deploy` itself. Those live as GitHub Actions secrets and are referenced in the deploy step's `env:` block. They never need to be Worker secrets.
 
 **Debugging prod:**
 - Worker logs live at `wrangler tail junglegym` (requires CF auth) — NOT in the Pages dashboard's tail view, which returns "static site, cannot tail" because Pages isn't serving anything dynamic
