@@ -13,7 +13,7 @@ const fs = require('fs')
 //   2. Reference it in the `Build for Cloudflare` env block in deploy.yml
 //   3. Add its name to SERVER_SECRETS below
 const SERVER_SECRETS = [
-  'SUPABASE_SERVICE_ROLE_KEY',
+  // 'SUPABASE_SERVICE_ROLE_KEY', — migrated to wrangler secret (2026-04-08)
   'STRIPE_SECRET_KEY',
   'STRIPE_WEBHOOK_SECRET',
 ]
