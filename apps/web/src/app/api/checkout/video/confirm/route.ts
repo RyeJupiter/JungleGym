@@ -54,19 +54,9 @@ export async function POST(req: Request) {
   // Duplicate key error is fine — means webhook already handled it.
   // Postgres unique violation code is 23505.
   if (insertError && insertError.code !== '23505' && !insertError.message?.includes('duplicate')) {
-    // DEBUG: return the actual error so we can diagnose. Revert after fixing.
     console.error('[checkout/video/confirm] insert failed:', insertError)
     return NextResponse.json(
-      {
-        error: 'Failed to record purchase',
-        detail: {
-          code: insertError.code,
-          message: insertError.message,
-          details: insertError.details,
-          hint: insertError.hint,
-        },
-        payload_keys: Object.keys(insertPayload),
-      },
+      { error: 'Failed to record purchase' },
       { status: 500 }
     )
   }
