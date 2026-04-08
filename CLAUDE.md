@@ -13,13 +13,13 @@ npm run type-check   # TypeScript check across all packages
 # From apps/web
 npm run dev          # Next.js dev server
 npm run build:cloudflare  # Cloudflare Workers build (use this to test prod builds)
-npx wrangler pages deployment list --project-name junglegym  # Check deploy status
+npx wrangler deployments list  # Check deploy status
 ```
 
 ## Architecture
 
 **Turborepo monorepo** with two workspaces:
-- `apps/web` — Next.js 15.2.9 App Router, deployed to Cloudflare Pages via `@opennextjs/cloudflare`
+- `apps/web` — Next.js 15.2.9 App Router, deployed to Cloudflare Workers via `@opennextjs/cloudflare`
 - `packages/shared` — TypeScript types, Supabase DB types, pricing utils, validation
 
 **Database**: Supabase (PostgreSQL + RLS + Storage). All schema is in `supabase/migrations/` — run them in order (00001–00006) to set up a fresh database.
@@ -170,7 +170,7 @@ Davin and Rye work in tandem. To avoid conflicts:
 **Claude Code commit/push behavior:**
 - **Commit after every meaningful change** — don't batch up work before committing
 - **Do NOT push unless explicitly told to** — wait for "push", "push it", "go ahead and push", etc. before running `git push`
-- **Reason**: Cloudflare Pages is linked to GitHub — every push triggers a full redeploy of the live site, so pushes should be intentional and batched
+- **Reason**: Cloudflare Workers is linked to GitHub — every push triggers a full redeploy of the live site, so pushes should be intentional and batched
 
 **Note on repo rename**: The repo was previously `JungleGym-` (with trailing dash). The rename cleared origin's git history. Davin synced via `git reset --hard origin/main` on 2026-03-21 to align with Rye's 12-commit history.
 
