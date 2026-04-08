@@ -154,6 +154,50 @@ function ConfirmationCard({
   )
 }
 
+// ── Admin row with confirmation ──────────────────────────────────────────────
+
+function AdminRow({ admin, onRemove, isPending }: { admin: SiteAdmin; onRemove: (email: string) => void; isPending: boolean }) {
+  const [confirming, setConfirming] = useState(false)
+
+  return (
+    <div className="flex items-center justify-between px-5 py-4 gap-4">
+      <div className="min-w-0">
+        <p className="text-stone-900 text-sm font-medium">{admin.email}</p>
+        {admin.added_by && (
+          <p className="text-xs text-stone-400 mt-0.5">
+            Added by {admin.added_by} · {new Date(admin.added_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+          </p>
+        )}
+      </div>
+      {confirming ? (
+        <div className="flex gap-2 flex-shrink-0">
+          <button
+            onClick={() => setConfirming(false)}
+            disabled={isPending}
+            className="text-xs px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-lg transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onRemove(admin.email)}
+            disabled={isPending}
+            className="text-xs px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
+          >
+            {isPending ? '…' : 'Confirm'}
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setConfirming(true)}
+          className="text-xs font-semibold text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
+        >
+          Remove
+        </button>
+      )}
+    </div>
+  )
+}
+
 // ── Main panel ───────────────────────────────────────────────────────────────
 
 export function AdminsPanel({ admins, superadminEmails }: { admins: SiteAdmin[]; superadminEmails: string[] }) {
@@ -193,23 +237,7 @@ export function AdminsPanel({ admins, superadminEmails }: { admins: SiteAdmin[];
           ))}
           {/* Dynamic admins — removable */}
           {dynamicOnly.map((admin) => (
-            <div key={admin.email} className="flex items-center justify-between px-5 py-4 gap-4">
-              <div className="min-w-0">
-                <p className="text-stone-900 text-sm font-medium">{admin.email}</p>
-                {admin.added_by && (
-                  <p className="text-xs text-stone-400 mt-0.5">
-                    Added by {admin.added_by} · {new Date(admin.added_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={() => handleRemove(admin.email)}
-                disabled={isPending}
-                className="text-xs font-semibold text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
-              >
-                Remove
-              </button>
-            </div>
+            <AdminRow key={admin.email} admin={admin} onRemove={handleRemove} isPending={isPending} />
           ))}
         </div>
       </div>
