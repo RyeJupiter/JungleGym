@@ -121,7 +121,7 @@ export function AllTransactionsSection({ transactions }: { transactions: Unified
               <div className="text-right flex-shrink-0">
                 <p className="font-bold text-stone-900">{fmt(t.amount)}</p>
                 {t.platformAmount > 0 && (
-                  <p className="text-xs text-stone-400">+{fmt(t.platformAmount)} tip</p>
+                  <p className="text-xs text-stone-400">{fmt(t.platformAmount)} fee</p>
                 )}
               </div>
             </div>

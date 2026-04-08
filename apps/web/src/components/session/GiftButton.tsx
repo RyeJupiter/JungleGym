@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
-import { calculateGiftTotal, formatPrice, PLATFORM_FEE_PCT } from '@junglegym/shared'
+import { calculatePriceBreakdown, formatPrice, PLATFORM_FEE_PCT } from '@junglegym/shared'
 
 export function GiftButton({
   sessionId,
@@ -19,11 +19,11 @@ export function GiftButton({
   const [error, setError] = useState<string | null>(null)
   const supabase = createBrowserSupabaseClient()
 
-  const rawCreator = parseFloat(creatorAmount) || 0
-  const { platformAmount, total } = calculateGiftTotal(rawCreator)
+  const rawAmount = parseFloat(creatorAmount) || 0
+  const { creatorAmount: creatorCut, platformFee, total } = calculatePriceBreakdown(rawAmount)
 
   async function handleSend() {
-    if (rawCreator <= 0) return
+    if (rawAmount <= 0) return
     setLoading(true)
     setError(null)
     try {
@@ -32,9 +32,9 @@ export function GiftButton({
       const { error } = await supabase.from('gifts').insert({
         session_id: sessionId,
         giver_id: session.user.id,
-        creator_amount: rawCreator,
+        creator_amount: creatorCut,
         platform_tip_pct: PLATFORM_FEE_PCT,
-        platform_amount: platformAmount,
+        platform_amount: platformFee,
         total_amount: total,
         message: message || null,
       })
@@ -70,7 +70,7 @@ export function GiftButton({
               <>
                 <h3 className="font-black text-stone-900 text-lg mb-1">Send a gift</h3>
                 <p className="text-stone-500 text-sm mb-6">
-                  80% goes directly to {creatorName}. 20% keeps JungleGym running.
+                  80% goes to {creatorName}. 20% platform fee keeps JungleGym running.
                 </p>
 
                 {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
@@ -106,19 +106,19 @@ export function GiftButton({
                   />
                 </div>
 
-                {rawCreator > 0 && (
+                {rawAmount > 0 && (
                   <div className="bg-stone-50 rounded-xl p-4 text-sm mb-4 space-y-1">
+                    <div className="flex justify-between font-black border-b border-stone-200 pb-1 mb-1">
+                      <span>Total</span>
+                      <span>{formatPrice(total)}</span>
+                    </div>
                     <div className="flex justify-between">
                       <span className="text-stone-600">To {creatorName} (80%)</span>
-                      <span className="font-bold text-jungle-800">{formatPrice(rawCreator)}</span>
+                      <span className="font-bold text-jungle-800">{formatPrice(creatorCut)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-stone-600">JungleGym platform (20%)</span>
-                      <span className="text-stone-500">{formatPrice(platformAmount)}</span>
-                    </div>
-                    <div className="flex justify-between border-t border-stone-200 pt-1 mt-1">
-                      <span className="font-semibold">You pay</span>
-                      <span className="font-black">{formatPrice(total)}</span>
+                      <span className="text-stone-600">Platform fee (20%)</span>
+                      <span className="text-stone-500">{formatPrice(platformFee)}</span>
                     </div>
                   </div>
                 )}
@@ -132,7 +132,7 @@ export function GiftButton({
                   </button>
                   <button
                     onClick={handleSend}
-                    disabled={loading || rawCreator <= 0}
+                    disabled={loading || rawAmount <= 0}
                     className="flex-1 bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50"
                   >
                     {loading ? 'Sending...' : 'Send gift'}

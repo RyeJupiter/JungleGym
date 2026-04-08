@@ -94,7 +94,7 @@ export function MetricsPanel({ data }: { data: MetricsData }) {
             sub="owed to teachers"
           />
           <StatCard
-            label="Platform tips"
+            label="Platform fees"
             value={fmt(stats.platformRevenue)}
             sub="JungleGym income"
           />

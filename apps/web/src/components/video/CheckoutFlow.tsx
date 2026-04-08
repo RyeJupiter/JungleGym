@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { formatPrice, calculateGiftTotal, PLATFORM_FEE_PCT } from '@junglegym/shared'
+import { formatPrice, calculatePriceBreakdown, PLATFORM_FEE_PCT } from '@junglegym/shared'
 import type { PriceTier } from '@junglegym/shared'
 import { PaymentForm } from './PaymentForm'
 
@@ -34,7 +34,7 @@ export function CheckoutFlow({
   }
 
   const selectedPrice = prices[selectedTier] ?? 0
-  const { platformAmount, total } = calculateGiftTotal(selectedPrice)
+  const { creatorAmount, platformFee } = calculatePriceBreakdown(selectedPrice)
 
   async function handleContinue() {
     if (!selectedPrice) return
@@ -111,17 +111,17 @@ export function CheckoutFlow({
       {/* Price breakdown */}
       {selectedPrice > 0 && (
         <div className="bg-jungle-800/40 border border-jungle-800 rounded-xl p-4 space-y-2 text-sm">
+          <div className="flex justify-between font-black text-white pb-2 border-b border-jungle-800">
+            <span>Total</span>
+            <span>{formatPrice(selectedPrice)}</span>
+          </div>
           <div className="flex justify-between text-jungle-300">
             <span>To creator (80%)</span>
-            <span className="font-semibold">{formatPrice(selectedPrice)}</span>
+            <span className="font-semibold">{formatPrice(creatorAmount)}</span>
           </div>
           <div className="flex justify-between text-jungle-600 text-xs">
-            <span>JungleGym platform ({PLATFORM_FEE_PCT}%)</span>
-            <span>+ {formatPrice(platformAmount)}</span>
-          </div>
-          <div className="flex justify-between font-black text-white pt-2 border-t border-jungle-800">
-            <span>You pay</span>
-            <span>{formatPrice(total)}</span>
+            <span>Platform fee ({PLATFORM_FEE_PCT}%)</span>
+            <span>{formatPrice(platformFee)}</span>
           </div>
           {clientSecret && (
             <button
@@ -148,7 +148,7 @@ export function CheckoutFlow({
             {loading ? 'Setting up payment...' : 'Continue to payment'}
           </button>
           <p className="text-xs text-jungle-600 text-center">
-            80% of the video price goes directly to the creator. {PLATFORM_FEE_PCT}% keeps JungleGym running.
+            80% goes to the creator. {PLATFORM_FEE_PCT}% platform fee keeps JungleGym running.
           </p>
         </div>
       )}

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getStripe } from '@/lib/stripe'
-import { PLATFORM_FEE_PCT } from '@junglegym/shared'
+import { PLATFORM_FEE_PCT, calculatePriceBreakdown } from '@junglegym/shared'
 import type { PriceTier } from '@junglegym/shared'
 
 export async function POST(req: Request) {
@@ -53,8 +53,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
   }
 
-  const platformAmount = Math.round((videoPrice * PLATFORM_FEE_PCT) / 100 * 100) / 100
-  const totalCents = Math.round((videoPrice + platformAmount) * 100)
+  const { creatorAmount, platformFee, total } = calculatePriceBreakdown(videoPrice)
+  const totalCents = Math.round(total * 100)
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount: totalCents,
@@ -65,10 +65,10 @@ export async function POST(req: Request) {
       user_id: user.id,
       video_id: videoId,
       tier,
-      tip_pct: String(PLATFORM_FEE_PCT),
-      video_price: String(videoPrice),
-      platform_amount: String(platformAmount),
-      total_amount: String(videoPrice + platformAmount),
+      fee_pct: String(PLATFORM_FEE_PCT),
+      video_price: String(creatorAmount),
+      platform_amount: String(platformFee),
+      total_amount: String(total),
     },
   })
 

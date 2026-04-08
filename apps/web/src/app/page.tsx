@@ -51,8 +51,8 @@ export default async function HomePage() {
           <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
             {[
               { emoji: '🔍', title: 'Find a teacher', body: 'Browse by style — yoga, kettlebell, mobility, breathwork, and more.', href: '/explore' },
-              { emoji: '🎬', title: 'Watch & train', body: '80% of every purchase goes directly to the teacher. 20% keeps JungleGym running.', href: '/explore' },
-              { emoji: '🎁', title: 'Join live sessions', body: 'Real-time classes, gift-based. Give freely — 80% goes to the teacher, 20% to the platform.', href: '/sessions' },
+              { emoji: '🎬', title: 'Watch & train', body: 'The price you see is the price you pay. 80% goes to the teacher, 20% platform fee.', href: '/explore' },
+              { emoji: '🎁', title: 'Join live sessions', body: 'Real-time classes, gift-based. Give freely — 80% to the teacher, 20% platform fee.', href: '/sessions' },
             ].map((step) => (
               <Link key={step.title} href={step.href} className="bg-jungle-800/60 hover:bg-jungle-700/80 rounded-2xl p-6 border border-jungle-700 hover:border-jungle-500 transition-colors block">
                 <div className="text-4xl mb-3">{step.emoji}</div>
@@ -71,7 +71,7 @@ export default async function HomePage() {
             <p className="text-xs font-semibold text-jungle-500 uppercase tracking-widest mb-3">Radical Transparency</p>
             <h2 className="text-4xl font-black text-jungle-900 mb-3">Here's how the money flows.</h2>
             <p className="text-jungle-600 max-w-xl mx-auto text-lg">
-              Buy classes, yours permanently. Every video is priced by the minute — 80% goes to the teacher, 20% keeps JungleGym running.
+              Buy classes, yours permanently. Every video is priced by the minute — 80% goes to the teacher, 20% platform fee keeps JungleGym running.
             </p>
           </div>
 
@@ -137,8 +137,8 @@ export default async function HomePage() {
           </div>
 
           <div className="text-center mt-8 space-y-2">
-            <p className="text-jungle-900 text-sm font-bold">80% of every purchase goes directly to the teacher. 20% keeps JungleGym running.</p>
-            <p className="text-jungle-500 text-sm">No hidden fees. No optional sliders. Just a clean, honest split.</p>
+            <p className="text-jungle-900 text-sm font-bold">The price you see is the price you pay. 80% goes to the teacher, 20% platform fee.</p>
+            <p className="text-jungle-500 text-sm">No hidden fees. No surprises. Just a clean, honest split.</p>
             <p className="text-jungle-500 text-sm">You can also share any video you own with one friend — on us.</p>
           </div>
 
@@ -152,7 +152,7 @@ export default async function HomePage() {
             </p>
             <p className="text-jungle-400 text-sm mb-8 max-w-md mx-auto">
               <strong className="text-jungle-200">80% goes to the creators</strong> whose videos you pick.
-              20% keeps JungleGym running. No hidden fees.
+              20% platform fee keeps JungleGym running.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center mb-8 text-sm text-jungle-300">
               {['Access to any 6 videos', 'Swap picks each month', '80% to creators', 'Cancel any time'].map((f) => (
@@ -171,7 +171,7 @@ export default async function HomePage() {
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
             <h2 className="text-2xl font-black text-jungle-900 mb-1">Live classes, gift-based.</h2>
-            <p className="text-jungle-600 text-sm">Real-time sessions from vetted teachers. Give what you feel — 80% to the teacher, 20% to the platform.</p>
+            <p className="text-jungle-600 text-sm">Real-time sessions from vetted teachers. Give what you feel — 80% to the teacher, 20% platform fee.</p>
           </div>
           <Link href="/sessions" className="shrink-0 bg-jungle-900 hover:bg-jungle-800 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors whitespace-nowrap">
             Check out live classes →

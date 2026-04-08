@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'rea
 import { useLocalSearchParams, router } from 'expo-router'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
-import { formatPrice, formatDuration, calculateGiftTotal } from '@junglegym/shared'
+import { formatPrice, formatDuration, calculatePriceBreakdown } from '@junglegym/shared'
 import type { Database, PriceTier } from '@junglegym/shared'
 
 type Video = Database['public']['Tables']['videos']['Row']
@@ -14,15 +14,12 @@ const TIERS: { key: PriceTier; label: string; desc: string }[] = [
   { key: 'abundance', label: 'Abundance', desc: "You're thriving" },
 ]
 
-const TIP_PRESETS = [0, 5, 10, 15, 20]
-
 export default function VideoScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { user } = useAuth()
   const [video, setVideo] = useState<Video | null>(null)
   const [purchase, setPurchase] = useState<{ tier: string } | null>(null)
   const [selectedTier, setSelectedTier] = useState<PriceTier>('community')
-  const [tipPct, setTipPct] = useState(10)
   const [buying, setBuying] = useState(false)
 
   useEffect(() => {
@@ -44,7 +41,7 @@ export default function VideoScreen() {
   }
 
   const selectedPrice = prices[selectedTier] ?? 0
-  const { platformAmount, total } = calculateGiftTotal(selectedPrice, tipPct)
+  const { creatorAmount, platformFee, total } = calculatePriceBreakdown(selectedPrice)
 
   async function buy() {
     if (!user) { router.push('/(auth)/login'); return }
@@ -54,9 +51,9 @@ export default function VideoScreen() {
       user_id: user.id,
       video_id: video.id,
       tier: selectedTier,
-      amount_paid: selectedPrice,
-      platform_tip_pct: tipPct,
-      platform_amount: platformAmount,
+      amount_paid: creatorAmount,
+      platform_tip_pct: 20,
+      platform_amount: platformFee,
       total_amount: total,
     })
     setBuying(false)
@@ -103,43 +100,20 @@ export default function VideoScreen() {
             )
           })}
 
-          {/* Platform tip */}
-          <View style={styles.tipBox}>
-            <View style={styles.tipHeader}>
-              <Text style={styles.tipTitle}>Platform tip</Text>
-              <Text style={styles.tipSubtitle}>Keeps JungleGym alive</Text>
-            </View>
-            <View style={styles.tipPresets}>
-              {TIP_PRESETS.map((pct) => (
-                <TouchableOpacity
-                  key={pct}
-                  style={[styles.tipBtn, tipPct === pct && styles.tipBtnActive]}
-                  onPress={() => setTipPct(pct)}
-                >
-                  <Text style={[styles.tipBtnText, tipPct === pct && styles.tipBtnTextActive]}>
-                    {pct === 0 ? 'None' : `${pct}%`}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
           {/* Receipt breakdown */}
           {selectedPrice > 0 && (
             <View style={styles.receipt}>
-              <View style={styles.receiptRow}>
-                <Text style={styles.receiptLabel}>To creator</Text>
-                <Text style={styles.receiptValue}>{formatPrice(selectedPrice)}</Text>
-              </View>
-              <View style={styles.receiptRow}>
-                <Text style={styles.receiptLabelSub}>Platform tip ({tipPct}%)</Text>
-                <Text style={styles.receiptValueSub}>
-                  {tipPct > 0 ? `+ ${formatPrice(platformAmount)}` : 'None'}
-                </Text>
-              </View>
               <View style={[styles.receiptRow, styles.receiptTotal]}>
-                <Text style={styles.receiptTotalLabel}>You pay</Text>
+                <Text style={styles.receiptTotalLabel}>Total</Text>
                 <Text style={styles.receiptTotalValue}>{formatPrice(total)}</Text>
+              </View>
+              <View style={styles.receiptRow}>
+                <Text style={styles.receiptLabel}>To creator (80%)</Text>
+                <Text style={styles.receiptValue}>{formatPrice(creatorAmount)}</Text>
+              </View>
+              <View style={styles.receiptRow}>
+                <Text style={styles.receiptLabelSub}>Platform fee (20%)</Text>
+                <Text style={styles.receiptValueSub}>{formatPrice(platformFee)}</Text>
               </View>
             </View>
           )}
@@ -148,7 +122,7 @@ export default function VideoScreen() {
             onPress={buy} disabled={buying}>
             <Text style={styles.buyBtnText}>{buying ? 'Processing...' : 'Unlock video'}</Text>
           </TouchableOpacity>
-          <Text style={styles.creatorNote}>100% of the video price goes to the creator.</Text>
+          <Text style={styles.creatorNote}>80% goes to the creator. 20% platform fee.</Text>
         </View>
       )}
 

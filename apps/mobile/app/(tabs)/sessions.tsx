@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal } from 'react-native'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
-import { calculateGiftTotal, formatPrice } from '@junglegym/shared'
+import { calculatePriceBreakdown, formatPrice } from '@junglegym/shared'
 import type { Database } from '@junglegym/shared'
 
 type LiveSession = Database['public']['Tables']['live_sessions']['Row']
@@ -12,7 +12,6 @@ export default function SessionsScreen() {
   const [sessions, setSessions] = useState<LiveSession[]>([])
   const [giftModal, setGiftModal] = useState<{ sessionId: string; creatorName: string } | null>(null)
   const [giftAmount, setGiftAmount] = useState('')
-  const [tipPct, setTipPct] = useState(10)
   const [sendingGift, setSendingGift] = useState(false)
 
   useEffect(() => {
@@ -26,7 +25,7 @@ export default function SessionsScreen() {
   }, [])
 
   const rawAmount = parseFloat(giftAmount) || 0
-  const { platformAmount, total } = calculateGiftTotal(rawAmount, tipPct)
+  const { creatorAmount, platformFee, total } = calculatePriceBreakdown(rawAmount)
 
   async function sendGift() {
     if (!giftModal || !user || rawAmount <= 0) return
@@ -34,9 +33,9 @@ export default function SessionsScreen() {
     const { error } = await supabase.from('gifts').insert({
       session_id: giftModal.sessionId,
       giver_id: user.id,
-      creator_amount: rawAmount,
-      platform_tip_pct: tipPct,
-      platform_amount: platformAmount,
+      creator_amount: creatorAmount,
+      platform_tip_pct: 20,
+      platform_amount: platformFee,
       total_amount: total,
     })
     setSendingGift(false)
@@ -45,7 +44,6 @@ export default function SessionsScreen() {
     } else {
       setGiftModal(null)
       setGiftAmount('')
-      setTipPct(10)
       Alert.alert('💚 Gift sent!', 'Thank you for your generosity.')
     }
   }
@@ -94,39 +92,29 @@ export default function SessionsScreen() {
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>Send a gift</Text>
             <Text style={styles.modalSub}>
-              100% goes to {giftModal?.creatorName}
+              80% goes to {giftModal?.creatorName}. 20% platform fee.
             </Text>
 
-            <Text style={styles.label}>Amount for creator</Text>
+            <Text style={styles.label}>Gift amount</Text>
             <View style={styles.amountRow}>
               <Text style={styles.dollar}>$</Text>
               <TextInput style={styles.amountInput} keyboardType="decimal-pad"
                 value={giftAmount} onChangeText={setGiftAmount} placeholder="20" placeholderTextColor="#9ca3af" />
             </View>
 
-            <Text style={styles.label}>Platform tip: {tipPct}% (adjustable)</Text>
-            <View style={styles.tipRow}>
-              {[0, 5, 10, 15, 20].map((p) => (
-                <TouchableOpacity key={p} style={[styles.tipBtn, tipPct === p && styles.tipBtnActive]}
-                  onPress={() => setTipPct(p)}>
-                  <Text style={[styles.tipText, tipPct === p && styles.tipTextActive]}>{p}%</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
             {rawAmount > 0 && (
               <View style={styles.summary}>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>To creator</Text>
-                  <Text style={styles.summaryValue}>{formatPrice(rawAmount)}</Text>
-                </View>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Platform tip</Text>
-                  <Text style={styles.summaryMuted}>{formatPrice(platformAmount)}</Text>
-                </View>
                 <View style={[styles.summaryRow, styles.summaryTotal]}>
-                  <Text style={styles.summaryBold}>You pay</Text>
+                  <Text style={styles.summaryBold}>Total</Text>
                   <Text style={styles.summaryBold}>{formatPrice(total)}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>To creator (80%)</Text>
+                  <Text style={styles.summaryValue}>{formatPrice(creatorAmount)}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Platform fee (20%)</Text>
+                  <Text style={styles.summaryMuted}>{formatPrice(platformFee)}</Text>
                 </View>
               </View>
             )}

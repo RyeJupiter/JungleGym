@@ -118,9 +118,9 @@ Server-side secrets are injected at Worker runtime via Cloudflare secret binding
 - `users` — mirrors `auth.users`, has `role` ('creator' | 'learner')
 - `profiles` — display info + creator pricing rates; `username` is unique slug
 - `videos` — free or 3-tier paid; `published` flag; `creator_id → users`
-- `purchases` — one per (user, video); `amount_paid` goes 100% to creator; optional `platform_tip_pct`
+- `purchases` — one per (user, video); `amount_paid` is creator's cut (80%); `platform_tip_pct` is the fee percentage (DB column name is legacy)
 - `live_sessions` — creator-hosted classes with `scheduled_at`
-- `gifts` — donations to live sessions with adjustable platform tip
+- `gifts` — donations to live sessions with 20% platform fee
 - `teacher_applications` — learner → creator upgrade requests (pending/approved/rejected)
 - `video_shares` — one share token per (owner, video); `redeem_video_share` RPC creates a $0 purchase atomically
 
@@ -147,7 +147,7 @@ A movement video platform — yoga, dance, martial arts, breathwork, and beyond.
 - Prices round DOWN to nearest fun number: $1.11, $2.22, $3.33, $4.20, etc.
 - Every creator is encouraged to offer one free video
 
-**Platform tip**: Suggested 10% to JungleGym at checkout ("Tip the jungle gym?"), adjustable 0–200%. Recorded in DB as `platform_tip_pct` — not a checkout line item.
+**Platform fee**: Fixed 20% fee taken from the displayed price. The price the buyer sees is the total they pay — 80% goes to the creator, 20% to JungleGym. Recorded in DB as `platform_tip_pct` (legacy column name).
 
 **Money flow**:
 - All payments into JungleGym business accounts (Stripe/PayPal)

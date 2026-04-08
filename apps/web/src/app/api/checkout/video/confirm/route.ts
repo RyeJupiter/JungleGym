@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     video_id: meta.video_id,
     tier: meta.tier,
     amount_paid: Number(meta.video_price),
-    platform_tip_pct: Number(meta.tip_pct),
+    platform_tip_pct: Number(meta.fee_pct),
     platform_amount: Number(meta.platform_amount),
     total_amount: Number(meta.total_amount),
     stripe_payment_intent_id: paymentIntent.id,
