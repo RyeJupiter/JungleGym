@@ -14,7 +14,7 @@ const fs = require('fs')
 //   3. Add its name to SERVER_SECRETS below
 const SERVER_SECRETS = [
   // 'SUPABASE_SERVICE_ROLE_KEY', — migrated to wrangler secret (2026-04-08)
-  'STRIPE_SECRET_KEY',
+  // 'STRIPE_SECRET_KEY', — migrated to wrangler secret (2026-04-08)
   'STRIPE_WEBHOOK_SECRET',
 ]
 
