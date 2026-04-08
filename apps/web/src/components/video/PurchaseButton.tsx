@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatPrice, calculateGiftTotal, PLATFORM_FEE_PCT } from '@junglegym/shared'
 import type { PriceTier } from '@junglegym/shared'
+import { PaymentForm } from './PaymentForm'
 
 const TIER_LABELS: Record<PriceTier, { label: string; desc: string }> = {
   supported: { label: 'Supported', desc: 'Pay what you can' },
@@ -27,6 +28,7 @@ export function PurchaseButton({
   const [selectedTier, setSelectedTier] = useState<PriceTier>('community')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
   const router = useRouter()
 
   const prices: Record<PriceTier, number | null> = {
@@ -53,48 +55,60 @@ export function PurchaseButton({
         body: JSON.stringify({ videoId, tier: selectedTier }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Checkout failed')
-      window.location.href = data.url
+      if (!res.ok) throw new Error(data.error ?? 'Failed to start checkout')
+      setClientSecret(data.clientSecret)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Checkout failed')
+      setError(err instanceof Error ? err.message : 'Failed to start checkout')
+    } finally {
       setLoading(false)
     }
   }
 
+  function handleBack() {
+    setClientSecret(null)
+    setError(null)
+  }
+
   return (
     <div className="bg-white border border-stone-200 rounded-2xl p-5 space-y-4">
-      <h3 className="font-bold text-stone-900 text-sm">Choose your tier</h3>
+      <h3 className="font-bold text-stone-900 text-sm">
+        {clientSecret ? 'Complete your purchase' : 'Choose your tier'}
+      </h3>
       {error && <p className="text-red-600 text-xs">{error}</p>}
 
-      <div className="space-y-2">
-        {(Object.entries(TIER_LABELS) as [PriceTier, { label: string; desc: string }][]).map(
-          ([tier, { label, desc }]) => {
-            const price = prices[tier]
-            if (!price) return null
-            return (
-              <button
-                key={tier}
-                type="button"
-                onClick={() => setSelectedTier(tier)}
-                className={`w-full text-left rounded-xl p-3 border-2 transition-colors ${
-                  selectedTier === tier
-                    ? 'border-jungle-500 bg-jungle-50'
-                    : 'border-stone-200 hover:border-stone-300'
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-bold text-sm text-stone-900">{label}</p>
-                    <p className="text-xs text-stone-500 mt-0.5">{desc}</p>
+      {/* Tier selection — hidden during payment */}
+      {!clientSecret && (
+        <div className="space-y-2">
+          {(Object.entries(TIER_LABELS) as [PriceTier, { label: string; desc: string }][]).map(
+            ([tier, { label, desc }]) => {
+              const price = prices[tier]
+              if (!price) return null
+              return (
+                <button
+                  key={tier}
+                  type="button"
+                  onClick={() => setSelectedTier(tier)}
+                  className={`w-full text-left rounded-xl p-3 border-2 transition-colors ${
+                    selectedTier === tier
+                      ? 'border-jungle-500 bg-jungle-50'
+                      : 'border-stone-200 hover:border-stone-300'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-bold text-sm text-stone-900">{label}</p>
+                      <p className="text-xs text-stone-500 mt-0.5">{desc}</p>
+                    </div>
+                    <span className="font-black text-stone-900">{formatPrice(price)}</span>
                   </div>
-                  <span className="font-black text-stone-900">{formatPrice(price)}</span>
-                </div>
-              </button>
-            )
-          }
-        )}
-      </div>
+                </button>
+              )
+            }
+          )}
+        </div>
+      )}
 
+      {/* Price breakdown — always visible */}
       {selectedPrice > 0 && (
         <div className="bg-jungle-50 border border-jungle-100 rounded-xl p-4 space-y-1.5 text-sm">
           <div className="flex justify-between text-stone-700">
@@ -109,19 +123,40 @@ export function PurchaseButton({
             <span>You pay</span>
             <span>{formatPrice(total)}</span>
           </div>
+          {clientSecret && (
+            <p className="text-xs text-stone-400 pt-1">
+              {TIER_LABELS[selectedTier].label} tier
+            </p>
+          )}
         </div>
       )}
 
-      <button
-        onClick={handlePurchase}
-        disabled={loading}
-        className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
-      >
-        {loading ? 'Redirecting to checkout…' : isLoggedIn ? 'Unlock this video' : 'Sign in to unlock'}
-      </button>
-      <p className="text-xs text-stone-400 text-center">
-        80% of the video price goes directly to the creator. {PLATFORM_FEE_PCT}% keeps JungleGym running.
-      </p>
+      {/* Payment form or purchase button */}
+      {clientSecret ? (
+        <div className="space-y-3">
+          <PaymentForm clientSecret={clientSecret} videoId={videoId} />
+          <button
+            type="button"
+            onClick={handleBack}
+            className="w-full text-sm text-stone-500 hover:text-stone-700 transition-colors py-1"
+          >
+            &larr; Change tier
+          </button>
+        </div>
+      ) : (
+        <>
+          <button
+            onClick={handlePurchase}
+            disabled={loading}
+            className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
+          >
+            {loading ? 'Setting up payment…' : isLoggedIn ? 'Unlock this video' : 'Sign in to unlock'}
+          </button>
+          <p className="text-xs text-stone-400 text-center">
+            80% of the video price goes directly to the creator. {PLATFORM_FEE_PCT}% keeps JungleGym running.
+          </p>
+        </>
+      )}
     </div>
   )
 }

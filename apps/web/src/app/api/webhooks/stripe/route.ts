@@ -139,6 +139,27 @@ export async function POST(req: Request) {
       break
     }
 
+    // ── Payment intent succeeded (inline Elements checkout) ────────────────
+    case 'payment_intent.succeeded': {
+      const pi = event.data.object as Stripe.PaymentIntent
+      const meta = pi.metadata ?? {}
+
+      if (meta.type === 'video_purchase') {
+        // Idempotent: unique(user_id, video_id) constraint prevents duplicates
+        await supabase.from('purchases').insert({
+          user_id: meta.user_id,
+          video_id: meta.video_id,
+          tier: meta.tier,
+          amount_paid: Number(meta.video_price),
+          platform_tip_pct: Number(meta.tip_pct),
+          platform_amount: Number(meta.platform_amount),
+          total_amount: Number(meta.total_amount),
+          stripe_payment_intent_id: pi.id,
+        })
+      }
+      break
+    }
+
     // ── Payment intent failures (one-time video purchases) ───────────────────
     case 'payment_intent.payment_failed': {
       // Nothing to undo — we only write to purchases on success.

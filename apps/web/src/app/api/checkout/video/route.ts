@@ -20,6 +20,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'videoId and tier required' }, { status: 400 })
   }
 
+  // Check if user already owns this video
+  const { data: existing } = await supabase
+    .from('purchases')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('video_id', videoId)
+    .maybeSingle()
+
+  if (existing) {
+    return NextResponse.json({ error: 'You already own this video' }, { status: 409 })
+  }
+
   const { data: video } = await supabase
     .from('videos')
     .select('id, title, thumbnail_url, price_supported, price_community, price_abundance, creator_id')
@@ -44,25 +56,10 @@ export async function POST(req: Request) {
   const platformAmount = Math.round((videoPrice * PLATFORM_FEE_PCT) / 100 * 100) / 100
   const totalCents = Math.round((videoPrice + platformAmount) * 100)
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://junglegym.academy'
-
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    customer_email: user.email,
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: 'usd',
-          unit_amount: totalCents,
-          product_data: {
-            name: video.title,
-            description: `${tier.charAt(0).toUpperCase() + tier.slice(1)} tier · 80% to creator, 20% to platform`,
-            ...(video.thumbnail_url ? { images: [video.thumbnail_url] } : {}),
-          },
-        },
-      },
-    ],
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: totalCents,
+    currency: 'usd',
+    automatic_payment_methods: { enabled: true },
     metadata: {
       type: 'video_purchase',
       user_id: user.id,
@@ -73,9 +70,7 @@ export async function POST(req: Request) {
       platform_amount: String(platformAmount),
       total_amount: String(videoPrice + platformAmount),
     },
-    success_url: `${siteUrl}/video/${videoId}?purchase=success`,
-    cancel_url: `${siteUrl}/video/${videoId}`,
   })
 
-  return NextResponse.json({ url: session.url })
+  return NextResponse.json({ clientSecret: paymentIntent.client_secret })
 }
