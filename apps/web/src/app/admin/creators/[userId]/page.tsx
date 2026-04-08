@@ -47,7 +47,7 @@ export default async function CreatorDetailPage({
       // Table may not exist yet
     }
   }
-  if (!isAdmin) redirect('/dashboard')
+  if (!isAdmin) redirect('/library')
 
   // ── Fetch creator data ──
   const svc = await createServiceSupabaseClient()

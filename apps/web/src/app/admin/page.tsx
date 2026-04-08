@@ -40,7 +40,7 @@ export default async function AdminPage({
       // Table may not exist yet — fall through to redirect
     }
   }
-  if (!isAdmin) redirect('/dashboard')
+  if (!isAdmin) redirect('/library')
 
   const isSuperAdmin = ADMIN_EMAILS.includes(authUser.email ?? '')
 
