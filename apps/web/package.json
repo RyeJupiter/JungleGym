@@ -24,10 +24,11 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "stripe": "^22.0.0",
-    "tus-js-client": "^4.3.1"
+    "tus-js-client": "^4.3.1",
+    "wrangler": "^3.91.0",
+    "@opennextjs/cloudflare": "^1.17.1"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "^1.17.1",
     "@types/node": "^20.14.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -37,7 +38,6 @@
     "eslint-config-next": "^15.2.3",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
-    "typescript": "^5.4.5",
-    "wrangler": "^3.91.0"
+    "typescript": "^5.4.5"
   }
 }
