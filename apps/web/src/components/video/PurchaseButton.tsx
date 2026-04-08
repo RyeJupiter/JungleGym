@@ -1,16 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { formatPrice, calculateGiftTotal, PLATFORM_FEE_PCT } from '@junglegym/shared'
-import type { PriceTier } from '@junglegym/shared'
-import { PaymentForm } from './PaymentForm'
-
-const TIER_LABELS: Record<PriceTier, { label: string; desc: string }> = {
-  supported: { label: 'Supported', desc: 'Pay what you can' },
-  community: { label: 'Community', desc: 'Chip in a little more' },
-  abundance: { label: 'Abundance', desc: "You're thriving — share it" },
-}
+import { formatPrice } from '@junglegym/shared'
 
 export function PurchaseButton({
   videoId,
@@ -25,138 +16,39 @@ export function PurchaseButton({
   priceAbundance: number | null
   isLoggedIn: boolean
 }) {
-  const [selectedTier, setSelectedTier] = useState<PriceTier>('community')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [clientSecret, setClientSecret] = useState<string | null>(null)
   const router = useRouter()
 
-  const prices: Record<PriceTier, number | null> = {
-    supported: priceSupported,
-    community: priceCommunity,
-    abundance: priceAbundance,
-  }
+  // Show the lowest available price as the starting price
+  const lowestPrice = priceSupported ?? priceCommunity ?? priceAbundance
 
-  const selectedPrice = prices[selectedTier] ?? 0
-  const { platformAmount, total } = calculateGiftTotal(selectedPrice)
-
-  async function handlePurchase() {
+  function handleUnlock() {
     if (!isLoggedIn) {
-      router.push(`/auth/login?next=/video/${videoId}`)
+      router.push(`/auth/login?next=/video/${videoId}/checkout`)
       return
     }
-    if (!selectedPrice) return
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/checkout/video', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoId, tier: selectedTier }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Failed to start checkout')
-      setClientSecret(data.clientSecret)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to start checkout')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  function handleBack() {
-    setClientSecret(null)
-    setError(null)
+    router.push(`/video/${videoId}/checkout`)
   }
 
   return (
     <div className="bg-white border border-stone-200 rounded-2xl p-5 space-y-4">
-      <h3 className="font-bold text-stone-900 text-sm">
-        {clientSecret ? 'Complete your purchase' : 'Choose your tier'}
-      </h3>
-      {error && <p className="text-red-600 text-xs">{error}</p>}
+      <h3 className="font-bold text-stone-900 text-sm">Unlock this video</h3>
 
-      {/* Tier selection — hidden during payment */}
-      {!clientSecret && (
-        <div className="space-y-2">
-          {(Object.entries(TIER_LABELS) as [PriceTier, { label: string; desc: string }][]).map(
-            ([tier, { label, desc }]) => {
-              const price = prices[tier]
-              if (!price) return null
-              return (
-                <button
-                  key={tier}
-                  type="button"
-                  onClick={() => setSelectedTier(tier)}
-                  className={`w-full text-left rounded-xl p-3 border-2 transition-colors ${
-                    selectedTier === tier
-                      ? 'border-jungle-500 bg-jungle-50'
-                      : 'border-stone-200 hover:border-stone-300'
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-bold text-sm text-stone-900">{label}</p>
-                      <p className="text-xs text-stone-500 mt-0.5">{desc}</p>
-                    </div>
-                    <span className="font-black text-stone-900">{formatPrice(price)}</span>
-                  </div>
-                </button>
-              )
-            }
-          )}
-        </div>
+      {lowestPrice && (
+        <p className="text-stone-500 text-sm">
+          Starting at <span className="font-bold text-stone-900">{formatPrice(lowestPrice)}</span>
+        </p>
       )}
 
-      {/* Price breakdown — always visible */}
-      {selectedPrice > 0 && (
-        <div className="bg-jungle-50 border border-jungle-100 rounded-xl p-4 space-y-1.5 text-sm">
-          <div className="flex justify-between text-stone-700">
-            <span>To creator (80%)</span>
-            <span className="font-semibold">{formatPrice(selectedPrice)}</span>
-          </div>
-          <div className="flex justify-between text-stone-500 text-xs">
-            <span>JungleGym platform (20%)</span>
-            <span>+ {formatPrice(platformAmount)}</span>
-          </div>
-          <div className="flex justify-between font-black text-stone-900 pt-1 border-t border-jungle-100">
-            <span>You pay</span>
-            <span>{formatPrice(total)}</span>
-          </div>
-          {clientSecret && (
-            <p className="text-xs text-stone-400 pt-1">
-              {TIER_LABELS[selectedTier].label} tier
-            </p>
-          )}
-        </div>
-      )}
+      <button
+        onClick={handleUnlock}
+        className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors"
+      >
+        {isLoggedIn ? 'Unlock this video' : 'Sign in to unlock'}
+      </button>
 
-      {/* Payment form or purchase button */}
-      {clientSecret ? (
-        <div className="space-y-3">
-          <PaymentForm clientSecret={clientSecret} videoId={videoId} />
-          <button
-            type="button"
-            onClick={handleBack}
-            className="w-full text-sm text-stone-500 hover:text-stone-700 transition-colors py-1"
-          >
-            &larr; Change tier
-          </button>
-        </div>
-      ) : (
-        <>
-          <button
-            onClick={handlePurchase}
-            disabled={loading}
-            className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Setting up payment…' : isLoggedIn ? 'Unlock this video' : 'Sign in to unlock'}
-          </button>
-          <p className="text-xs text-stone-400 text-center">
-            80% of the video price goes directly to the creator. {PLATFORM_FEE_PCT}% keeps JungleGym running.
-          </p>
-        </>
-      )}
+      <p className="text-xs text-stone-400 text-center">
+        80% goes directly to the creator.
+      </p>
     </div>
   )
 }
