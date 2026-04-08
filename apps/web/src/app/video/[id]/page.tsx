@@ -1,8 +1,10 @@
+import { Suspense } from 'react'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { formatPrice, formatDuration } from '@junglegym/shared'
 import { PurchaseButton } from '@/components/video/PurchaseButton'
+import { PurchaseConfirm } from '@/components/video/PurchaseConfirm'
 import { ShareButton } from '@/components/video/ShareButton'
 import { AddToCalendarButton } from '@/components/video/AddToCalendarButton'
 import { Navbar } from '@/components/Navbar'
@@ -66,6 +68,9 @@ export default async function VideoPage({ params }: Props) {
       <Navbar />
 
       <div className="max-w-4xl mx-auto px-6 py-12">
+        <Suspense>
+          <PurchaseConfirm />
+        </Suspense>
         {/* Video player / locked state */}
         <div className="bg-stone-900 rounded-2xl overflow-hidden mb-8 aspect-video flex items-center justify-center relative">
           {hasAccess ? (
