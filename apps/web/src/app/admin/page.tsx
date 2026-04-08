@@ -128,7 +128,7 @@ export default async function AdminPage({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let sessions: any[] = []
     if (creatorIds.length > 0) {
-      const { data } = await supabase.from('live_sessions').select('id, creator_id').in('creator_id', creatorIds)
+      const { data } = await supabase.from('live_sessions').select('id, creator_id, title').in('creator_id', creatorIds)
       sessions = data ?? []
     }
     const sessionIds: string[] = sessions.map((s) => s.id)
@@ -136,18 +136,29 @@ export default async function AdminPage({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let gifts: any[] = []
     if (sessionIds.length > 0) {
-      const { data } = await supabase.from('gifts').select('session_id, creator_amount, platform_amount')
+      const { data } = await supabase
+        .from('gifts')
+        .select('id, session_id, giver_id, creator_amount, platform_amount, total_amount, message, created_at')
+        .order('created_at', { ascending: false })
       gifts = data ?? []
     }
 
-    // ── Buyer profiles for recent purchases ──
-    const recentPurchases = purchases.slice(0, 25)
-    const buyerIds = [...new Set<string>(recentPurchases.map((p) => p.user_id))]
+    // ── Buyer profiles for all purchases ──
+    const buyerIds = [...new Set<string>(purchases.map((p) => p.user_id))]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let buyerProfiles: any[] = []
     if (buyerIds.length > 0) {
       const { data } = await supabase.from('profiles').select('user_id, display_name').in('user_id', buyerIds)
       buyerProfiles = data ?? []
+    }
+
+    // ── Giver profiles for gifts ──
+    const giverIds = [...new Set<string>(gifts.map((g) => g.giver_id))]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let giverProfiles: any[] = []
+    if (giverIds.length > 0) {
+      const { data } = await supabase.from('profiles').select('user_id, display_name').in('user_id', giverIds)
+      giverProfiles = data ?? []
     }
 
     // ── Aggregate stats ──
@@ -197,29 +208,53 @@ export default async function AdminPage({
       }
     }).sort((a, b) => b.totalOwed - a.totalOwed)
 
-    // ── Recent purchases list ──
+    // ── Build unified transactions ──
     const videoMap = new Map(videos.map((v) => [v.id, v]))
     const buyerProfileMap = new Map(buyerProfiles.map((p) => [p.user_id, p]))
     const creatorProfileMap = new Map(profiles.map((p) => [p.user_id, p]))
+    const giverProfileMap = new Map(giverProfiles.map((p) => [p.user_id, p]))
+    const sessionMap = new Map(sessions.map((s) => [s.id, s]))
 
-    const recentPurchasesList = recentPurchases.map((p) => {
+    const purchaseTransactions = purchases.map((p) => {
       const video = videoMap.get(p.video_id)
       const buyerProfile = buyerProfileMap.get(p.user_id)
-      const creatorId = video?.creator_id ?? ''
-      const creatorProfile = creatorProfileMap.get(creatorId)
+      const creatorProfile = creatorProfileMap.get(video?.creator_id ?? '')
       return {
         id: p.id,
+        type: 'purchase' as const,
         createdAt: p.created_at,
-        tier: p.tier,
-        amountPaid: p.amount_paid ?? 0,
+        amount: p.amount_paid ?? 0,
         platformAmount: p.platform_amount ?? 0,
         totalAmount: p.total_amount ?? 0,
+        tier: p.tier,
+        videoTitle: video?.title ?? 'Unknown video',
         buyerName: buyerProfile?.display_name ?? 'Unknown',
         buyerEmail: users.find((u) => u.id === p.user_id)?.email ?? '',
-        videoTitle: video?.title ?? 'Unknown video',
         creatorName: creatorProfile?.display_name ?? 'Unknown creator',
       }
     })
+
+    const giftTransactions = gifts.map((g) => {
+      const session = sessionMap.get(g.session_id)
+      const creatorProfile = creatorProfileMap.get(session?.creator_id ?? '')
+      const giverProfile = giverProfileMap.get(g.giver_id)
+      return {
+        id: g.id,
+        type: 'gift' as const,
+        createdAt: g.created_at,
+        amount: g.creator_amount ?? 0,
+        platformAmount: g.platform_amount ?? 0,
+        totalAmount: g.total_amount ?? 0,
+        giverName: giverProfile?.display_name ?? 'Unknown',
+        giverEmail: users.find((u: any) => u.id === g.giver_id)?.email ?? '',
+        sessionTitle: session?.title ?? 'Unknown session',
+        message: g.message ?? undefined,
+        creatorName: creatorProfile?.display_name ?? 'Unknown creator',
+      }
+    })
+
+    const allTransactions = [...purchaseTransactions, ...giftTransactions]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
     metricsData = {
       stats: {
@@ -236,7 +271,7 @@ export default async function AdminPage({
           + gifts.reduce((sum, g) => sum + (g.creator_amount ?? 0) + (g.platform_amount ?? 0), 0),
       },
       payouts,
-      recentPurchases: recentPurchasesList,
+      allTransactions,
     }
   } else if (tab === 'admins' && isSuperAdmin) {
     try {
