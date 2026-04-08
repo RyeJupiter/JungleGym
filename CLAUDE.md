@@ -33,19 +33,53 @@ npx wrangler deployments list  # Check deploy status
 
 **There is ALSO a Cloudflare Pages project called `junglegym-web`.** It is **vestigial**. It rebuilds on every push because it's still linked to GitHub, but its output does not power production. The Pages project shows up as a "static site" (no Pages Functions) because `.open-next/` only produces assets meaningful to the Worker. Do not waste time debugging it. A future cleanup should delete it entirely.
 
-**Env vars for production live in GitHub Actions secrets, NOT the Cloudflare dashboard.** This trips people up constantly. They're injected at build time in the `Build for Cloudflare` step of `deploy.yml`, which bakes them into the Worker bundle. To add a new prod env var:
-1. Add it to GitHub → Settings → Secrets and variables → Actions (repo-level secret)
-2. Add it to the `env:` block under the build step in `deploy.yml`
-3. Push — next deploy will include it
+**Prod env vars live in TWO different places depending on whether they're client-side or server-side. This trips people up constantly.**
 
-`NEXT_PUBLIC_*` vars must be handled this way too — they're inlined into the client bundle at build time, so they need to be present when the Worker is built, not just when it runs.
+### Client-side vars (`NEXT_PUBLIC_*`) → GitHub Actions secrets + deploy.yml build env
 
-**Current prod env vars (all set as GitHub secrets + referenced in deploy.yml):**
-- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+Next.js inlines `NEXT_PUBLIC_*` vars into the client bundle at build time. They need to be present in the environment of the `npm run build:cloudflare` step so the build can bake them in. To add one:
+
+1. GitHub → Settings → Secrets and variables → Actions → add the secret
+2. Edit `.github/workflows/deploy.yml` → add `NEXT_PUBLIC_FOO: ${{ secrets.NEXT_PUBLIC_FOO }}` to the `env:` block under "Build for Cloudflare"
+3. Push → next deploy inlines it
+
+Current `NEXT_PUBLIC_*` vars handled this way:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
-- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- `NEXT_PUBLIC_SITE_URL` (hardcoded to `https://junglegym.academy` in deploy.yml, not a secret)
+
+### Server-side vars (everything else) → the `.env.local`-smuggling hack in `next.config.js`
+
+This is weird. Read carefully.
+
+Next.js only inlines `NEXT_PUBLIC_*` env vars into the server bundle. If you reference `process.env.STRIPE_SECRET_KEY` in server code, Next.js does NOT bake the value in — the compiled code still contains a literal lookup that happens at request time. On Cloudflare Workers, `process.env` is empty at request time unless something populates it. Simply putting the secret in the GitHub Actions build env does nothing for runtime.
+
+The workaround (originally Rye's fix for `SUPABASE_SERVICE_ROLE_KEY`) lives in `apps/web/next.config.js`:
+
+1. Before the Next.js build runs, next.config.js checks if certain env vars are present in `process.env` (populated by the GitHub Actions `env:` block)
+2. If they are, it writes them into a `.env.local` file on disk
+3. The Next.js build then sees `.env.local` like any dev would locally, and **OpenNext's adapter bakes `.env*` files into `next-env.mjs`** which is loaded at Worker startup via `populateProcessEnv()`
+4. At request time, `process.env.STRIPE_SECRET_KEY` actually has a value because OpenNext restored it from the bundled `.env.local`
+
+**To add a new server-side secret:**
+1. Add it to GitHub → Settings → Secrets and variables → Actions
+2. Add it to the `env:` block under "Build for Cloudflare" in `deploy.yml` so it's available to the build process
+3. Add its name to the `SERVER_SECRETS` array in `apps/web/next.config.js` so it gets written to `.env.local` during the build
+4. Push → the deploy bakes it into the Worker bundle
+
+**Current server-side secrets smuggled via this mechanism:**
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `CLOUDFLARE_API_KEY`, `CLOUDFLARE_EMAIL`, `CLOUDFLARE_ACCOUNT_ID` (for wrangler auth itself)
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+
+**NOT done via `wrangler secret put`.** You might try running `wrangler secret put FOO --name junglegym` — it will succeed and create a Worker secret binding, and in theory OpenNext would read it at runtime. But in practice nothing on this repo uses that path, and `wrangler secret list --name junglegym` currently returns `[]`. Stick with the .env.local hack to match the existing pattern, unless you're deliberately migrating off it.
+
+**This is a cursed pattern and should probably be cleaned up.** A more normal setup would be to run `wrangler secret put` for each secret (maybe scripted in a `npm run secrets:prod` target), which avoids baking secrets into the bundled JavaScript output (which is a mild security concern — your .open-next/worker.js literally contains the secret strings). But migrating requires verifying that OpenNext's runtime actually reads Worker secret bindings correctly, and that's a project of its own.
+
+### CLOUDFLARE_* in deploy.yml
+
+`CLOUDFLARE_API_KEY`, `CLOUDFLARE_EMAIL`, `CLOUDFLARE_ACCOUNT_ID` ARE only needed at build time — they authenticate `wrangler deploy` itself. Those live as GitHub Actions secrets and are referenced in the deploy step's `env:` block. They never need to be Worker secrets.
 
 **Debugging prod:**
 - Worker logs live at `wrangler tail junglegym` (requires CF auth) — NOT in the Pages dashboard's tail view, which returns "static site, cannot tail" because Pages isn't serving anything dynamic
@@ -220,3 +254,4 @@ Davin and Rye work in tandem. To avoid conflicts:
 | 2026-04-08 | Davin | Replaced Stripe Checkout with inline Payment Elements | Users now pay without leaving JungleGym. New `PaymentForm` component, `/api/checkout/video` rewritten to return a PaymentIntent clientSecret, new `/api/checkout/video/confirm` route verifies the intent on redirect (so purchases are recorded even without webhooks — important for local dev). Webhook handler extended with `payment_intent.succeeded`. Branch: davin/stripe-payment-elements, merged to main. |
 | 2026-04-08 | Davin | Fixed wrangler v3/v4 peer-dep mismatch breaking Cloudflare build | `@opennextjs/cloudflare@1.17.1` peer-depends on `wrangler@^4.65.0`; `apps/web` was pinning `^3.91.0`. The version mismatch caused npm to keep wrangler in `apps/web/node_modules` while hoisting `@opennextjs/cloudflare` to the repo root, so the Worker build failed with `Cannot find package 'wrangler'`. Bumped to `^4.65.0` — works now. |
 | 2026-04-08 | Davin | Documented the real deployment architecture in CLAUDE.md | The Pages project is vestigial; the actual prod pipeline is GitHub Actions → `wrangler deploy` → standalone Worker `junglegym`. Env vars live in GitHub Actions secrets, not the Cloudflare dashboard. Spent hours this session not knowing this — nobody else should. |
+| 2026-04-08 | Davin | Corrected CLAUDE.md (again) + extended next.config.js to smuggle STRIPE_SECRET_KEY into the Worker bundle | Second pass of the deployment doc was also wrong. The actual mechanism is Rye's hack in `next.config.js`: write GitHub Actions env vars to a `.env.local` file during build so OpenNext bakes them into the Worker bundle. `wrangler secret put` isn't used at all (`wrangler secret list --name junglegym` returns `[]`). Added `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` to the `SERVER_SECRETS` array in next.config.js alongside the pre-existing `SUPABASE_SERVICE_ROLE_KEY`, so the Payment Elements flow can actually call Stripe at runtime. |
