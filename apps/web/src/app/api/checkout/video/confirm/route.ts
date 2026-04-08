@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   const svc = await createServiceSupabaseClient()
 
   // Idempotent insert — unique(user_id, video_id) constraint prevents duplicates
-  const { error: insertError } = await svc.from('purchases').insert({
+  const insertPayload = {
     user_id: meta.user_id,
     video_id: meta.video_id,
     tier: meta.tier,
@@ -48,11 +48,27 @@ export async function POST(req: Request) {
     platform_amount: Number(meta.platform_amount),
     total_amount: Number(meta.total_amount),
     stripe_payment_intent_id: paymentIntent.id,
-  })
+  }
+  const { error: insertError } = await svc.from('purchases').insert(insertPayload)
 
-  // Duplicate key error is fine — means webhook already handled it
-  if (insertError && !insertError.message.includes('duplicate')) {
-    return NextResponse.json({ error: 'Failed to record purchase' }, { status: 500 })
+  // Duplicate key error is fine — means webhook already handled it.
+  // Postgres unique violation code is 23505.
+  if (insertError && insertError.code !== '23505' && !insertError.message?.includes('duplicate')) {
+    // DEBUG: return the actual error so we can diagnose. Revert after fixing.
+    console.error('[checkout/video/confirm] insert failed:', insertError)
+    return NextResponse.json(
+      {
+        error: 'Failed to record purchase',
+        detail: {
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint,
+        },
+        payload_keys: Object.keys(insertPayload),
+      },
+      { status: 500 }
+    )
   }
 
   return NextResponse.json({ success: true })
