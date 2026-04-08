@@ -32,11 +32,7 @@ export default async function ExplorePage({
     videoQuery = videoQuery.ilike('title', `%${q}%`)
   }
 
-  // Fetch creator users for the Teachers section
-  const [{ data: videos }, { data: creatorUsers }] = await Promise.all([
-    videoQuery,
-    supabase.from('users').select('id').eq('role', 'creator').limit(8),
-  ])
+  const { data: videos } = await videoQuery
 
   // Look up profiles for videos (two-step — FK goes users→profiles, not videos→profiles)
   const videoCreatorIds = [...new Set((videos ?? []).map((v) => v.creator_id))]
@@ -44,16 +40,6 @@ export default async function ExplorePage({
     ? await supabase.from('profiles').select('user_id, display_name, username, photo_url').in('user_id', videoCreatorIds)
     : { data: [] }
   const profileByUserId = Object.fromEntries((videoProfiles ?? []).map((p) => [p.user_id, p]))
-
-  const creatorIds = creatorUsers?.map((u) => u.id) ?? []
-  const { data: creators } = creatorIds.length
-    ? await supabase
-        .from('profiles')
-        .select('*')
-        .in('user_id', creatorIds)
-        .limit(8)
-        .order('created_at', { ascending: false })
-    : { data: [] }
 
   const FEATURED_TAGS = [
     'yoga', 'strength', 'mobility', 'hiit', 'kettlebell',
@@ -168,32 +154,6 @@ export default async function ExplorePage({
           </div>
         )}
 
-        {/* Teachers section */}
-        {(creators ?? []).length > 0 && (
-          <>
-            <h2 className="text-2xl font-black text-jungle-900 mb-6">Teachers</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {creators!.map((creator) => (
-                <Link key={creator.id} href={`/@${creator.username}`}>
-                  <div className="bg-white rounded-2xl p-5 text-center border border-stone-200 hover:border-jungle-400 hover:shadow-md transition-all">
-                    <div className="w-14 h-14 rounded-full bg-jungle-100 mx-auto mb-3 overflow-hidden flex items-center justify-center text-2xl">
-                      {creator.photo_url ? (
-                        <img src={creator.photo_url} alt={creator.display_name} className="w-full h-full object-cover" />
-                      ) : '🌿'}
-                    </div>
-                    <p className="font-bold text-jungle-900 text-sm">{creator.display_name}</p>
-                    <p className="text-jungle-500 text-xs mb-1">@{creator.username}</p>
-                    {creator.tags?.slice(0, 2).map((t: string) => (
-                      <span key={t} className="inline-block mr-1 text-xs bg-jungle-50 text-jungle-700 px-2 py-0.5 rounded-full capitalize">
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </>
-        )}
       </div>
     </div>
   )
