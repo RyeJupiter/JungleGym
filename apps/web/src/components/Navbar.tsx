@@ -19,6 +19,19 @@ export async function Navbar() {
     ])
     isCreator = user?.role === 'creator'
     isAdmin = ADMIN_EMAILS.includes(authUser.email ?? '')
+    if (!isAdmin) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data } = await (supabase as any)
+          .from('site_admins')
+          .select('email')
+          .eq('email', authUser.email ?? '')
+          .maybeSingle()
+        isAdmin = !!data
+      } catch {
+        // Table may not exist yet
+      }
+    }
     photoUrl = profile?.photo_url ?? null
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     username = (profile as any)?.username ?? null
