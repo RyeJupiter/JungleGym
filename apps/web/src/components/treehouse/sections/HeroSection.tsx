@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { AvatarCropModal } from '@/components/AvatarCropModal'
-import { isHeicFile } from '@/lib/compressImage'
+import { convertHeicIfNeeded } from '@/lib/compressImage'
 import type { ThemeClasses } from '../themes'
 import type { HeroVariant } from '../config'
 
@@ -51,18 +51,19 @@ export function HeroSection({
 }: HeroProps) {
   const photoInputRef = useRef<HTMLInputElement>(null)
   const [cropFile, setCropFile] = useState<File | null>(null)
-  const [photoError, setPhotoError] = useState<string | null>(null)
+  const [converting, setConverting] = useState(false)
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
-    if (isHeicFile(file)) {
-      setPhotoError('HEIC photos aren\'t supported by browsers. Export as JPEG from Photos (iPhone) or Preview (Mac) and try again.')
-      return
+    setConverting(true)
+    try {
+      const ready = await convertHeicIfNeeded(file)
+      setCropFile(ready)
+    } finally {
+      setConverting(false)
     }
-    setPhotoError(null)
-    setCropFile(file)
   }
 
   function handleCropConfirm(croppedFile: File) {
@@ -79,10 +80,13 @@ export function HeroSection({
     />
   ) : null
 
-  const photoErrorBanner = photoError ? (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-red-900/90 text-red-100 text-sm font-medium px-5 py-3 rounded-xl shadow-xl max-w-sm text-center backdrop-blur-sm">
-      {photoError}
-      <button onClick={() => setPhotoError(null)} className="ml-3 text-red-300 hover:text-white font-bold">✕</button>
+  const convertingBanner = converting ? (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-stone-900/90 text-stone-100 text-sm font-medium px-5 py-3 rounded-xl shadow-xl max-w-sm text-center backdrop-blur-sm flex items-center gap-3">
+      <svg className="animate-spin w-4 h-4 text-jungle-400 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+      </svg>
+      Converting photo…
     </div>
   ) : null
 
@@ -160,7 +164,7 @@ export function HeroSection({
         </div>
       </div>
       {cropModal}
-      {photoErrorBanner}
+      {convertingBanner}
       </>
     )
   }
@@ -250,7 +254,7 @@ export function HeroSection({
         </div>
       </div>
       {cropModal}
-      {photoErrorBanner}
+      {convertingBanner}
       </>
     )
   }
@@ -349,7 +353,7 @@ export function HeroSection({
         </div>
       </div>
       {cropModal}
-      {photoErrorBanner}
+      {convertingBanner}
     </div>
   )
 }

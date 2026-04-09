@@ -1,5 +1,5 @@
 /**
- * Returns true if the file is HEIC/HEIF — a format browsers can't decode.
+ * Returns true if the file is HEIC/HEIF — a format most browsers can't decode natively.
  * Checks both the MIME type and the file extension since macOS sometimes
  * reports these files with a generic or empty type.
  */
@@ -8,6 +8,22 @@ export function isHeicFile(file: File): boolean {
   if (heicTypes.includes(file.type.toLowerCase())) return true
   const ext = file.name.split('.').pop()?.toLowerCase()
   return ext === 'heic' || ext === 'heif'
+}
+
+/**
+ * Converts a HEIC/HEIF file to JPEG using heic2any (loaded on demand via
+ * dynamic import — zero bundle cost unless a HEIC file is actually selected).
+ * Returns the file unchanged if it is not HEIC.
+ */
+export async function convertHeicIfNeeded(file: File): Promise<File> {
+  if (!isHeicFile(file)) return file
+
+  // Dynamic import: only fetches the ~1.5 MB WASM bundle when needed
+  const heic2any = (await import('heic2any')).default
+  const result = await heic2any({ blob: file, toType: 'image/jpeg', quality: 1 })
+  const blob = Array.isArray(result) ? result[0] : result
+  const baseName = file.name.replace(/\.[^.]+$/, '')
+  return new File([blob], `${baseName}.jpg`, { type: 'image/jpeg', lastModified: Date.now() })
 }
 
 type CompressOptions = {

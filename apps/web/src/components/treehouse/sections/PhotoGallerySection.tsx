@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
-import { compressImage, isHeicFile } from '@/lib/compressImage'
+import { compressImage, convertHeicIfNeeded } from '@/lib/compressImage'
 import type { ThemeClasses } from '../themes'
 
 export type GalleryImage = { url: string; caption?: string }
@@ -23,21 +23,17 @@ export function PhotoGallerySection({
   onImagesChange,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
-  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [converting, setConverting] = useState(false)
 
   async function handleUpload(files: FileList) {
     if (!userId) return
     const supabase = createBrowserSupabaseClient()
     const newImages: GalleryImage[] = [...images]
 
-    const heicFiles = Array.from(files).filter(isHeicFile)
-    if (heicFiles.length > 0) {
-      setUploadError(`${heicFiles.length === 1 ? 'One photo is' : `${heicFiles.length} photos are`} in HEIC format, which browsers can't display. Export as JPEG from Photos (iPhone) or Preview (Mac) and try again.`)
-    }
-
+    setConverting(true)
     for (const file of Array.from(files)) {
-      if (isHeicFile(file)) continue
-      const ready = await compressImage(file, { maxWidth: 2400, maxHeight: 2400, quality: 0.88 })
+      const converted = await convertHeicIfNeeded(file)
+      const ready = await compressImage(converted, { maxWidth: 2400, maxHeight: 2400, quality: 0.88 })
       const ext = ready.name.split('.').pop() ?? 'jpg'
       const path = `${userId}/${crypto.randomUUID()}.${ext}`
 
@@ -57,6 +53,7 @@ export function PhotoGallerySection({
       newImages.push({ url: publicUrl })
     }
 
+    setConverting(false)
     onImagesChange?.(newImages)
   }
 
@@ -97,15 +94,17 @@ export function PhotoGallerySection({
         multiple
         className="hidden"
         onChange={(e) => {
-          setUploadError(null)
           if (e.target.files?.length) handleUpload(e.target.files)
         }}
       />
 
-      {uploadError && (
-        <div className="mb-4 flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
-          <span className="flex-1">{uploadError}</span>
-          <button onClick={() => setUploadError(null)} className="text-red-400 hover:text-red-600 font-bold flex-shrink-0">✕</button>
+      {converting && (
+        <div className="mb-4 flex items-center gap-2 text-stone-500 text-sm px-1">
+          <svg className="animate-spin w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+          </svg>
+          Converting &amp; uploading photos…
         </div>
       )}
 
