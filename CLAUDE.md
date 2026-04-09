@@ -99,7 +99,7 @@ Server-side secrets are injected at Worker runtime via Cloudflare secret binding
 `CLOUDFLARE_API_KEY`, `CLOUDFLARE_EMAIL`, `CLOUDFLARE_ACCOUNT_ID` are only needed at deploy time — they authenticate `wrangler deploy` itself. Those live as GitHub Actions secrets and are referenced in the deploy step's `env:` block. They never need to be Worker secrets.
 
 **Debugging prod:**
-- Worker logs live at `wrangler tail junglegym` (requires CF auth) — NOT in the Pages dashboard's tail view, which returns "static site, cannot tail" because Pages isn't serving anything dynamic
+- Worker logs live at `wrangler tail junglegym` — run from `apps/web/` (Davin's local wrangler uses OAuth browser login, so no API key needed for interactive commands). NOT in the Pages dashboard's tail view.
 - Deploy status: GitHub Actions tab on the repo, or `gh run list --workflow=deploy.yml`
 - `wrangler.toml` lives at `apps/web/wrangler.toml` — Cloudflare's build autodetect looks at repo root and doesn't find it, hence the "No Wrangler configuration file found" line in Pages build logs. This is expected and harmless.
 
