@@ -59,26 +59,8 @@ export default async function StudioPage() {
           </div>
         </div>
 
-        {/* Videos */}
-        <section className="mb-12">
-          <h2 className="text-xl font-bold text-stone-900 mb-4">Your videos</h2>
-          {(videos ?? []).length === 0 ? (
-            <div className="bg-white rounded-2xl border border-stone-200 p-10 text-center text-stone-400">
-              <p className="text-4xl mb-3">🎬</p>
-              <p className="font-medium">No videos yet</p>
-              <p className="text-sm mt-1">Upload your first video to start sharing.</p>
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
-              {videos!.map((v, i) => (
-                <VideoRow key={v.id} video={v} index={i} />
-              ))}
-            </div>
-          )}
-        </section>
-
         {/* Sessions */}
-        <section>
+        <section className="mb-12">
           <h2 className="text-xl font-bold text-stone-900 mb-4">Live sessions</h2>
           {(sessions ?? []).length === 0 ? (
             <div className="bg-white rounded-2xl border border-stone-200 p-10 text-center text-stone-400">
@@ -117,6 +99,24 @@ export default async function StudioPage() {
                     </Link>
                   </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Videos */}
+        <section>
+          <h2 className="text-xl font-bold text-stone-900 mb-4">Your videos</h2>
+          {(videos ?? []).length === 0 ? (
+            <div className="bg-white rounded-2xl border border-stone-200 p-10 text-center text-stone-400">
+              <p className="text-4xl mb-3">🎬</p>
+              <p className="font-medium">No videos yet</p>
+              <p className="text-sm mt-1">Upload your first video to start sharing.</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+              {videos!.map((v, i) => (
+                <VideoRow key={v.id} video={v} index={i} />
               ))}
             </div>
           )}
