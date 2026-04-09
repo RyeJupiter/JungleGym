@@ -104,34 +104,37 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: Props) {
     setScale((s) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, s - e.deltaY * 0.002)))
   }
 
-  // Confirm — render cropped circle to a new canvas and export
+  // Confirm — render cropped circle to a new canvas and export as lossless PNG.
+  // compressImage() in the caller does the single JPEG encode pass, targeting
+  // max quality within the upload size limit.
   async function handleConfirm() {
     const img = imgRef.current
     if (!img) return
 
+    const OUTPUT_SIZE = 800
     const out = document.createElement('canvas')
-    out.width = 400
-    out.height = 400
+    out.width = OUTPUT_SIZE
+    out.height = OUTPUT_SIZE
     const ctx = out.getContext('2d')
     if (!ctx) return
 
-    const ratio = 400 / CANVAS_SIZE
+    const ratio = OUTPUT_SIZE / CANVAS_SIZE
     const w = img.naturalWidth * scale * ratio
     const h = img.naturalHeight * scale * ratio
-    const x = 400 / 2 - w / 2 + offset.x * ratio
-    const y = 400 / 2 - h / 2 + offset.y * ratio
+    const x = OUTPUT_SIZE / 2 - w / 2 + offset.x * ratio
+    const y = OUTPUT_SIZE / 2 - h / 2 + offset.y * ratio
 
     // Clip to circle
     ctx.beginPath()
-    ctx.arc(200, 200, 200, 0, Math.PI * 2)
+    ctx.arc(OUTPUT_SIZE / 2, OUTPUT_SIZE / 2, OUTPUT_SIZE / 2, 0, Math.PI * 2)
     ctx.clip()
     ctx.drawImage(img, x, y, w, h)
 
     out.toBlob((blob) => {
       if (!blob) return
       const baseName = file.name.replace(/\.[^.]+$/, '')
-      onConfirm(new File([blob], `${baseName}-avatar.jpg`, { type: 'image/jpeg', lastModified: Date.now() }))
-    }, 'image/jpeg', 0.9)
+      onConfirm(new File([blob], `${baseName}-avatar.png`, { type: 'image/png', lastModified: Date.now() }))
+    }, 'image/png')
   }
 
   return (

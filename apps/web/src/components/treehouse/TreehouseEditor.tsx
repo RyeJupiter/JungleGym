@@ -155,7 +155,7 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
       // Upload photo if changed
       if (profileEdits.photo_url !== undefined) {
         if (photoFile) {
-          const ready = await compressImage(photoFile, { maxWidth: 800, maxHeight: 800, quality: 0.82 })
+          const ready = await compressImage(photoFile, { maxWidth: 1000, maxHeight: 1000, maxBytes: 5 * 1024 * 1024 })
           const ext = ready.name.split('.').pop()
           const path = `${data.profile.user_id}/avatar.${ext}`
           const { error: uploadError } = await supabase.storage
