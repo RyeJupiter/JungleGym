@@ -41,11 +41,18 @@ type Props = {
 
 type Tab = 'overview' | 'settings'
 
-const STATUS_STYLES: Record<string, string> = {
-  scheduled: 'bg-blue-50 text-blue-700',
-  live: 'bg-red-50 text-red-600',
-  completed: 'bg-stone-100 text-stone-500',
-  cancelled: 'bg-red-50 text-red-400',
+const STATUS_LABELS: Record<string, string> = {
+  scheduled: 'Scheduled',
+  live: 'Live',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+}
+
+const STATUS_ACTIVE_STYLES: Record<string, string> = {
+  scheduled: 'bg-blue-600 border-blue-600 text-white',
+  live: 'bg-red-500 border-red-500 text-white',
+  completed: 'bg-stone-500 border-stone-500 text-white',
+  cancelled: 'bg-stone-300 border-stone-300 text-stone-700',
 }
 
 function fmt(n: number) {
@@ -59,7 +66,6 @@ function formatDateTime(iso: string) {
   })
 }
 
-// Local datetime string for datetime-local input (strips timezone)
 function toLocalInput(iso: string) {
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -71,7 +77,6 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('overview')
 
-  // Settings form state
   const [title, setTitle] = useState(initial.title)
   const [description, setDescription] = useState(initial.description ?? '')
   const [scheduledAt, setScheduledAt] = useState(toLocalInput(initial.scheduled_at))
@@ -80,6 +85,17 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
   const [status, setStatus] = useState(initial.status)
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  async function saveStatus(next: string) {
+    setStatus(next)
+    setSaveMsg(null)
+    const { error } = await supabase
+      .from('live_sessions')
+      .update({ status: next, updated_at: new Date().toISOString() })
+      .eq('id', initial.id)
+    if (error) setSaveMsg({ ok: false, text: error.message })
+    else router.refresh()
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -122,20 +138,39 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
     <div className="max-w-5xl mx-auto px-6 py-12">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-8">
-        <div>
-          <Link href="/studio" className="text-xs text-stone-400 hover:text-stone-600 transition-colors mb-2 inline-block">
-            ← Studio
-          </Link>
-          <h1 className="text-3xl font-black text-stone-900">{title}</h1>
-          <div className="flex items-center gap-3 mt-2">
-            <span className={`text-xs px-2.5 py-1 rounded-full font-semibold capitalize ${STATUS_STYLES[status] ?? 'bg-stone-100 text-stone-500'}`}>
-              {status}
-            </span>
-            <span className="text-sm text-stone-500">{formatDateTime(initial.scheduled_at)}</span>
-            <span className="text-sm text-stone-400">· {initial.duration_minutes} min</span>
-          </div>
+      <div className="mb-6">
+        <Link href="/studio" className="text-xs text-stone-400 hover:text-stone-600 transition-colors mb-2 inline-block">
+          ← Studio
+        </Link>
+        <h1 className="text-3xl font-black text-stone-900">{title}</h1>
+        <div className="flex items-center gap-2 mt-1 text-sm text-stone-400">
+          <span>{formatDateTime(initial.scheduled_at)}</span>
+          <span>· {initial.duration_minutes} min</span>
         </div>
+      </div>
+
+      {/* Status bar — always visible */}
+      <div className="bg-white rounded-2xl border border-stone-200 p-4 mb-6">
+        <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">Status</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {(['scheduled', 'live', 'completed', 'cancelled'] as const).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => saveStatus(s)}
+              className={`py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                status === s
+                  ? (STATUS_ACTIVE_STYLES[s] ?? 'bg-jungle-700 border-jungle-700 text-white')
+                  : 'bg-white border-stone-200 text-stone-500 hover:border-stone-300'
+              }`}
+            >
+              {STATUS_LABELS[s]}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-stone-400 mt-2">
+          <strong>Live</strong> shows it as happening now on your Treehouse and the sessions page. <strong>Cancelled</strong> hides it.
+        </p>
       </div>
 
       {/* Tabs */}
@@ -156,14 +191,12 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
       {/* ── Overview ──────────────────────────────────────────────────── */}
       {tab === 'overview' && (
         <div className="space-y-8">
-          {/* Stat cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <StatCard label="Total gifts" value={fmt(metrics.totalGifts)} />
             <StatCard label="Your earnings" value={fmt(metrics.totalCreator)} />
             <StatCard label="Gift count" value={String(metrics.giftCount)} />
           </div>
 
-          {/* Gift transactions */}
           <section>
             <h2 className="text-lg font-bold text-stone-900 mb-4">Gifts</h2>
             {transactions.length === 0 ? (
@@ -190,16 +223,12 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
                       <tr key={t.id} className={i > 0 ? 'border-t border-stone-100' : ''}>
                         <td className="px-5 py-3.5">
                           <p className="font-semibold text-stone-900">{t.giverName}</p>
-                          {t.giverUsername && (
-                            <p className="text-xs text-stone-400">@{t.giverUsername}</p>
-                          )}
+                          {t.giverUsername && <p className="text-xs text-stone-400">@{t.giverUsername}</p>}
                         </td>
                         <td className="px-5 py-3.5 text-stone-500 max-w-xs">
-                          {t.message ? (
-                            <span className="italic text-xs">"{t.message}"</span>
-                          ) : (
-                            <span className="text-stone-300 text-xs">—</span>
-                          )}
+                          {t.message
+                            ? <span className="italic text-xs">"{t.message}"</span>
+                            : <span className="text-stone-300 text-xs">—</span>}
                         </td>
                         <td className="px-5 py-3.5 text-stone-400 text-xs whitespace-nowrap">
                           {new Date(t.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
@@ -222,7 +251,6 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
         <form onSubmit={handleSave} className="space-y-6">
           <section className="bg-white rounded-2xl border border-stone-200 p-8 space-y-5">
             <h2 className="font-bold text-stone-900">Details</h2>
-
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-1">Title *</label>
               <input
@@ -230,7 +258,6 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
                 required className={inputClass} placeholder="Morning Mobility Flow"
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-1">Description</label>
               <textarea
@@ -243,7 +270,6 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
 
           <section className="bg-white rounded-2xl border border-stone-200 p-8 space-y-5">
             <h2 className="font-bold text-stone-900">Schedule</h2>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-stone-700 mb-1">Date & time *</label>
@@ -262,38 +288,16 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
                 />
               </div>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Max participants <span className="text-stone-400 font-normal">(optional)</span></label>
+              <label className="block text-sm font-medium text-stone-700 mb-1">
+                Max participants <span className="text-stone-400 font-normal">(optional)</span>
+              </label>
               <input
                 type="number" value={maxParticipants} min="1"
                 onChange={(e) => { setMaxParticipants(e.target.value); setSaveMsg(null) }}
                 className={inputClass} placeholder="Unlimited"
               />
             </div>
-          </section>
-
-          <section className="bg-white rounded-2xl border border-stone-200 p-8 space-y-5">
-            <h2 className="font-bold text-stone-900">Status</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {(['scheduled', 'live', 'completed', 'cancelled'] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => { setStatus(s); setSaveMsg(null) }}
-                  className={`py-2.5 rounded-lg text-sm font-semibold capitalize border transition-colors ${
-                    status === s
-                      ? 'bg-jungle-700 border-jungle-700 text-white'
-                      : 'bg-white border-stone-200 text-stone-500 hover:border-stone-300'
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-stone-400">
-              Setting to <strong>live</strong> makes it visible as live now on your Treehouse. <strong>Cancelled</strong> hides it.
-            </p>
           </section>
 
           <div className="bg-jungle-50 border border-jungle-100 rounded-xl px-5 py-4 text-sm text-jungle-700">
