@@ -94,11 +94,11 @@ export function VideoManagePage({ video, videoPublicUrl, metrics, transactions }
             aria-checked={published}
             onClick={togglePublish}
             disabled={toggling}
-            className="relative w-12 h-7 rounded-full transition-colors duration-200 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-jungle-400"
+            className="relative w-12 h-7 rounded-md transition-colors duration-200 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-jungle-400"
             style={{ background: published ? '#22c55e' : '#d1d5db' }}
           >
             <span
-              className="absolute top-1 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200"
+              className="absolute top-1 left-0 w-5 h-5 rounded-sm bg-white shadow-sm transition-transform duration-200"
               style={{ transform: published ? 'translateX(23px)' : 'translateX(3px)' }}
             />
           </button>
