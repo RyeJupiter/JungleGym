@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { AvatarCropModal } from '@/components/AvatarCropModal'
+import { isHeicFile } from '@/lib/compressImage'
 import type { ThemeClasses } from '../themes'
 import type { HeroVariant } from '../config'
 
@@ -50,12 +51,18 @@ export function HeroSection({
 }: HeroProps) {
   const photoInputRef = useRef<HTMLInputElement>(null)
   const [cropFile, setCropFile] = useState<File | null>(null)
+  const [photoError, setPhotoError] = useState<string | null>(null)
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    setCropFile(file)
     e.target.value = ''
+    if (isHeicFile(file)) {
+      setPhotoError('HEIC photos aren\'t supported by browsers. Export as JPEG from Photos (iPhone) or Preview (Mac) and try again.')
+      return
+    }
+    setPhotoError(null)
+    setCropFile(file)
   }
 
   function handleCropConfirm(croppedFile: File) {
@@ -70,6 +77,13 @@ export function HeroSection({
       onConfirm={handleCropConfirm}
       onCancel={() => setCropFile(null)}
     />
+  ) : null
+
+  const photoErrorBanner = photoError ? (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-red-900/90 text-red-100 text-sm font-medium px-5 py-3 rounded-xl shadow-xl max-w-sm text-center backdrop-blur-sm">
+      {photoError}
+      <button onClick={() => setPhotoError(null)} className="ml-3 text-red-300 hover:text-white font-bold">✕</button>
+    </div>
   ) : null
 
   if (variant === 'compact') {
@@ -146,6 +160,7 @@ export function HeroSection({
         </div>
       </div>
       {cropModal}
+      {photoErrorBanner}
       </>
     )
   }
@@ -235,6 +250,7 @@ export function HeroSection({
         </div>
       </div>
       {cropModal}
+      {photoErrorBanner}
       </>
     )
   }
@@ -333,6 +349,7 @@ export function HeroSection({
         </div>
       </div>
       {cropModal}
+      {photoErrorBanner}
     </div>
   )
 }

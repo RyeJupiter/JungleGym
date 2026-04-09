@@ -1,3 +1,15 @@
+/**
+ * Returns true if the file is HEIC/HEIF — a format browsers can't decode.
+ * Checks both the MIME type and the file extension since macOS sometimes
+ * reports these files with a generic or empty type.
+ */
+export function isHeicFile(file: File): boolean {
+  const heicTypes = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence']
+  if (heicTypes.includes(file.type.toLowerCase())) return true
+  const ext = file.name.split('.').pop()?.toLowerCase()
+  return ext === 'heic' || ext === 'heif'
+}
+
 type CompressOptions = {
   /** Maximum width in pixels — image is scaled down proportionally if wider */
   maxWidth: number
