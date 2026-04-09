@@ -101,10 +101,11 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: Props) {
   }
   function onPointerUp() { drag.current = null }
 
-  // Scroll to zoom
+  // Scroll to zoom — multiplicative so perceived speed is consistent across the range
   function onWheel(e: React.WheelEvent) {
     e.preventDefault()
-    setScale((s) => Math.min(MAX_SCALE, Math.max(minScale, s - e.deltaY * 0.002)))
+    const factor = Math.pow(1.003, -e.deltaY)
+    setScale((s) => Math.min(MAX_SCALE, Math.max(minScale, s * factor)))
   }
 
   // Confirm — render cropped circle to a new canvas and export as lossless PNG.
@@ -161,15 +162,18 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: Props) {
           />
         </div>
 
-        {/* Zoom slider */}
+        {/* Zoom slider — logarithmic mapping so perceived speed is even across the range */}
         <div className="mb-5 px-2">
           <input
             type="range"
-            min={minScale}
-            max={MAX_SCALE}
-            step={0.001}
-            value={scale}
-            onChange={(e) => setScale(Number(e.target.value))}
+            min={0}
+            max={1000}
+            step={1}
+            value={Math.round(Math.log(scale / minScale) / Math.log(MAX_SCALE / minScale) * 1000)}
+            onChange={(e) => {
+              const t = Number(e.target.value) / 1000
+              setScale(minScale * Math.pow(MAX_SCALE / minScale, t))
+            }}
             className="w-full accent-jungle-400"
           />
           <div className="flex justify-between text-white/30 text-xs mt-1">

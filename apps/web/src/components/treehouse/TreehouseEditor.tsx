@@ -163,7 +163,9 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
             .upload(path, ready, { cacheControl: '3600', upsert: true })
           if (uploadError) throw uploadError
           const { data: { publicUrl } } = supabase.storage.from('profile-photos').getPublicUrl(path)
-          updatePayload.photo_url = publicUrl
+          // Append cache-bust param — CDN caches the old file at the same path
+          // for up to cacheControl seconds, so the URL must differ per upload.
+          updatePayload.photo_url = `${publicUrl}?v=${Date.now()}`
         } else {
           // photo was removed
           updatePayload.photo_url = null
