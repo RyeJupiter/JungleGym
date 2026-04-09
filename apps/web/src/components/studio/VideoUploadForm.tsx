@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import * as tus from 'tus-js-client'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { calculateTierPrices, formatPrice } from '@junglegym/shared'
+import { TagInput } from './TagInput'
+import { suggestTagsFromTitle } from '@/lib/movementTags'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 
@@ -59,7 +61,7 @@ export function VideoUploadForm({
 }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [tags, setTags] = useState('')
+  const [tags, setTags] = useState<string[]>([])
   const [isFree, setIsFree] = useState(false)
   const [durationSecs, setDurationSecs] = useState('')
   const [videoFile, setVideoFile] = useState<File | null>(null)
@@ -75,6 +77,8 @@ export function VideoUploadForm({
   const abortRef = useRef<AbortController | null>(null)
   const router = useRouter()
   const supabase = createBrowserSupabaseClient()
+
+  const tagSuggestions = useMemo(() => suggestTagsFromTitle(title), [title])
 
   const duration = parseInt(durationSecs) || 0
   const calculatedPrices = duration > 0 ? calculateTierPrices(duration, defaultRates) : null
@@ -169,7 +173,7 @@ export function VideoUploadForm({
         creator_id: creatorId,
         title,
         description: description || null,
-        tags: tags ? tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean) : [],
+        tags,
         duration_seconds: duration || null,
         is_free: isFree,
         price_supported: (!isFree && prices) ? prices.supported : null,
@@ -282,15 +286,14 @@ export function VideoUploadForm({
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} placeholder="What will learners take away?" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">Tags <span className="text-stone-400 font-normal">— comma-separated</span></label>
-          <input type="text" value={tags} onChange={(e) => setTags(e.target.value)} className={inputClass} placeholder="strength, kettlebell, beginner" />
+          <label className="block text-sm font-medium text-stone-700 mb-1">Tags</label>
+          <TagInput
+            tags={tags}
+            onChange={setTags}
+            suggestions={tagSuggestions}
+            placeholder="strength, kettlebell, beginner…"
+          />
         </div>
-        {!videoFile && (
-          <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">Duration <span className="text-stone-400 font-normal">(seconds — auto-filled from file)</span></label>
-            <input type="number" value={durationSecs} onChange={(e) => setDurationSecs(e.target.value)} min="1" className={inputClass} placeholder="600" />
-          </div>
-        )}
       </div>
 
       {/* Pricing */}

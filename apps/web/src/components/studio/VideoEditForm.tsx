@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { formatPrice } from '@junglegym/shared'
+import { TagInput } from './TagInput'
+import { suggestTagsFromTitle } from '@/lib/movementTags'
 
 type Video = {
   id: string
@@ -22,7 +24,7 @@ type Video = {
 export function VideoEditForm({ video }: { video: Video }) {
   const [title, setTitle] = useState(video.title)
   const [description, setDescription] = useState(video.description ?? '')
-  const [tags, setTags] = useState(video.tags.join(', '))
+  const [tags, setTags] = useState<string[]>(video.tags)
   const [isFree, setIsFree] = useState(video.is_free)
   const [published, setPublished] = useState(video.published)
   const [thumbnailUrl, setThumbnailUrl] = useState(video.thumbnail_url ?? '')
@@ -32,6 +34,7 @@ export function VideoEditForm({ video }: { video: Video }) {
   const [saved, setSaved] = useState(false)
   const router = useRouter()
   const supabase = createBrowserSupabaseClient()
+  const tagSuggestions = useMemo(() => suggestTagsFromTitle(title), [title])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -42,7 +45,7 @@ export function VideoEditForm({ video }: { video: Video }) {
       const { error } = await supabase.from('videos').update({
         title,
         description: description || null,
-        tags: tags ? tags.split(',').map((t) => t.trim().toLowerCase()) : [],
+        tags,
         is_free: isFree,
         price_supported: isFree ? null : video.price_supported,
         price_community: isFree ? null : video.price_community,
@@ -92,8 +95,12 @@ export function VideoEditForm({ video }: { video: Video }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">Tags (comma-separated)</label>
-          <input type="text" value={tags} onChange={(e) => setTags(e.target.value)} className={inputClass} placeholder="strength, kettlebell" />
+          <label className="block text-sm font-medium text-stone-700 mb-1">Tags</label>
+          <TagInput
+            tags={tags}
+            onChange={setTags}
+            suggestions={tagSuggestions}
+          />
         </div>
 
         <div>
