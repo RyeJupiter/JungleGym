@@ -112,7 +112,7 @@ export function SectionRenderer({
         <div className={`max-w-5xl mx-auto px-6 ${opacity}`}>
           <VideoGridSection
             videos={data.freeVideos}
-            title="Free to watch"
+            title="Free classes"
             theme={theme}
           />
         </div>
@@ -123,7 +123,7 @@ export function SectionRenderer({
         <div className={`max-w-5xl mx-auto px-6 ${opacity}`}>
           <VideoGridSection
             videos={data.paidVideos}
-            title="Paid content"
+            title="Paid classes"
             theme={theme}
             badgeClass="bg-earth-600 text-earth-100"
           />
