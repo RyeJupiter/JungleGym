@@ -95,7 +95,7 @@ export default async function LibraryPage() {
         {/* Purchased videos */}
         <div id="library">
           <h2 className="text-2xl font-black text-jungle-900 mb-6">
-            {isCreator ? 'Videos you own' : 'Your videos'}
+            Library
           </h2>
 
           {(purchases ?? []).length === 0 ? (

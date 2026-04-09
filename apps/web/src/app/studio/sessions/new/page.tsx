@@ -22,7 +22,7 @@ export default async function NewSessionPage() {
       <div className="max-w-2xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-black text-stone-900 mb-2">Schedule a session</h1>
         <p className="text-stone-500 mb-8">Gift-based. 100% of gifts go directly to you.</p>
-        <ScheduleSessionForm creatorId={session.user.id} />
+        <ScheduleSessionForm creatorId={authUser.id} />
       </div>
     </div>
   )

@@ -89,9 +89,10 @@ export default async function StudioPage() {
           ) : (
             <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
               {sessions!.map((s, i) => (
-                <div
+                <Link
                   key={s.id}
-                  className={`flex items-center justify-between px-5 py-4 ${i > 0 ? 'border-t border-stone-100' : ''}`}
+                  href={`/studio/sessions/${s.id}/manage`}
+                  className={`flex items-center justify-between px-5 py-4 hover:bg-stone-50 transition-colors ${i > 0 ? 'border-t border-stone-100' : ''}`}
                 >
                   <div>
                     <p className="font-semibold text-stone-900 text-sm">{s.title}</p>
@@ -101,14 +102,17 @@ export default async function StudioPage() {
                       })} · {s.duration_minutes} min
                     </p>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${
-                    s.status === 'live' ? 'bg-red-50 text-red-600' :
-                    s.status === 'scheduled' ? 'bg-blue-50 text-blue-600' :
-                    'bg-stone-100 text-stone-500'
-                  }`}>
-                    {s.status}
-                  </span>
-                </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${
+                      s.status === 'live' ? 'bg-red-50 text-red-600' :
+                      s.status === 'scheduled' ? 'bg-blue-50 text-blue-600' :
+                      'bg-stone-100 text-stone-500'
+                    }`}>
+                      {s.status}
+                    </span>
+                    <span className="text-xs text-stone-400 font-semibold">Manage →</span>
+                  </div>
+                </Link>
               ))}
             </div>
           )}
