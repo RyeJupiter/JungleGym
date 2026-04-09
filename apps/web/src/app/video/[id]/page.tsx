@@ -1,13 +1,10 @@
-import { Suspense } from 'react'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { formatPrice, formatDuration } from '@junglegym/shared'
 import { PurchaseButton } from '@/components/video/PurchaseButton'
-import { PurchaseConfirm } from '@/components/video/PurchaseConfirm'
 import { ShareButton } from '@/components/video/ShareButton'
 import { AddToCalendarButton } from '@/components/video/AddToCalendarButton'
-import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
 type Props = { params: Promise<{ id: string }> }
@@ -25,18 +22,14 @@ export default async function VideoPage({ params }: Props) {
 
   const { data: video } = await supabase
     .from('videos')
-    .select('*')
+    .select('*, profiles!creator_id(display_name, username, photo_url, bio, tags)')
     .eq('id', id)
     .eq('published', true)
     .single()
 
   if (!video) notFound()
 
-  const [{ data: { user } }, { data: profileRows }] = await Promise.all([
-    supabase.auth.getUser(),
-    supabase.from('profiles').select('display_name, username, photo_url, bio, tags').eq('user_id', video.creator_id).limit(1),
-  ])
-  const creator = profileRows?.[0] ?? null
+  const { data: { user } } = await supabase.auth.getUser()
 
   // Check if learner already purchased this
   const { data: purchase } = user
@@ -49,6 +42,7 @@ export default async function VideoPage({ params }: Props) {
     : { data: null }
 
   const hasAccess = video.is_free || !!purchase
+  const creator = video.profiles as { display_name: string; username: string; photo_url: string | null; bio: string | null; tags: string[] } | null
 
   // Generate signed URL for private video bucket
   let videoPlaybackUrl: string | null = null
@@ -65,12 +59,16 @@ export default async function VideoPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <Navbar />
+      <header className="bg-white border-b border-stone-200 px-6 h-16 flex items-center justify-between">
+        <Link href="/" className="font-black text-xl text-jungle-800">
+          jungle<span className="text-jungle-500">gym</span>
+        </Link>
+        <Link href="/explore" className="text-sm text-stone-600 hover:text-stone-900 font-medium">
+          ← Back to explore
+        </Link>
+      </header>
 
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <Suspense>
-          <PurchaseConfirm />
-        </Suspense>
         {/* Video player / locked state */}
         <div className="bg-stone-900 rounded-2xl overflow-hidden mb-8 aspect-video flex items-center justify-center relative">
           {hasAccess ? (
@@ -78,7 +76,7 @@ export default async function VideoPage({ params }: Props) {
               <video
                 src={videoPlaybackUrl}
                 controls
-                controlsList="nodownload"
+                playsInline
                 className="w-full h-full"
                 poster={video.thumbnail_url ?? undefined}
               />
@@ -96,7 +94,7 @@ export default async function VideoPage({ params }: Props) {
               )}
               <div className="relative z-10">
                 <div className="text-5xl mb-4">🔒</div>
-                <p className="text-white font-bold text-lg mb-2">Choose your tier to unlock</p>
+                <p className="text-white font-bold text-lg mb-2">Choose your tier to drop in</p>
                 <p className="text-white/60 text-sm">
                   {video.duration_seconds ? formatDuration(video.duration_seconds) : ''} of content
                 </p>
@@ -132,7 +130,7 @@ export default async function VideoPage({ params }: Props) {
             )}
 
             {/* Creator */}
-            <Link href={`/@${creator?.username}`} className="flex items-center gap-3 group">
+            <Link href={creator?.username ? `/@${creator.username}` : '/explore'} className="flex items-center gap-3 group">
               <div className="w-10 h-10 rounded-full bg-jungle-100 overflow-hidden flex items-center justify-center text-xl flex-shrink-0">
                 {creator?.photo_url ? (
                   <img src={creator.photo_url} alt="" className="w-full h-full object-cover" />
@@ -153,7 +151,7 @@ export default async function VideoPage({ params }: Props) {
               <div className="bg-jungle-50 border border-jungle-200 rounded-2xl p-5 text-center">
                 <div className="text-3xl mb-2">✓</div>
                 <p className="font-bold text-jungle-800">
-                  {video.is_free ? 'Free access' : `Unlocked (${purchase?.tier})`}
+                  {video.is_free ? 'Free access' : `Dropped in · ${purchase?.tier}`}
                 </p>
                 <AddToCalendarButton videoTitle={video.title} videoId={video.id} />
                 {!video.is_free && (
