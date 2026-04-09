@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { VideoRow } from '@/components/studio/VideoRow'
+import { SessionRow } from '@/components/studio/SessionRow'
 import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
@@ -70,36 +71,13 @@ export default async function StudioPage() {
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
-              {sessions!.map((s, i) => (
-                <div
-                  key={s.id}
-                  className={`flex items-center justify-between px-5 py-4 ${i > 0 ? 'border-t border-stone-100' : ''}`}
-                >
-                  <div>
-                    <p className="font-semibold text-stone-900 text-sm">{s.title}</p>
-                    <p className="text-xs text-stone-400 mt-0.5">
-                      {new Date(s.scheduled_at).toLocaleDateString(undefined, {
-                        weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
-                      })} · {s.duration_minutes} min
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${
-                      s.status === 'live' ? 'bg-red-50 text-red-600' :
-                      s.status === 'scheduled' ? 'bg-blue-50 text-blue-600' :
-                      'bg-stone-100 text-stone-500'
-                    }`}>
-                      {s.status}
-                    </span>
-                    <Link
-                      href={`/studio/sessions/${s.id}/manage`}
-                      className="text-xs text-stone-400 hover:text-stone-700 font-medium transition-colors"
-                    >
-                      Manage
-                    </Link>
-                  </div>
-                </div>
-              ))}
+              {sessions!.map((s, i) => {
+                const minsUntil = (new Date(s.scheduled_at).getTime() - Date.now()) / 60000
+                const isGoLive = s.status === 'scheduled' && minsUntil <= 30 && minsUntil > -s.duration_minutes
+                return (
+                  <SessionRow key={s.id} session={s} index={i} isGoLive={isGoLive} />
+                )
+              })}
             </div>
           )}
         </section>
