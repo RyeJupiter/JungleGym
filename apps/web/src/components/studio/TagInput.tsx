@@ -15,7 +15,8 @@ export function TagInput({ tags, onChange, suggestions = [], placeholder = 'Add 
   const inputRef = useRef<HTMLInputElement>(null)
 
   function addTag(raw: string) {
-    const tag = raw.trim().toLowerCase().replace(/\s+/g, '-')
+    // Treat hyphens and underscores as word separators, then re-join with hyphens
+    const tag = raw.trim().toLowerCase().replace(/[-_]+/g, ' ').replace(/\s+/g, '-').replace(/^-+|-+$/g, '')
     if (!tag || tags.includes(tag)) return
     onChange([...tags, tag])
   }
@@ -99,7 +100,7 @@ export function TagInput({ tags, onChange, suggestions = [], placeholder = 'Add 
         </div>
       )}
 
-      <p className="mt-1.5 text-xs text-stone-400">Press space or comma to add a tag</p>
+      <p className="mt-1.5 text-xs text-stone-400">Type a tag, then press <kbd className="font-mono bg-stone-100 px-1 rounded">space</kbd> or <kbd className="font-mono bg-stone-100 px-1 rounded">,</kbd> to add it · backspace removes the last one</p>
     </div>
   )
 }

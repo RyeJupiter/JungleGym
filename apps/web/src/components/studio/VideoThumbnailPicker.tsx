@@ -71,8 +71,11 @@ export function VideoThumbnailPicker({ videoSrc, triggerLabel = 'Choose frame fr
         type="button"
         onClick={handleOpen}
         disabled={disabled}
-        className="text-xs text-jungle-600 hover:text-jungle-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="inline-flex items-center gap-1.5 bg-jungle-50 hover:bg-jungle-100 text-jungle-700 font-semibold text-sm px-4 py-2 rounded-lg border border-jungle-200 hover:border-jungle-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.854v6.292a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+        </svg>
         {triggerLabel}
       </button>
 

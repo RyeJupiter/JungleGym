@@ -90,22 +90,25 @@ export function VideoEditForm({ video, videoPublicUrl, onSaved }: Props) {
         {/* Thumbnail */}
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-2">Thumbnail</label>
-          {thumbnailPreview && (
-            <div className="rounded-xl overflow-hidden aspect-video bg-stone-100 mb-2 max-w-xs">
-              <img src={thumbnailPreview} alt="Thumbnail" className="w-full h-full object-cover" />
-            </div>
-          )}
-          <VideoThumbnailPicker
-            videoSrc={videoPublicUrl}
-            triggerLabel={thumbnailPreview ? 'Choose different frame' : 'Choose frame from video'}
-            onCapture={(file, previewUrl) => {
-              setNewThumbnailFile(file)
-              setThumbnailPreview(previewUrl)
-            }}
-          />
-          {!videoPublicUrl && (
-            <p className="text-xs text-stone-400">No video file — thumbnail cannot be changed here.</p>
-          )}
+          <div className="flex items-start gap-4">
+            {thumbnailPreview && (
+              <div className="rounded-xl overflow-hidden bg-stone-100 flex-shrink-0 w-40 aspect-video">
+                <img src={thumbnailPreview} alt="Thumbnail" className="w-full h-full object-cover" />
+              </div>
+            )}
+            {videoPublicUrl ? (
+              <VideoThumbnailPicker
+                videoSrc={videoPublicUrl}
+                triggerLabel={thumbnailPreview ? 'Choose a different frame' : 'Choose frame from video'}
+                onCapture={(file, previewUrl) => {
+                  setNewThumbnailFile(file)
+                  setThumbnailPreview(previewUrl)
+                }}
+              />
+            ) : (
+              <p className="text-xs text-stone-400 self-center">No video file — thumbnail cannot be changed here.</p>
+            )}
+          </div>
         </div>
 
         <div>
