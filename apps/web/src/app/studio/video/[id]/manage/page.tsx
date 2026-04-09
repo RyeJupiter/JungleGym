@@ -32,11 +32,13 @@ export default async function VideoManagePageRoute({ params }: Props) {
   const purchaseCount = purchases?.length ?? 0
   const creatorEarnings = purchases?.reduce((sum, p) => sum + (p.amount_paid ?? 0), 0) ?? 0
 
-  // Construct public video URL for the thumbnail picker
+  // Generate a signed URL for the thumbnail picker (videos bucket is private)
   let videoPublicUrl: string | null = null
   if (video.video_url) {
-    const { data } = supabase.storage.from('videos').getPublicUrl(video.video_url)
-    videoPublicUrl = data.publicUrl
+    const { data } = await supabase.storage
+      .from('videos')
+      .createSignedUrl(video.video_url, 3600)
+    videoPublicUrl = data?.signedUrl ?? null
   }
 
   return (
