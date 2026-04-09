@@ -115,7 +115,7 @@ Server-side secrets are injected at Worker runtime via Cloudflare secret binding
 
 **Next.js 15**: `params` and `searchParams` are `Promise<{...}>` — always `await` them.
 
-**Supabase join filters** on FK relations are unreliable. Do two-step queries: fetch IDs first, then `.in('col', ids)`.
+**Supabase join filters** on FK relations are unreliable — **NEVER use `profiles!creator_id(...)` or similar `!` join syntax.** These fail silently (return null) because there's no direct FK from `videos`/`live_sessions` to `profiles` — they're siblings through `users`. Always do two-step queries: fetch IDs first, then `.in('col', ids)`. This has caused prod-breaking 404s twice now (March 21, April 9).
 
 **Client components using `useSearchParams()`** must be wrapped in `<Suspense>` in their parent page.
 
@@ -192,7 +192,7 @@ This file is the shared source of truth for all Claude Code instances working in
 
 - **No Stripe Connect yet** — manual payouts via Venmo. Stripe Connect is planned but blocked on Stripe + PayPal account credentials from Rye.
 - **Fun pricing is pre-calculated** — stored on the video row, not computed at query time.
-- **Supabase FK join filters are unreliable** — always do two-step queries.
+- **Supabase FK join filters are unreliable** — never use `!` join syntax (e.g. `profiles!creator_id(...)`). Always do two-step queries. Broken joins return null silently and cause 404s.
 - **Next.js pinned at 15.2.9** — do not bump; Cloudflare adapter breaks above this.
 - **Google OAuth** — not yet added. Steps: Google Cloud Console creds → Supabase Auth providers → "Continue with Google" button in `LoginForm.tsx` and `SignupForm.tsx`.
 
