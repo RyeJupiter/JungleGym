@@ -78,6 +78,7 @@ export default async function VideoPage({ params }: Props) {
               <video
                 src={videoPlaybackUrl}
                 controls
+                controlsList="nodownload"
                 className="w-full h-full"
                 poster={video.thumbnail_url ?? undefined}
               />
