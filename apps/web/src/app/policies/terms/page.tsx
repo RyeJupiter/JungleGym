@@ -19,12 +19,12 @@ export default function TermsOfServicePage() {
         <div className="flex flex-col items-center mb-10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://upload.wikimedia.org/wikipedia/commons/b/bd/Klammeraffe-drawing.jpg"
-            alt="Black-handed spider monkey (Ateles geoffroyi) — vintage natural history illustration"
+            src="https://upload.wikimedia.org/wikipedia/commons/6/62/Ayeaye%2C_Daubentonia_madagascariensis%2C_Joseph_Wolf.jpg"
+            alt="Aye-aye (Daubentonia madagascariensis) — watercolor by Joseph Wolf, c. 1863"
             className="w-48 h-auto opacity-80 mix-blend-multiply"
           />
           <p className="text-xs text-stone-400 mt-2 italic">
-            Black-handed spider monkey · <em>Ateles geoffroyi</em> · public domain illustration
+            Aye-aye · <em>Daubentonia madagascariensis</em> · Joseph Wolf, c. 1863 · public domain
           </p>
         </div>
 
