@@ -30,8 +30,9 @@ export function EditorToolbar({
   const [showThemes, setShowThemes] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
   const [showBanner, setShowBanner] = useState(false)
+  const [pendingTemplate, setPendingTemplate] = useState<(typeof TEMPLATES)[number] | null>(null)
 
-  function closeAll() { setShowThemes(false); setShowTemplates(false); setShowBanner(false) }
+  function closeAll() { setShowThemes(false); setShowTemplates(false); setShowBanner(false); setPendingTemplate(null) }
 
   return (
     <div className="sticky top-0 z-50 bg-stone-900/95 backdrop-blur-sm border-b border-stone-700 shadow-lg">
@@ -113,21 +114,41 @@ export function EditorToolbar({
 
             {showTemplates && (
               <div className="absolute top-full mt-2 right-0 bg-stone-800 border border-stone-600 rounded-xl shadow-xl p-2 w-64 z-50">
-                {TEMPLATES.map((t) => (
-                  <button
-                    key={t.name}
-                    onClick={() => {
-                      if (confirm(`Apply the "${t.name}" template? This will replace your current layout.`)) {
-                        onTemplateApply(t.config)
-                        setShowTemplates(false)
-                      }
-                    }}
-                    className="w-full text-left px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-700/50 transition-colors"
-                  >
-                    <span className="text-sm font-medium">{t.emoji} {t.name}</span>
-                    <span className="block text-xs text-stone-500 mt-0.5">{t.description}</span>
-                  </button>
-                ))}
+                {pendingTemplate ? (
+                  <div className="px-3 py-3">
+                    <p className="text-sm font-semibold text-white mb-0.5">
+                      Apply "{pendingTemplate.name}"?
+                    </p>
+                    <p className="text-xs text-stone-400 mb-3">
+                      This will replace your current layout.
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { onTemplateApply(pendingTemplate.config); closeAll() }}
+                        className="flex-1 bg-jungle-600 hover:bg-jungle-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors"
+                      >
+                        Apply
+                      </button>
+                      <button
+                        onClick={() => setPendingTemplate(null)}
+                        className="flex-1 bg-stone-700 hover:bg-stone-600 text-stone-200 text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  TEMPLATES.map((t) => (
+                    <button
+                      key={t.name}
+                      onClick={() => setPendingTemplate(t)}
+                      className="w-full text-left px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-700/50 transition-colors"
+                    >
+                      <span className="text-sm font-medium">{t.emoji} {t.name}</span>
+                      <span className="block text-xs text-stone-500 mt-0.5">{t.description}</span>
+                    </button>
+                  ))
+                )}
               </div>
             )}
           </div>
