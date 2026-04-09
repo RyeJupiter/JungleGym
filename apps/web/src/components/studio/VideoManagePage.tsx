@@ -84,18 +84,25 @@ export function VideoManagePage({ video, videoPublicUrl, metrics, transactions }
         </div>
 
         {/* Publish toggle */}
-        <button
-          onClick={togglePublish}
-          disabled={toggling}
-          className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 ${
-            published
-              ? 'bg-green-50 text-green-700 hover:bg-green-100'
-              : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-          }`}
-        >
-          <span className={`w-2 h-2 rounded-full ${published ? 'bg-green-500' : 'bg-stone-400'}`} />
-          {toggling ? '…' : published ? 'Published' : 'Draft'}
-        </button>
+        <div className="flex-shrink-0 flex items-center gap-3">
+          <span className={`text-sm font-semibold ${published ? 'text-green-700' : 'text-stone-400'}`}>
+            {toggling ? '…' : published ? 'Published' : 'Draft'}
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={published}
+            onClick={togglePublish}
+            disabled={toggling}
+            className="relative w-12 h-7 rounded-full transition-colors duration-200 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-jungle-400"
+            style={{ background: published ? '#22c55e' : '#d1d5db' }}
+          >
+            <span
+              className="absolute top-1 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200"
+              style={{ transform: published ? 'translateX(23px)' : 'translateX(3px)' }}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}

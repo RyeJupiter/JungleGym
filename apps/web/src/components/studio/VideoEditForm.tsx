@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
-import { formatPrice } from '@junglegym/shared'
 import { TagInput } from './TagInput'
 import { VideoThumbnailPicker } from './VideoThumbnailPicker'
 import { suggestTagsFromTitle } from '@/lib/movementTags'
@@ -27,11 +26,33 @@ type Props = {
   onSaved?: () => void
 }
 
+function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: () => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      disabled={disabled}
+      className="relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-200 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-jungle-400"
+      style={{ background: checked ? '#22c55e' : '#d1d5db' }}
+    >
+      <span
+        className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200"
+        style={{ transform: checked ? 'translateX(21px)' : 'translateX(2px)' }}
+      />
+    </button>
+  )
+}
+
 export function VideoEditForm({ video, videoPublicUrl, onSaved }: Props) {
   const [title, setTitle] = useState(video.title)
   const [description, setDescription] = useState(video.description ?? '')
   const [tags, setTags] = useState<string[]>(video.tags)
   const [isFree, setIsFree] = useState(video.is_free)
+  const [priceSupported, setPriceSupported] = useState(video.price_supported?.toString() ?? '')
+  const [priceCommunity, setPriceCommunity] = useState(video.price_community?.toString() ?? '')
+  const [priceAbundance, setPriceAbundance] = useState(video.price_abundance?.toString() ?? '')
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(video.thumbnail_url ?? null)
   const [newThumbnailFile, setNewThumbnailFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
@@ -53,9 +74,9 @@ export function VideoEditForm({ video, videoPublicUrl, onSaved }: Props) {
         description: description || null,
         tags,
         is_free: isFree,
-        price_supported: isFree ? null : video.price_supported,
-        price_community: isFree ? null : video.price_community,
-        price_abundance: isFree ? null : video.price_abundance,
+        price_supported: isFree ? null : (parseFloat(priceSupported) || null),
+        price_community: isFree ? null : (parseFloat(priceCommunity) || null),
+        price_abundance: isFree ? null : (parseFloat(priceAbundance) || null),
       }
 
       if (newThumbnailFile) {
@@ -126,22 +147,45 @@ export function VideoEditForm({ video, videoPublicUrl, onSaved }: Props) {
           <TagInput tags={tags} onChange={setTags} suggestions={tagSuggestions} />
         </div>
 
-        {!video.is_free && (
-          <div className="bg-stone-50 rounded-xl p-4 text-sm text-stone-600">
-            <p className="font-semibold mb-1">Pricing</p>
-            <div className="flex gap-4">
-              <span>Supported: <strong>{video.price_supported ? formatPrice(video.price_supported) : '—'}</strong></span>
-              <span>Community: <strong>{video.price_community ? formatPrice(video.price_community) : '—'}</strong></span>
-              <span>Abundance: <strong>{video.price_abundance ? formatPrice(video.price_abundance) : '—'}</strong></span>
-            </div>
-            <p className="text-xs text-stone-400 mt-1">Prices are set at upload time based on duration.</p>
+        {/* Pricing */}
+        <div className="bg-stone-50 rounded-xl p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-stone-700">Pricing</span>
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <span className="text-sm text-stone-500">Free</span>
+              <Toggle checked={isFree} onChange={() => setIsFree(!isFree)} />
+            </label>
           </div>
-        )}
 
-        <label className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
-          <input type="checkbox" checked={isFree} onChange={(e) => setIsFree(e.target.checked)} className="rounded accent-jungle-500" />
-          Free video
-        </label>
+          <div className={`grid grid-cols-3 gap-3 transition-opacity ${isFree ? 'opacity-40 pointer-events-none' : ''}`}>
+            {([
+              { label: 'Supported', value: priceSupported, set: setPriceSupported },
+              { label: 'Community', value: priceCommunity, set: setPriceCommunity },
+              { label: 'Abundance', value: priceAbundance, set: setPriceAbundance },
+            ] as const).map(({ label, value, set }) => (
+              <div key={label}>
+                <label className="block text-xs text-stone-500 mb-1">{label}</label>
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400 text-sm">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={value}
+                    onChange={(e) => set(e.target.value)}
+                    disabled={isFree}
+                    className="w-full rounded-lg border border-stone-200 bg-white pl-6 pr-2 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-jungle-400"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {!isFree && (
+            <p className="text-xs text-stone-400">Changes apply to future purchases only — past transactions are unaffected.</p>
+          )}
+        </div>
       </div>
 
       <button
