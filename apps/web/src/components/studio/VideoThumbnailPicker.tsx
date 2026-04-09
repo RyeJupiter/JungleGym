@@ -85,24 +85,35 @@ export function VideoThumbnailPicker({ videoSrc, triggerLabel = 'Choose frame fr
             <h3 className="font-black text-stone-900 text-lg mb-1">Choose a thumbnail</h3>
             <p className="text-stone-400 text-xs mb-4">Drag the slider to scrub · pause on the frame you want</p>
 
-            <video
-              ref={videoRef}
-              src={resolvedSrc}
-              crossOrigin="anonymous"
-              className="w-full rounded-xl mb-3 bg-stone-900 aspect-video object-contain"
-              muted
-              playsInline
-              preload="metadata"
-              onLoadedMetadata={(e) => {
-                const v = e.currentTarget
-                setDuration(v.duration)
-                v.currentTime = Math.min(Math.max(1, v.duration * 0.1), v.duration - 0.1)
-              }}
-              onSeeked={(e) => {
-                setCurrentTime(e.currentTarget.currentTime)
-                setReady(true)
-              }}
-            />
+            <div className="relative mb-3">
+              <video
+                ref={videoRef}
+                src={resolvedSrc}
+                crossOrigin="anonymous"
+                className="w-full rounded-xl bg-stone-900 aspect-video object-contain"
+                muted
+                playsInline
+                preload="metadata"
+                onLoadedMetadata={(e) => {
+                  const v = e.currentTarget
+                  setDuration(v.duration)
+                  v.currentTime = Math.min(Math.max(1, v.duration * 0.1), v.duration - 0.1)
+                }}
+                onSeeked={(e) => {
+                  setCurrentTime(e.currentTarget.currentTime)
+                  setReady(true)
+                }}
+              />
+              {/* Loading overlay */}
+              {!ready && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-stone-900/80">
+                  <svg className="animate-spin w-8 h-8 text-white/60" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                </div>
+              )}
+            </div>
 
             <div className="flex items-center gap-3 mb-4">
               <span className="text-xs text-stone-400 tabular-nums w-10 flex-shrink-0">{formatTime(currentTime)}</span>
