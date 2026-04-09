@@ -18,7 +18,7 @@ type Props = {
   isCreator: boolean
 }
 
-export function ProfileForm({ profile, userId, email, isCreator }: Props) {
+export function ProfileForm({ profile, userId, email }: Props) {
   const supabase = createBrowserSupabaseClient()
   const router = useRouter()
 
@@ -48,80 +48,25 @@ export function ProfileForm({ profile, userId, email, isCreator }: Props) {
     }
   }
 
-  // ── Password ──────────────────────────────────────────────────────────────
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [passwordSaving, setPasswordSaving] = useState(false)
-  const [passwordMsg, setPasswordMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  // ── Password reset ────────────────────────────────────────────────────────
+  const [resetSending, setResetSending] = useState(false)
+  const [resetMsg, setResetMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
-  async function handlePasswordSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (newPassword !== confirmPassword) {
-      setPasswordMsg({ ok: false, text: 'Passwords do not match.' })
-      return
-    }
-    if (newPassword.length < 8) {
-      setPasswordMsg({ ok: false, text: 'Password must be at least 8 characters.' })
-      return
-    }
-    setPasswordSaving(true)
-    setPasswordMsg(null)
+  async function handlePasswordReset() {
+    if (!email) return
+    setResetSending(true)
+    setResetMsg(null)
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      const redirectTo = `${window.location.origin}/auth/callback?next=/auth/reset-password`
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
       if (error) throw error
-      setPasswordMsg({ ok: true, text: 'Password updated.' })
-      setNewPassword('')
-      setConfirmPassword('')
+      setResetMsg({ ok: true, text: 'Check your email — we sent a reset link valid for 20 minutes.' })
     } catch (err: unknown) {
-      setPasswordMsg({ ok: false, text: err instanceof Error ? err.message : 'Failed to update password.' })
+      setResetMsg({ ok: false, text: err instanceof Error ? err.message : 'Failed to send reset email.' })
     } finally {
-      setPasswordSaving(false)
+      setResetSending(false)
     }
   }
-
-  // ── Delete account ────────────────────────────────────────────────────────
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [deleteStep, setDeleteStep] = useState<'warn' | 'confirm'>('warn')
-  const [deleteConfirm, setDeleteConfirm] = useState('')
-  const [deleting, setDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
-
-  function openDeleteModal() {
-    setDeleteStep('warn')
-    setDeleteConfirm('')
-    setDeleteError(null)
-    setShowDeleteModal(true)
-  }
-
-  function closeDeleteModal() {
-    setShowDeleteModal(false)
-    setDeleteConfirm('')
-    setDeleteError(null)
-  }
-
-  async function handleDeleteAccount() {
-    setDeleting(true)
-    setDeleteError(null)
-    try {
-      const res = await fetch('/api/account/delete', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: deleteConfirmHandle }),
-      })
-      if (!res.ok) {
-        const body = await res.json()
-        throw new Error(body.error ?? 'Failed to delete account')
-      }
-      await supabase.auth.signOut()
-      router.push('/')
-      router.refresh()
-    } catch (err: unknown) {
-      setDeleteError(err instanceof Error ? err.message : 'Something went wrong.')
-      setDeleting(false)
-    }
-  }
-
-  const deleteConfirmHandle = profile?.username ?? ''
 
   return (
     <div className="space-y-6">
@@ -180,145 +125,28 @@ export function ProfileForm({ profile, userId, email, isCreator }: Props) {
             {usernameSaving ? 'Saving…' : 'Save username'}
           </button>
         </form>
-      </section>
 
-      {/* Security */}
-      <section className="bg-white rounded-2xl border border-stone-200 p-8 space-y-5">
-        <h2 className="font-bold text-stone-900">Security</h2>
-        <form onSubmit={handlePasswordSubmit} className="space-y-3">
+        {/* Password reset */}
+        <div className="pt-2 border-t border-stone-100 space-y-3">
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">New password</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => { setNewPassword(e.target.value); setPasswordMsg(null) }}
-              required
-              minLength={8}
-              className={inputClass}
-              placeholder="At least 8 characters"
-              autoComplete="new-password"
-            />
+            <p className="text-sm font-medium text-stone-700">Password</p>
+            <p className="text-xs text-stone-400 mt-0.5">We&apos;ll send a secure reset link to your email, valid for 20 minutes.</p>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">Confirm new password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => { setConfirmPassword(e.target.value); setPasswordMsg(null) }}
-              required
-              className={inputClass}
-              placeholder="Repeat new password"
-              autoComplete="new-password"
-            />
-          </div>
-          {passwordMsg && (
-            <p className={`text-sm px-3 py-2 rounded-lg ${passwordMsg.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-              {passwordMsg.text}
+          {resetMsg && (
+            <p className={`text-sm px-3 py-2 rounded-lg ${resetMsg.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+              {resetMsg.text}
             </p>
           )}
-          <button type="submit" disabled={passwordSaving} className={btnClass}>
-            {passwordSaving ? 'Updating…' : 'Update password'}
+          <button
+            type="button"
+            onClick={handlePasswordReset}
+            disabled={resetSending || !email || !!resetMsg?.ok}
+            className="bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {resetSending ? 'Sending…' : resetMsg?.ok ? 'Email sent ✓' : 'Send reset link'}
           </button>
-        </form>
-      </section>
-
-      {/* Danger Zone */}
-      <section className="bg-white rounded-2xl border border-red-200 p-8 space-y-4">
-        <h2 className="font-bold text-red-700">Danger zone</h2>
-        <p className="text-sm text-stone-600">
-          Permanently delete your account and all associated data. This cannot be undone.
-        </p>
-        <button
-          type="button"
-          onClick={openDeleteModal}
-          className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
-        >
-          Delete account
-        </button>
-      </section>
-
-      {/* Delete confirmation modal — two-step */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={closeDeleteModal}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 space-y-5" onClick={(e) => e.stopPropagation()}>
-
-            {deleteStep === 'warn' ? (
-              <>
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black text-stone-900">Are you sure?</h3>
-                    <p className="text-sm text-stone-500 mt-0.5">This action is permanent and cannot be reversed.</p>
-                  </div>
-                </div>
-                <ul className="text-sm text-stone-600 space-y-1.5 bg-red-50 rounded-xl px-4 py-3">
-                  <li>Your account and login will be deleted</li>
-                  <li>Your public profile will be removed</li>
-                  <li>All your videos and purchases will be gone</li>
-                  <li className="font-semibold text-red-700">There is no undo</li>
-                </ul>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={closeDeleteModal}
-                    className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold py-2.5 rounded-lg text-sm transition-colors"
-                  >
-                    No, keep my account
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeleteStep('confirm')}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
-                  >
-                    Yes, I'm sure
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h3 className="text-xl font-black text-stone-900">Final confirmation</h3>
-                <p className="text-sm text-stone-600 leading-relaxed">
-                  Type <span className="font-mono font-bold text-stone-900">@{deleteConfirmHandle}</span> below to permanently delete your account.
-                </p>
-                <input
-                  type="text"
-                  value={deleteConfirm}
-                  onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(null) }}
-                  className={inputClass}
-                  placeholder={`@${deleteConfirmHandle}`}
-                  autoFocus
-                />
-                {deleteError && (
-                  <p className="text-sm bg-red-50 text-red-700 px-3 py-2 rounded-lg">{deleteError}</p>
-                )}
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={closeDeleteModal}
-                    disabled={deleting}
-                    className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold py-2.5 rounded-lg text-sm transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDeleteAccount}
-                    disabled={deleting || deleteConfirm !== `@${deleteConfirmHandle}`}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors disabled:opacity-40"
-                  >
-                    {deleting ? 'Deleting…' : 'Delete forever'}
-                  </button>
-                </div>
-              </>
-            )}
-
-          </div>
         </div>
-      )}
+      </section>
     </div>
   )
 }

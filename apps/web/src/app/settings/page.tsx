@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ProfileForm } from '@/components/profile/ProfileForm'
 import { StudioSettingsForm } from '@/components/studio/StudioSettingsForm'
+import { DangerZone } from '@/components/profile/DangerZone'
 import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
@@ -38,6 +39,12 @@ export default async function SettingsPage() {
               community_rate: profile.community_rate ?? 2,
               abundance_rate: profile.abundance_rate ?? 3,
             }} />
+          </div>
+        )}
+
+        {profile?.username && (
+          <div className="mt-6">
+            <DangerZone username={profile.username} userId={authUser.id} />
           </div>
         )}
       </div>
