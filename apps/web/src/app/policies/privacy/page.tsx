@@ -17,7 +17,19 @@ export default function PrivacyPolicyPage() {
 
       <main className="max-w-3xl mx-auto px-6 py-16">
         <h1 className="text-4xl font-black text-jungle-900 mb-2">Privacy Policy</h1>
-        <p className="text-stone-500 text-sm mb-12">Last updated: April 9, 2026</p>
+        <p className="text-stone-500 text-sm mb-8">Last updated: April 9, 2026</p>
+
+        <div className="bg-jungle-50 border border-jungle-200 rounded-xl px-6 py-5 mb-12 text-stone-700 leading-relaxed">
+          <p>
+            Your rights are important to us. We believe in transparency so that you may exercise
+            your informed consent — to work with us, or not. If you have any further questions,
+            please{' '}
+            <a href="mailto:rye@junglegym.academy" className="text-jungle-600 underline">
+              reach out
+            </a>
+            .
+          </p>
+        </div>
 
         <div className="space-y-10 text-stone-700 leading-relaxed">
 
