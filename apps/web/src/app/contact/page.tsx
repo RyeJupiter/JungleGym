@@ -19,10 +19,10 @@ export default async function ContactPage() {
           </p>
 
           <a
-            href="mailto:hello@junglegym.academy"
+            href="mailto:rye@junglegym.academy"
             className="inline-block text-lg font-semibold text-jungle-400 hover:text-jungle-300 transition-colors underline underline-offset-4"
           >
-            hello@junglegym.academy
+            rye@junglegym.academy
           </a>
 
           <div className="mt-10 pt-8 border-t border-stone-200 text-sm text-jungle-600">
