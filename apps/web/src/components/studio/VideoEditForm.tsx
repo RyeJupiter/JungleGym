@@ -59,8 +59,12 @@ function PriceInput({ label, value, onChange, disabled }: {
           type="button"
           onClick={decrement}
           disabled={disabled}
-          className="px-2.5 py-2 text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors text-base leading-none select-none"
-        >−</button>
+          className="px-2.5 py-2 text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors select-none"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
         <div className="relative flex-1">
           <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-stone-400 text-xs">$</span>
           <input
@@ -77,8 +81,12 @@ function PriceInput({ label, value, onChange, disabled }: {
           type="button"
           onClick={increment}
           disabled={disabled}
-          className="px-2.5 py-2 text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors text-base leading-none select-none"
-        >+</button>
+          className="px-2.5 py-2 text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors select-none"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
       </div>
     </div>
   )
