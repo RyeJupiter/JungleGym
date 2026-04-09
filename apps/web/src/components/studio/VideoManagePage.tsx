@@ -28,15 +28,37 @@ type Metrics = {
   creatorEarnings: number
 }
 
+export type VideoTransaction = {
+  id: string
+  createdAt: string
+  tier: string
+  buyerName: string
+  buyerUsername: string
+  creatorAmount: number
+  platformAmount: number
+  total: number
+}
+
 type Props = {
   video: Video
   videoPublicUrl: string | null
   metrics: Metrics
+  transactions: VideoTransaction[]
 }
 
 type Tab = 'metrics' | 'settings'
 
-export function VideoManagePage({ video, videoPublicUrl, metrics }: Props) {
+const TIER_STYLES: Record<string, string> = {
+  supported: 'bg-green-50 text-green-700',
+  community: 'bg-blue-50 text-blue-700',
+  abundance: 'bg-purple-50 text-purple-700',
+}
+
+function fmt(n: number) {
+  return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
+export function VideoManagePage({ video, videoPublicUrl, metrics, transactions }: Props) {
   const [published, setPublished] = useState(video.published)
   const [toggling, setToggling] = useState(false)
   const [tab, setTab] = useState<Tab>('metrics')
@@ -95,7 +117,7 @@ export function VideoManagePage({ video, videoPublicUrl, metrics }: Props) {
 
       {/* Metrics tab */}
       {tab === 'metrics' && (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Thumbnail */}
           {video.thumbnail_url && (
             <div className="rounded-2xl overflow-hidden aspect-video bg-stone-100 max-w-sm">
@@ -114,17 +136,53 @@ export function VideoManagePage({ video, videoPublicUrl, metrics }: Props) {
             />
           </div>
 
-          {metrics.purchaseCount === 0 && (
-            <p className="text-sm text-stone-400 text-center py-4">
-              No purchases yet.{' '}
-              {!published && (
-                <button onClick={togglePublish} className="text-jungle-600 hover:underline font-medium">
-                  Publish your video
-                </button>
-              )}{' '}
-              {published && 'Share it to start earning.'}
-            </p>
-          )}
+          {/* Transactions */}
+          <div>
+            <h2 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">Transactions</h2>
+
+            {transactions.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-stone-200 p-10 text-center text-stone-400">
+                <p className="font-medium">No purchases yet</p>
+                {!published && (
+                  <p className="text-sm mt-1">
+                    <button onClick={togglePublish} className="text-jungle-600 hover:underline font-medium">
+                      Publish your video
+                    </button>{' '}to start earning.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100">
+                {transactions.map((t) => (
+                  <div key={t.id} className="px-5 py-4 flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${TIER_STYLES[t.tier] ?? 'bg-stone-100 text-stone-600'}`}>
+                          {t.tier}
+                        </span>
+                        <p className="font-semibold text-stone-900 truncate">{t.buyerName}</p>
+                        {t.buyerUsername && (
+                          <p className="text-xs text-stone-400 truncate">@{t.buyerUsername}</p>
+                        )}
+                      </div>
+                      <p className="text-xs text-stone-400">
+                        {new Date(t.createdAt).toLocaleDateString(undefined, {
+                          month: 'short', day: 'numeric', year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-bold text-stone-900">{fmt(t.total)}</p>
+                      <p className="text-xs text-stone-400">
+                        {fmt(t.creatorAmount)} you · {fmt(t.platformAmount)} platform
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
