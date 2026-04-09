@@ -51,6 +51,13 @@ export default async function ExplorePage({
       <Navbar />
 
       <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="mb-8">
+          <h1 className="text-4xl font-black text-stone-900">Classes</h1>
+          <p className="text-stone-500 mt-2">
+            Movement classes from skilled guides. Pay once, own forever.
+          </p>
+        </div>
+
         {/* Search */}
         <form method="get" className="mb-8">
           <div className="flex gap-3 max-w-lg">
