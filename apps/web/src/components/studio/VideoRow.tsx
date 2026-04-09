@@ -74,8 +74,8 @@ export function VideoRow({ video, index }: { video: Video; index: number }) {
         >
           {loading ? '…' : published ? 'Unpublish' : 'Publish'}
         </button>
-        <Link href={`/studio/video/${video.id}/edit`} className="text-xs text-stone-400 hover:text-stone-700 font-medium">
-          Edit
+        <Link href={`/studio/video/${video.id}/manage`} className="text-xs text-stone-400 hover:text-stone-700 font-medium">
+          Manage
         </Link>
       </div>
     </div>

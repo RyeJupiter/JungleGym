@@ -6,6 +6,7 @@ import * as tus from 'tus-js-client'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { calculateTierPrices, formatPrice } from '@junglegym/shared'
 import { TagInput } from './TagInput'
+import { VideoThumbnailPicker } from './VideoThumbnailPicker'
 import { suggestTagsFromTitle } from '@/lib/movementTags'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -243,7 +244,7 @@ export function VideoUploadForm({
         </div>
 
         {/* Thumbnail — 1 col */}
-        <div className="col-span-1">
+        <div className="col-span-1 flex flex-col gap-2">
           <input ref={thumbInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => {
                 const file = e.target.files?.[0] ?? null
                 setThumbnailFile(file)
@@ -253,7 +254,7 @@ export function VideoUploadForm({
           <button
             type="button"
             onClick={() => thumbInputRef.current?.click()}
-            className={`w-full h-full rounded-2xl border-2 border-dashed transition-colors overflow-hidden ${
+            className={`w-full rounded-2xl border-2 border-dashed transition-colors overflow-hidden aspect-video ${
               thumbnailFile
                 ? 'border-jungle-300'
                 : 'border-stone-200 hover:border-jungle-300 bg-white hover:bg-jungle-50/40'
@@ -268,10 +269,19 @@ export function VideoUploadForm({
             ) : (
               <div className="flex flex-col items-center justify-center gap-1 h-full py-6">
                 <p className="text-xl">🖼️</p>
-                <p className="text-xs text-stone-400 text-center leading-tight">Thumbnail</p>
+                <p className="text-xs text-stone-400 text-center leading-tight">Upload</p>
               </div>
             )}
           </button>
+          <VideoThumbnailPicker
+            videoSrc={videoFile}
+            triggerLabel="Choose frame"
+            onCapture={(file, previewUrl) => {
+              if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview)
+              setThumbnailFile(file)
+              setThumbnailPreview(previewUrl)
+            }}
+          />
         </div>
       </div>
 
