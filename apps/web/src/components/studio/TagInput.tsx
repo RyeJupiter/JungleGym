@@ -61,7 +61,7 @@ export function TagInput({ tags, onChange, suggestions = [], placeholder = 'Add 
             key={i}
             className="inline-flex items-center gap-1 bg-jungle-100 text-jungle-800 text-xs font-semibold px-2.5 py-1 rounded-full select-none"
           >
-            {tag}
+            {tag.replace(/-/g, ' ')}
             <button
               type="button"
               onMouseDown={(e) => e.preventDefault()} // don't blur the input
@@ -100,7 +100,7 @@ export function TagInput({ tags, onChange, suggestions = [], placeholder = 'Add 
         </div>
       )}
 
-      <p className="mt-1.5 text-xs text-stone-400">Type a tag, then press <kbd className="font-mono bg-stone-100 px-1 rounded">space</kbd> or <kbd className="font-mono bg-stone-100 px-1 rounded">,</kbd> to add it · backspace removes the last one</p>
+      <p className="mt-1.5 text-xs text-stone-400">Type a tag, then press <kbd className="font-mono bg-stone-100 px-1 rounded">space</kbd> or <kbd className="font-mono bg-stone-100 px-1 rounded">,</kbd> to add it · backspace removes the last one · use spaces for multi-word tags (stored as hyphens)</p>
     </div>
   )
 }
