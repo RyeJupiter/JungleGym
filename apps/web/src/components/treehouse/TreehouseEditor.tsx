@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   DndContext,
@@ -19,7 +19,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { compressImage } from '@/lib/compressImage'
 import type { TreehouseConfig, SectionConfig, ThemeKey } from './config'
 import { SINGLETON_SECTIONS } from './config'
-import { THEME_MAP } from './themes'
+import { THEME_MAP, withBannerOverrides } from './themes'
 import { SectionRenderer } from './sections/SectionRenderer'
 import type { TreehouseData } from './sections/SectionRenderer'
 import { SortableSection } from './SortableSection'
@@ -35,10 +35,12 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
   const router = useRouter()
   const [config, setConfig] = useState<TreehouseConfig>(initialConfig)
   const [profileEdits, setProfileEdits] = useState<Record<string, string>>({})
+  const profileEditsRef = useRef<Record<string, string>>({})
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
 
-  const theme = THEME_MAP[config.theme]
+  const baseTheme = THEME_MAP[config.theme]
+  const theme = config.banner ? withBannerOverrides(baseTheme) : baseTheme
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -98,7 +100,8 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
 
   // ── Profile field edits ──
   const handleFieldChange = useCallback((field: string, value: string) => {
-    setProfileEdits((prev) => ({ ...prev, [field]: value }))
+    profileEditsRef.current = { ...profileEditsRef.current, [field]: value }
+    setProfileEdits(profileEditsRef.current)
   }, [])
 
   // ── Photo change ──
@@ -122,38 +125,40 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
     setSaving(true)
     try {
       const supabase = createBrowserSupabaseClient()
+      // Read from ref to capture any pending onBlur edits that haven't committed to state yet
+      const edits = profileEditsRef.current
       const updatePayload: Record<string, unknown> = {
         treehouse_config: config,
       }
 
       // Banner is stored inside treehouse_config (already included above via `config`)
       // Include any inline text edits
-      if (profileEdits.display_name !== undefined) updatePayload.display_name = profileEdits.display_name
-      if (profileEdits.tagline !== undefined) updatePayload.tagline = profileEdits.tagline || null
-      if (profileEdits.bio !== undefined) updatePayload.bio = profileEdits.bio || null
-      if (profileEdits.location !== undefined) updatePayload.location = profileEdits.location || null
-      if (profileEdits.instagram_url !== undefined) updatePayload.instagram_url = profileEdits.instagram_url || null
-      if (profileEdits.website_url !== undefined) updatePayload.website_url = profileEdits.website_url || null
-      if (profileEdits.tags !== undefined) {
-        updatePayload.tags = profileEdits.tags
-          ? profileEdits.tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean)
+      if (edits.display_name !== undefined) updatePayload.display_name = edits.display_name
+      if (edits.tagline !== undefined) updatePayload.tagline = edits.tagline || null
+      if (edits.bio !== undefined) updatePayload.bio = edits.bio || null
+      if (edits.location !== undefined) updatePayload.location = edits.location || null
+      if (edits.instagram_url !== undefined) updatePayload.instagram_url = edits.instagram_url || null
+      if (edits.website_url !== undefined) updatePayload.website_url = edits.website_url || null
+      if (edits.tags !== undefined) {
+        updatePayload.tags = edits.tags
+          ? edits.tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean)
           : []
       }
-      if (profileEdits.supported_rate !== undefined) {
-        const r = parseFloat(profileEdits.supported_rate)
+      if (edits.supported_rate !== undefined) {
+        const r = parseFloat(edits.supported_rate)
         if (!isNaN(r) && r > 0) updatePayload.supported_rate = r
       }
-      if (profileEdits.community_rate !== undefined) {
-        const r = parseFloat(profileEdits.community_rate)
+      if (edits.community_rate !== undefined) {
+        const r = parseFloat(edits.community_rate)
         if (!isNaN(r) && r > 0) updatePayload.community_rate = r
       }
-      if (profileEdits.abundance_rate !== undefined) {
-        const r = parseFloat(profileEdits.abundance_rate)
+      if (edits.abundance_rate !== undefined) {
+        const r = parseFloat(edits.abundance_rate)
         if (!isNaN(r) && r > 0) updatePayload.abundance_rate = r
       }
 
       // Upload photo if changed
-      if (profileEdits.photo_url !== undefined) {
+      if (edits.photo_url !== undefined) {
         if (photoFile) {
           const ready = await compressImage(photoFile, { maxWidth: 1000, maxHeight: 1000, maxBytes: 5 * 1024 * 1024 })
           const ext = ready.name.split('.').pop()
@@ -223,7 +228,7 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
           className="fixed inset-0 z-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${config.banner})` }}
         >
-          <div className="absolute inset-0 bg-black/65 backdrop-blur-[2px]" />
+          <div className="absolute inset-0 bg-black/65" />
         </div>
       )}
       <div className="relative z-10">

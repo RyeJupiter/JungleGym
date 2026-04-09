@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
 import { MembershipButton } from '@/components/MembershipButton'
-import { EmailCaptureForm } from '@/components/EmailCaptureForm'
 
 export default async function HomePage() {
   return (
@@ -13,10 +12,10 @@ export default async function HomePage() {
       <div className="bg-jungle-800">
         <section className="pt-28 pb-24 px-6 text-center">
           <div className="max-w-3xl mx-auto">
-                <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 leading-none">
+                <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 leading-none" style={{ WebkitTextStroke: '1px rgba(0,0,0,0.3)' }}>
               Welcome to JungleGym.
               <br />
-              <span className="text-jungle-400">Let's learn & play.</span>
+              <span className="text-jungle-400">Let&apos;s learn &amp; play.</span>
             </h1>
             <p className="text-lg text-jungle-300 mb-10 max-w-xl mx-auto leading-relaxed">
               Movement classes from skilled guides.
@@ -176,16 +175,6 @@ export default async function HomePage() {
           <Link href="/sessions" className="shrink-0 bg-jungle-900 hover:bg-jungle-800 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors whitespace-nowrap">
             Check out live classes →
           </Link>
-        </div>
-      </section>
-
-      {/* Email capture */}
-      <section className="py-16 px-6 bg-jungle-800 text-center">
-        <div className="max-w-xl mx-auto">
-          <p className="text-xs font-semibold text-jungle-400 uppercase tracking-widest mb-3">Stay in the loop</p>
-          <h2 className="text-2xl font-black text-white mb-2">New teachers. New classes. No spam.</h2>
-          <p className="text-jungle-400 text-sm mb-6">We&apos;ll let you know when something worth moving for drops.</p>
-          <EmailCaptureForm />
         </div>
       </section>
 

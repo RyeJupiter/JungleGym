@@ -52,6 +52,7 @@ function VideoCard({ video: v, theme }: { video: VideoCardData; theme: ThemeClas
             <img
               src={v.thumbnail_url}
               alt={v.title}
+              loading="lazy"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (

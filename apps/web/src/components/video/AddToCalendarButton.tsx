@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { buildVideoCalUrl, RRULE_OPTIONS } from '@/lib/gcal'
+import { buildVideoCalUrl, RRULE_OPTIONS, buildIcsContent, downloadIcs } from '@/lib/gcal'
 
 export function AddToCalendarButton({ videoTitle, videoId }: { videoTitle: string; videoId: string }) {
   const [open, setOpen] = useState(false)
   const [time, setTime] = useState('07:00')
-  const [rrule, setRrule] = useState(RRULE_OPTIONS[0].value)
+  const [rrule, setRrule] = useState<string>(RRULE_OPTIONS[0].value)
 
   const calUrl = buildVideoCalUrl({ videoTitle, videoId, timeHHMM: time, rrule })
   const rruleLabel = RRULE_OPTIONS.find((o) => o.value === rrule)?.label ?? ''
@@ -55,16 +55,37 @@ export function AddToCalendarButton({ videoTitle, videoId }: { videoTitle: strin
                 📌 <strong>{rruleLabel}</strong> at {time} — <span className="text-jungle-500">{videoTitle.slice(0, 40)}{videoTitle.length > 40 ? '…' : ''}</span>
               </div>
 
-              <a
-                href={calUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl text-sm text-center transition-colors"
-              >
-                Open in Google Calendar →
-              </a>
+              <div className="space-y-2">
+                <a
+                  href={calUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl text-sm text-center transition-colors"
+                >
+                  Open in Google Calendar →
+                </a>
+                <button
+                  onClick={() => {
+                    const [hours, minutes] = time.split(':').map(Number)
+                    const start = new Date()
+                    start.setHours(hours, minutes, 0, 0)
+                    if (start <= new Date()) start.setDate(start.getDate() + 1)
+                    const end = new Date(start.getTime() + 60 * 60 * 1000)
+                    const ics = buildIcsContent({
+                      title: `Practice: ${videoTitle}`,
+                      description: `${window.location.origin}/video/${videoId}`,
+                      start,
+                      end,
+                    })
+                    downloadIcs(`practice-${videoTitle.replace(/\s+/g, '-')}.ics`, ics)
+                  }}
+                  className="block w-full bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold py-3 rounded-xl text-sm text-center transition-colors"
+                >
+                  Download for Apple Calendar (.ics)
+                </button>
+              </div>
               <p className="text-xs text-stone-400 text-center">
-                You&apos;ll be taken to Google Calendar to confirm the event.
+                Google Calendar opens in a new tab. Apple Calendar downloads an .ics file.
               </p>
             </div>
 

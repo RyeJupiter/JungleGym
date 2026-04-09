@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { ProfileForm } from '@/components/profile/ProfileForm'
 import { StudioSettingsForm } from '@/components/studio/StudioSettingsForm'
 import { DangerZone } from '@/components/profile/DangerZone'
+import { EmailPreferences } from '@/components/profile/EmailPreferences'
 import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
@@ -41,6 +42,10 @@ export default async function SettingsPage() {
             }} />
           </div>
         )}
+
+        <div className="mt-6">
+          <EmailPreferences />
+        </div>
 
         {profile?.username && (
           <div className="mt-6">

@@ -39,9 +39,10 @@ export function LiveSessionsSection({ sessions, theme }: Props) {
           const sessionDate = new Date(s.scheduled_at)
           const isLive = s.status === 'live'
           return (
-            <div
+            <Link
               key={s.id}
-              className={`rounded-xl border p-5 transition-colors ${
+              href="/sessions"
+              className={`block rounded-xl border p-5 transition-colors ${
                 isLive
                   ? 'bg-green-900/30 border-green-700/60 hover:border-green-500'
                   : `${theme.cardBg} ${theme.cardBorder} ${theme.cardHoverBorder}`
@@ -91,7 +92,7 @@ export function LiveSessionsSection({ sessions, theme }: Props) {
                   </>
                 )}
               </div>
-            </div>
+            </Link>
           )
         })}
       </div>

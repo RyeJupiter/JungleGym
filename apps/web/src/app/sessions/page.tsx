@@ -124,7 +124,7 @@ function SessionCard({
   const scheduledDate = new Date(s.scheduled_at)
 
   return (
-    <div className={`bg-white rounded-2xl border p-6 ${isLive ? 'border-red-200 shadow-sm' : 'border-stone-200'}`}>
+    <div className={`bg-white rounded-2xl border p-6 ${isLive ? 'border-red-200 shadow-sm' : 'border-stone-200'} hover:shadow-md transition-shadow`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-jungle-100 overflow-hidden flex items-center justify-center text-2xl flex-shrink-0">
@@ -163,7 +163,7 @@ function SessionCard({
         <p className="text-stone-600 text-sm mt-3">{s.description}</p>
       )}
 
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-4">
           <p className="text-xs text-stone-400">🎁 Gift-based — give freely, no pressure</p>
           {!isLive && <AddSessionToCalendarButton session={s} />}

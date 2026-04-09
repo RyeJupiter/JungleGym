@@ -14,10 +14,16 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json().catch(() => null)
-  const { videoId, tier } = body ?? {}
+  const videoId = typeof body?.videoId === 'string' ? body.videoId.trim() : ''
+  const tier = typeof body?.tier === 'string' ? body.tier.trim() : ''
 
   if (!videoId || !tier) {
     return NextResponse.json({ error: 'videoId and tier required' }, { status: 400 })
+  }
+
+  const validTiers = ['supported', 'community', 'abundance']
+  if (!validTiers.includes(tier)) {
+    return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
   }
 
   // Check if user already owns this video
@@ -48,7 +54,7 @@ export async function POST(req: Request) {
     community: video.price_community,
     abundance: video.price_abundance,
   }
-  const videoPrice = priceMap[tier as PriceTier]
+  const videoPrice = priceMap[tier]
   if (!videoPrice) {
     return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
   }

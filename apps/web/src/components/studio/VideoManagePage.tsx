@@ -73,14 +73,16 @@ export function VideoManagePage({ video, videoPublicUrl, metrics, transactions }
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-8">
+      <div className="flex items-start justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div>
           <Link href="/studio" className="text-sm text-stone-400 hover:text-stone-600 transition-colors mb-2 inline-block">
             ← Studio
           </Link>
-          <h1 className="text-2xl font-black text-stone-900 leading-snug">{video.title}</h1>
+          <Link href={`/video/${video.id}`} className="text-2xl font-black text-stone-900 leading-snug hover:text-jungle-700 transition-colors">
+            {video.title}
+          </Link>
         </div>
 
         {/* Publish toggle */}
@@ -127,13 +129,13 @@ export function VideoManagePage({ video, videoPublicUrl, metrics, transactions }
         <div className="space-y-8">
           {/* Thumbnail */}
           {video.thumbnail_url && (
-            <div className="rounded-2xl overflow-hidden aspect-video bg-stone-100 max-w-sm">
+            <Link href={`/video/${video.id}`} className="block rounded-2xl overflow-hidden aspect-video bg-stone-100 max-w-sm hover:opacity-90 transition-opacity">
               <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
-            </div>
+            </Link>
           )}
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <StatCard label="Views" value={video.view_count.toLocaleString()} />
             <StatCard label="Purchases" value={metrics.purchaseCount.toLocaleString()} />
             <StatCard
@@ -161,15 +163,15 @@ export function VideoManagePage({ video, videoPublicUrl, metrics, transactions }
             ) : (
               <div className="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100">
                 {transactions.map((t) => (
-                  <div key={t.id} className="px-5 py-4 flex items-start justify-between gap-4">
+                  <div key={t.id} className="px-4 sm:px-5 py-3 sm:py-4 flex items-start justify-between gap-3 sm:gap-4">
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-0.5">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                         <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${TIER_STYLES[t.tier] ?? 'bg-stone-100 text-stone-600'}`}>
                           {t.tier}
                         </span>
-                        <p className="font-semibold text-stone-900 truncate">{t.buyerName}</p>
+                        <p className="font-semibold text-stone-900 truncate text-sm sm:text-base">{t.buyerName}</p>
                         {t.buyerUsername && (
-                          <p className="text-xs text-stone-400 truncate">@{t.buyerUsername}</p>
+                          <p className="text-xs text-stone-400 truncate hidden sm:block">@{t.buyerUsername}</p>
                         )}
                       </div>
                       <p className="text-xs text-stone-400">
@@ -180,7 +182,7 @@ export function VideoManagePage({ video, videoPublicUrl, metrics, transactions }
                     </div>
 
                     <div className="text-right flex-shrink-0">
-                      <p className="font-bold text-stone-900">{fmt(t.total)}</p>
+                      <p className="font-bold text-stone-900 text-sm sm:text-base">{fmt(t.total)}</p>
                       <p className="text-xs text-stone-400">
                         {fmt(t.creatorAmount)} you · {fmt(t.platformAmount)} platform
                       </p>

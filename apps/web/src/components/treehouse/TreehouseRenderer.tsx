@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { TreehouseConfig } from './config'
-import { THEME_MAP } from './themes'
+import { THEME_MAP, withBannerOverrides } from './themes'
 import { SectionRenderer } from './sections/SectionRenderer'
 import type { TreehouseData } from './sections/SectionRenderer'
 
@@ -10,7 +10,8 @@ type Props = {
 }
 
 export function TreehouseRenderer({ config, data }: Props) {
-  const theme = THEME_MAP[config.theme]
+  const baseTheme = THEME_MAP[config.theme]
+  const theme = config.banner ? withBannerOverrides(baseTheme) : baseTheme
 
   return (
     <div className={`relative min-h-screen ${theme.pageBg}`}>
@@ -20,7 +21,7 @@ export function TreehouseRenderer({ config, data }: Props) {
           className="fixed inset-0 z-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${config.banner})` }}
         >
-          <div className="absolute inset-0 bg-black/65 backdrop-blur-[2px]" />
+          <div className="absolute inset-0 bg-black/65" />
         </div>
       )}
 

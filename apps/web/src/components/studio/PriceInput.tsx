@@ -20,12 +20,28 @@ export function PriceInput({ label, hint, value, onChange, disabled }: Props) {
   function increment() {
     const current = parseFloat(value) || 0
     const step = getStep(current)
-    onChange((Math.round((current + step) * 100) / 100).toFixed(2))
+    const currentCents = Math.round(current * 100)
+    const stepCents = Math.round(step * 100)
+    const remainder = currentCents % stepCents
+    if (remainder > 0) {
+      // Not aligned — snap up to nearest step boundary
+      onChange(((currentCents - remainder + stepCents) / 100).toFixed(2))
+    } else {
+      onChange(((currentCents + stepCents) / 100).toFixed(2))
+    }
   }
   function decrement() {
     const current = parseFloat(value) || 0
     const step = getStep(Math.max(0, current - 0.001))
-    onChange((Math.max(0, Math.round((current - step) * 100) / 100)).toFixed(2))
+    const currentCents = Math.round(current * 100)
+    const stepCents = Math.round(step * 100)
+    const remainder = currentCents % stepCents
+    if (remainder > 0) {
+      // Not aligned — snap down to nearest step boundary
+      onChange((Math.max(0, (currentCents - remainder) / 100)).toFixed(2))
+    } else {
+      onChange((Math.max(0, (currentCents - stepCents) / 100)).toFixed(2))
+    }
   }
 
   return (

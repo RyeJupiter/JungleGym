@@ -123,6 +123,23 @@ export const THEME_LABELS: Record<ThemeKey, { name: string; emoji: string }> = {
   stone: { name: 'Stone', emoji: '🪨' },
 }
 
+/** When a banner image is set, the dark overlay means we need light text regardless of theme */
+export function withBannerOverrides(theme: ThemeClasses): ThemeClasses {
+  return {
+    ...theme,
+    textPrimary: 'text-white',
+    textSecondary: 'text-white/70',
+    textMuted: 'text-white/40',
+    accent: 'text-white/90',
+    cardBg: 'bg-white/10',
+    cardBorder: 'border-white/20',
+    cardHoverBorder: 'hover:border-white/40',
+    badgeBg: 'bg-white/15',
+    badgeText: 'text-white',
+    divider: 'border-white/15',
+  }
+}
+
 /** Preview swatch colors for the theme picker UI */
 export const THEME_SWATCHES: Record<ThemeKey, string[]> = {
   jungle: ['#0a1c14', '#237a51', '#3d9e6b'],

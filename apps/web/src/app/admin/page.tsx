@@ -350,13 +350,14 @@ export default async function AdminPage({
     </div>
   )
   } catch (err) {
+    console.error('Admin page error:', err)
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl border border-red-200 p-8 max-w-xl w-full space-y-4">
-          <h1 className="text-lg font-bold text-red-700">Admin Debug</h1>
-          <pre className="text-sm text-stone-700 whitespace-pre-wrap break-all">
-            {err instanceof Error ? `${err.message}\n\n${err.stack}` : String(err)}
-          </pre>
+          <h1 className="text-lg font-bold text-red-700">Something went wrong</h1>
+          <p className="text-sm text-stone-600">
+            {err instanceof Error ? err.message : 'An unexpected error occurred.'}
+          </p>
         </div>
       </div>
     )

@@ -10,6 +10,7 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [email, setEmail] = useState('')
   const router = useRouter()
   const supabase = createBrowserSupabaseClient()
 
@@ -49,13 +50,22 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
     setTimeout(() => setCopied(false), 2000)
   }
 
+  function handleSendEmail() {
+    if (!link || !email) return
+    const subject = encodeURIComponent("I'm sharing a class with you on JungleGym")
+    const body = encodeURIComponent(
+      `Hey! I wanted to share this class with you. Click the link below to get free access:\n\n${link}\n\nSign up or log in to JungleGym to redeem it.`
+    )
+    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_self')
+  }
+
   return (
     <>
       <button
         onClick={handleOpen}
         className="w-full mt-3 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
       >
-        🔗 Share with a friend
+        🎁 Share with a friend
       </button>
 
       {open && (
@@ -63,7 +73,8 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
           <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-xl">
             <h3 className="font-black text-stone-900 text-lg mb-1">Share this class</h3>
             <p className="text-stone-500 text-sm mb-6">
-              Send this link to one friend. They get free access — once.
+              Send this to one friend. They get free access — your treat.
+              They&apos;ll need a JungleGym account to redeem.
             </p>
 
             {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
@@ -71,21 +82,54 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
             {loading ? (
               <div className="text-center py-4 text-stone-400 text-sm">Generating link...</div>
             ) : link ? (
-              <div className="space-y-3">
-                <input
-                  readOnly
-                  value={link}
-                  className="w-full rounded-lg border border-stone-200 px-3 py-2.5 text-stone-700 text-sm bg-stone-50 focus:outline-none"
-                  onClick={(e) => (e.target as HTMLInputElement).select()}
-                />
-                <button
-                  onClick={handleCopy}
-                  className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors"
-                >
-                  {copied ? '✓ Copied!' : 'Copy link'}
-                </button>
+              <div className="space-y-4">
+                {/* Email invite */}
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
+                    Send via email
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="friend@example.com"
+                      className="flex-1 rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-jungle-400"
+                    />
+                    <button
+                      onClick={handleSendEmail}
+                      disabled={!email}
+                      className="bg-jungle-600 hover:bg-jungle-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-40"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-stone-400">
+                  <div className="flex-1 border-t border-stone-200" />
+                  or copy the link
+                  <div className="flex-1 border-t border-stone-200" />
+                </div>
+
+                {/* Copy link */}
+                <div className="flex gap-2">
+                  <input
+                    readOnly
+                    value={link}
+                    className="flex-1 rounded-lg border border-stone-200 px-3 py-2 text-stone-600 text-sm bg-stone-50 focus:outline-none"
+                    onClick={(e) => (e.target as HTMLInputElement).select()}
+                  />
+                  <button
+                    onClick={handleCopy}
+                    className="bg-stone-200 hover:bg-stone-300 text-stone-700 font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+                  >
+                    {copied ? '✓' : 'Copy'}
+                  </button>
+                </div>
+
                 <p className="text-xs text-stone-400 text-center">
-                  This link can only be used once. Once redeemed, it expires.
+                  This link can only be redeemed once by one person.
                 </p>
               </div>
             ) : null}

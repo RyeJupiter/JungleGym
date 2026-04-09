@@ -9,20 +9,17 @@ export const metadata: Metadata = { title: 'Explore' }
 export default async function ExplorePage({
   searchParams,
 }: {
-  searchParams: Promise<{ tag?: string; q?: string }>
+  searchParams: Promise<{ tag?: string; q?: string; sort?: string }>
 }) {
-  const { tag, q } = await searchParams
+  const { tag, q, sort } = await searchParams
   const supabase = await createServerSupabaseClient()
 
-  // Auth state for nav
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Build video query — no join (videos.creator_id → users, not profiles)
   let videoQuery = supabase
     .from('videos')
     .select('*')
     .eq('published', true)
-    .order('created_at', { ascending: false })
     .limit(30)
 
   if (tag) {
@@ -32,9 +29,16 @@ export default async function ExplorePage({
     videoQuery = videoQuery.ilike('title', `%${q}%`)
   }
 
+  // Sorting
+  if (sort === 'popular') {
+    videoQuery = videoQuery.order('view_count', { ascending: false })
+  } else {
+    videoQuery = videoQuery.order('created_at', { ascending: false })
+  }
+
   const { data: videos } = await videoQuery
 
-  // Look up profiles for videos (two-step — FK goes users→profiles, not videos→profiles)
+  // Two-step profile lookup
   const videoCreatorIds = [...new Set((videos ?? []).map((v) => v.creator_id))]
   const { data: videoProfiles } = videoCreatorIds.length
     ? await supabase.from('profiles').select('user_id, display_name, username, photo_url').in('user_id', videoCreatorIds)
@@ -45,6 +49,16 @@ export default async function ExplorePage({
     'yoga', 'strength', 'mobility', 'hiit', 'kettlebell',
     'breathwork', 'meditation', 'bodyweight', 'flexibility',
   ]
+
+  // Build sort URL helper
+  function sortUrl(s: string) {
+    const params = new URLSearchParams()
+    if (tag) params.set('tag', tag)
+    if (q) params.set('q', q)
+    if (s !== 'newest') params.set('sort', s)
+    const qs = params.toString()
+    return `/explore${qs ? `?${qs}` : ''}`
+  }
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -60,6 +74,7 @@ export default async function ExplorePage({
 
         {/* Search */}
         <form method="get" className="mb-8">
+          {tag && <input type="hidden" name="tag" value={tag} />}
           <div className="flex gap-3 max-w-lg">
             <input
               name="q"
@@ -74,7 +89,7 @@ export default async function ExplorePage({
         </form>
 
         {/* Tag pills */}
-        <div className="flex gap-2 flex-wrap mb-10">
+        <div className="flex gap-2 flex-wrap mb-6">
           <Link
             href="/explore"
             className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
@@ -98,10 +113,30 @@ export default async function ExplorePage({
           ))}
         </div>
 
-        {/* Videos section */}
-        <h2 className="text-2xl font-black text-jungle-900 mb-6">
-          {q ? `Results for "${q}"` : tag ? `#${tag}` : 'Latest videos'}
-        </h2>
+        {/* Sort + heading */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-black text-jungle-900">
+            {q ? `Results for "${q}"` : tag ? `#${tag}` : 'Latest videos'}
+          </h2>
+          <div className="flex gap-1 text-sm">
+            <Link
+              href={sortUrl('newest')}
+              className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                sort !== 'popular' ? 'bg-stone-200 text-stone-800' : 'text-stone-500 hover:text-stone-700'
+              }`}
+            >
+              Newest
+            </Link>
+            <Link
+              href={sortUrl('popular')}
+              className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                sort === 'popular' ? 'bg-stone-200 text-stone-800' : 'text-stone-500 hover:text-stone-700'
+              }`}
+            >
+              Popular
+            </Link>
+          </div>
+        </div>
 
         {(videos ?? []).length === 0 ? (
           <div className="text-center py-16 mb-16 text-stone-400 bg-white rounded-2xl border border-stone-200">
@@ -126,6 +161,7 @@ export default async function ExplorePage({
                           src={video.thumbnail_url}
                           alt={video.title}
                           className="w-full h-full object-cover"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-4xl">🌿</div>
@@ -142,7 +178,18 @@ export default async function ExplorePage({
                       )}
                     </div>
                     <div className="p-4">
-                      <p className="text-xs text-jungle-600 font-semibold mb-1">{creator?.display_name ?? creator?.username ?? 'Guide'}</p>
+                      {/* Creator row */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-6 h-6 rounded-full bg-jungle-100 overflow-hidden flex items-center justify-center text-xs flex-shrink-0">
+                          {creator?.photo_url ? (
+                            <img src={creator.photo_url} alt="" className="w-full h-full object-cover" />
+                          ) : '🌿'}
+                        </div>
+                        <p className="text-xs text-jungle-600 font-semibold truncate">{creator?.display_name ?? creator?.username ?? 'Guide'}</p>
+                        {video.view_count > 0 && (
+                          <span className="text-xs text-stone-400 ml-auto flex-shrink-0">{video.view_count} views</span>
+                        )}
+                      </div>
                       <h3 className="font-bold text-stone-900 text-sm leading-snug mb-2 group-hover:text-jungle-700 transition-colors">
                         {video.title}
                       </h3>
