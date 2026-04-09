@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
 import { MembershipButton } from '@/components/MembershipButton'
+import { Footer } from '@/components/Footer'
 
 export default async function HomePage() {
   return (
@@ -12,7 +13,7 @@ export default async function HomePage() {
       <div className="bg-jungle-800">
         <section className="pt-28 pb-24 px-6 text-center">
           <div className="max-w-3xl mx-auto">
-                <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 leading-none" style={{ WebkitTextStroke: '1px rgba(0,0,0,0.3)' }}>
+                <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 leading-none" style={{ textShadow: '-1px -1px 0 rgba(0,0,0,0.25), 1px -1px 0 rgba(0,0,0,0.25), -1px 1px 0 rgba(0,0,0,0.25), 1px 1px 0 rgba(0,0,0,0.25)' }}>
               Welcome to JungleGym.
               <br />
               <span className="text-jungle-400">Let&apos;s learn &amp; play.</span>
@@ -198,6 +199,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <Footer />
     </div>
   )
 }

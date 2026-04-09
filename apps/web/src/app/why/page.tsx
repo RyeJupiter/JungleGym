@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Navbar } from '@/components/Navbar'
+import { Footer } from '@/components/Footer'
 
 export const metadata: Metadata = {
   title: 'Why the Jungle Exists – JungleGym',
@@ -10,12 +12,7 @@ export const metadata: Metadata = {
 export default function WhyPage() {
   return (
     <div className="min-h-screen bg-jungle-900 text-stone-100">
-      {/* Nav */}
-      <header className="px-6 py-5">
-        <Link href="/" className="font-black text-xl text-white">
-          jungle<span className="text-jungle-400">gym</span>
-        </Link>
-      </header>
+      <Navbar />
 
       {/* Hero */}
       <section className="max-w-3xl mx-auto px-6 pt-12 pb-20 text-center">
@@ -135,6 +132,8 @@ export default function WhyPage() {
           White-handed gibbon · <em>Hylobates lar</em> · Brehm&apos;s Life of Animals, c. 1880 · public domain
         </p>
       </section>
+
+      <Footer />
     </div>
   )
 }

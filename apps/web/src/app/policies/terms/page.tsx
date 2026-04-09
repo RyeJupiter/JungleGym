@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Navbar } from '@/components/Navbar'
+import { Footer } from '@/components/Footer'
 
 export const metadata: Metadata = {
   title: 'Terms of Service – JungleGym',
@@ -9,11 +11,7 @@ export const metadata: Metadata = {
 export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-stone-50">
-      <header className="bg-jungle-900 px-6 py-4">
-        <Link href="/" className="font-black text-xl text-white">
-          jungle<span className="text-jungle-400">gym</span>
-        </Link>
-      </header>
+      <Navbar />
 
       <main className="max-w-3xl mx-auto px-6 py-16">
         <div className="flex flex-col items-center mb-10">
@@ -234,6 +232,7 @@ export default function TermsOfServicePage() {
           </Link>
         </div>
       </main>
+      <Footer />
     </div>
   )
 }

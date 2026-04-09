@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { VideoRow } from '@/components/studio/VideoRow'
 import { PurchaseToast } from '@/components/studio/PurchaseToast'
+import { PastSessionsDropdown } from '@/components/studio/PastSessionsDropdown'
+import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Studio' }
@@ -22,7 +24,7 @@ export default async function StudioPage() {
     .eq('user_id', authUser.id)
     .single()
 
-  const [{ data: videos }, { data: sessions }] = await Promise.all([
+  const [{ data: videos }, { data: allSessions }] = await Promise.all([
     supabase
       .from('videos')
       .select('*')
@@ -32,9 +34,16 @@ export default async function StudioPage() {
       .from('live_sessions')
       .select('*')
       .eq('creator_id', authUser.id)
-      .order('scheduled_at', { ascending: false })
-      .limit(5),
+      .order('scheduled_at', { ascending: false }),
   ])
+
+  // Split sessions into active (live/scheduled) and past (completed/cancelled)
+  const activeSessions = (allSessions ?? []).filter((s) =>
+    s.status === 'live' || s.status === 'scheduled'
+  )
+  const pastSessions = (allSessions ?? []).filter((s) =>
+    s.status === 'completed' || s.status === 'cancelled'
+  )
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -43,16 +52,7 @@ export default async function StudioPage() {
         notificationPref={(profile?.notification_pref ?? 'every') as 'every' | 'daily' | 'weekly' | 'threshold' | 'off'}
         notificationThreshold={profile?.notification_threshold ?? 0}
       />
-      <header className="bg-white border-b border-stone-200 px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="font-black text-xl text-jungle-800">
-          jungle<span className="text-jungle-500">gym</span>
-        </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium text-stone-600">
-          <Link href="/explore" className="hover:text-stone-900">Explore</Link>
-          <Link href="/dashboard" className="hover:text-stone-900">Dashboard</Link>
-          <Link href="/studio/settings" className="hover:text-stone-900">Settings</Link>
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="max-w-5xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-10">
@@ -73,6 +73,36 @@ export default async function StudioPage() {
           </div>
         </div>
 
+        {/* Live sessions */}
+        <section className="mb-12">
+          <h2 className="text-xl font-bold text-stone-900 mb-4">Live sessions</h2>
+          {activeSessions.length === 0 && pastSessions.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-stone-200 p-10 text-center text-stone-400">
+              <p className="text-4xl mb-3">📅</p>
+              <p className="font-medium">No sessions yet</p>
+              <p className="text-sm mt-1">Schedule your first live session.</p>
+            </div>
+          ) : (
+            <>
+              {activeSessions.length > 0 && (
+                <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden mb-4">
+                  {activeSessions.map((s, i) => (
+                    <SessionRow key={s.id} session={s} index={i} />
+                  ))}
+                </div>
+              )}
+              {activeSessions.length === 0 && (
+                <div className="bg-white rounded-2xl border border-stone-200 p-6 text-center text-stone-400 mb-4">
+                  <p className="text-sm">No upcoming sessions.</p>
+                </div>
+              )}
+              {pastSessions.length > 0 && (
+                <PastSessionsDropdown sessions={pastSessions} />
+              )}
+            </>
+          )}
+        </section>
+
         {/* Videos */}
         <section className="mb-12">
           <h2 className="text-xl font-bold text-stone-900 mb-4">Your videos</h2>
@@ -90,43 +120,37 @@ export default async function StudioPage() {
             </div>
           )}
         </section>
+      </div>
+    </div>
+  )
+}
 
-        {/* Sessions */}
-        <section>
-          <h2 className="text-xl font-bold text-stone-900 mb-4">Live sessions</h2>
-          {(sessions ?? []).length === 0 ? (
-            <div className="bg-white rounded-2xl border border-stone-200 p-10 text-center text-stone-400">
-              <p className="text-4xl mb-3">📅</p>
-              <p className="font-medium">No sessions yet</p>
-              <p className="text-sm mt-1">Schedule your first live session.</p>
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
-              {sessions!.map((s, i) => (
-                <div
-                  key={s.id}
-                  className={`flex items-center justify-between px-5 py-4 ${i > 0 ? 'border-t border-stone-100' : ''}`}
-                >
-                  <div>
-                    <p className="font-semibold text-stone-900 text-sm">{s.title}</p>
-                    <p className="text-xs text-stone-400 mt-0.5">
-                      {new Date(s.scheduled_at).toLocaleDateString(undefined, {
-                        weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
-                      })} · {s.duration_minutes} min
-                    </p>
-                  </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${
-                    s.status === 'live' ? 'bg-red-50 text-red-600' :
-                    s.status === 'scheduled' ? 'bg-blue-50 text-blue-600' :
-                    'bg-stone-100 text-stone-500'
-                  }`}>
-                    {s.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+function SessionRow({ session: s, index }: { session: { id: string; title: string; scheduled_at: string; duration_minutes: number; status: string }; index: number }) {
+  const isLive = s.status === 'live'
+  return (
+    <div className={`flex items-center justify-between px-5 py-4 ${index > 0 ? 'border-t border-stone-100' : ''}`}>
+      <Link href={`/sessions/${s.id}`} className="flex-1 min-w-0 hover:opacity-80 transition-opacity">
+        <p className="font-semibold text-stone-900 text-sm">{s.title}</p>
+        <p className="text-xs text-stone-400 mt-0.5">
+          {new Date(s.scheduled_at).toLocaleDateString(undefined, {
+            weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+          })} · {s.duration_minutes} min
+        </p>
+      </Link>
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${
+          isLive ? 'bg-red-50 text-red-600' :
+          s.status === 'scheduled' ? 'bg-blue-50 text-blue-600' :
+          'bg-stone-100 text-stone-500'
+        }`}>
+          {s.status}
+        </span>
+        <Link
+          href={`/studio/sessions/${s.id}/manage`}
+          className="text-xs font-semibold px-3 py-1.5 rounded-full bg-green-50 text-green-700 hover:bg-green-100 transition-colors"
+        >
+          Manage
+        </Link>
       </div>
     </div>
   )
