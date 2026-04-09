@@ -11,14 +11,14 @@ export const metadata: Metadata = { title: 'Manage Video' }
 export default async function VideoManagePageRoute({ params }: Props) {
   const { id } = await params
   const supabase = await createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) redirect('/auth/login')
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/auth/login')
 
   const { data: video } = await supabase
     .from('videos')
     .select('*')
     .eq('id', id)
-    .eq('creator_id', session.user.id)
+    .eq('creator_id', user.id)
     .single()
 
   if (!video) notFound()

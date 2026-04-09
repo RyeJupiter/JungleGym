@@ -8,11 +8,11 @@ export const metadata: Metadata = { title: 'Schedule Session' }
 
 export default async function NewSessionPage() {
   const supabase = await createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) redirect('/auth/login')
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  if (!authUser) redirect('/auth/login')
 
   const { data: user } = await supabase
-    .from('users').select('role').eq('id', session.user.id).single()
+    .from('users').select('role').eq('id', authUser.id).single()
   if (user?.role !== 'creator') redirect('/dashboard')
 
   return (

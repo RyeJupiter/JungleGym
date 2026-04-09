@@ -27,11 +27,11 @@ export function GiftButton({
     setLoading(true)
     setError(null)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('Not authenticated')
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
       const { error } = await supabase.from('gifts').insert({
         session_id: sessionId,
-        giver_id: session.user.id,
+        giver_id: user.id,
         creator_amount: creatorCut,
         platform_tip_pct: PLATFORM_FEE_PCT,
         platform_amount: platformFee,
