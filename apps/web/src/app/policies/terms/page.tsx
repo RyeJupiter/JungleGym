@@ -16,6 +16,18 @@ export default function TermsOfServicePage() {
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-16">
+        <div className="flex flex-col items-center mb-10">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/b/bd/Klammeraffe-drawing.jpg"
+            alt="Black-handed spider monkey (Ateles geoffroyi) — vintage natural history illustration"
+            className="w-48 h-auto opacity-80 mix-blend-multiply"
+          />
+          <p className="text-xs text-stone-400 mt-2 italic">
+            Black-handed spider monkey · <em>Ateles geoffroyi</em> · public domain illustration
+          </p>
+        </div>
+
         <h1 className="text-4xl font-black text-jungle-900 mb-2">Terms of Service</h1>
         <p className="text-stone-500 text-sm mb-8">Last updated: April 9, 2026</p>
 
