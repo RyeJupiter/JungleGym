@@ -15,11 +15,11 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: Props) {
 
   // Crop state: offset is the image's top-left relative to the canvas centre
   const [scale, setScale] = useState(1)
+  const [minScale, setMinScale] = useState(0.01) // cover scale — set once image loads
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const drag = useRef<{ startX: number; startY: number; ox: number; oy: number } | null>(null)
 
   const CANVAS_SIZE = 320 // px — square canvas, circle inscribed
-  const MIN_SCALE = 0.5
   const MAX_SCALE = 4
 
   // Load image
@@ -28,8 +28,11 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: Props) {
     const url = URL.createObjectURL(file)
     img.onload = () => {
       imgRef.current = img
-      // Default scale: fill the circle (cover behaviour)
+      // Cover scale: smallest scale at which the image fills the circle.
+      // This becomes the slider minimum — can't zoom out past the point where
+      // the circle would have empty corners.
       const cover = Math.max(CANVAS_SIZE / img.naturalWidth, CANVAS_SIZE / img.naturalHeight)
+      setMinScale(cover)
       setScale(cover)
       setOffset({ x: 0, y: 0 })
       setImgLoaded(true)
@@ -101,7 +104,7 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: Props) {
   // Scroll to zoom
   function onWheel(e: React.WheelEvent) {
     e.preventDefault()
-    setScale((s) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, s - e.deltaY * 0.002)))
+    setScale((s) => Math.min(MAX_SCALE, Math.max(minScale, s - e.deltaY * 0.002)))
   }
 
   // Confirm — render cropped circle to a new canvas and export as lossless PNG.
@@ -162,11 +165,11 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: Props) {
         <div className="mb-5 px-2">
           <input
             type="range"
-            min={MIN_SCALE * 100}
-            max={MAX_SCALE * 100}
-            step={1}
-            value={Math.round(scale * 100)}
-            onChange={(e) => setScale(Number(e.target.value) / 100)}
+            min={minScale}
+            max={MAX_SCALE}
+            step={0.001}
+            value={scale}
+            onChange={(e) => setScale(Number(e.target.value))}
             className="w-full accent-jungle-400"
           />
           <div className="flex justify-between text-white/30 text-xs mt-1">
