@@ -14,6 +14,7 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: Props) {
   const [imgLoaded, setImgLoaded] = useState(false)
 
   // Crop state: offset is the image's top-left relative to the canvas centre
+  const [shape, setShape] = useState<'square' | 'circle'>('square')
   const [scale, setScale] = useState(1)
   const [minScale, setMinScale] = useState(0.01) // cover scale — set once image loads
   const [offset, setOffset] = useState({ x: 0, y: 0 })
@@ -63,27 +64,36 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: Props) {
     const y = CANVAS_SIZE / 2 - h / 2 + offset.y
     ctx.drawImage(img, x, y, w, h)
 
-    // Dim outside the circle
-    ctx.save()
-    ctx.globalCompositeOperation = 'source-over'
-    ctx.fillStyle = 'rgba(0,0,0,0.55)'
-    ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
-    // Cut out the circle (destination-out reveals the image below)
-    ctx.globalCompositeOperation = 'destination-out'
-    ctx.beginPath()
-    ctx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 4, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.restore()
+    if (shape === 'circle') {
+      // Dim outside the circle
+      ctx.save()
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.fillStyle = 'rgba(0,0,0,0.55)'
+      ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
+      // Cut out the circle (destination-out reveals the image below)
+      ctx.globalCompositeOperation = 'destination-out'
+      ctx.beginPath()
+      ctx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 4, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.restore()
 
-    // Circle border
-    ctx.save()
-    ctx.strokeStyle = 'rgba(255,255,255,0.6)'
-    ctx.lineWidth = 2
-    ctx.beginPath()
-    ctx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 4, 0, Math.PI * 2)
-    ctx.stroke()
-    ctx.restore()
-  }, [imgLoaded, scale, offset])
+      // Circle border
+      ctx.save()
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 4, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.restore()
+    } else {
+      // Square: just a subtle border around the crop area
+      ctx.save()
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)'
+      ctx.lineWidth = 2
+      ctx.strokeRect(3, 3, CANVAS_SIZE - 6, CANVAS_SIZE - 6)
+      ctx.restore()
+    }
+  }, [imgLoaded, scale, offset, shape])
 
   useEffect(() => { draw() }, [draw])
 
@@ -128,10 +138,11 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: Props) {
     const x = OUTPUT_SIZE / 2 - w / 2 + offset.x * ratio
     const y = OUTPUT_SIZE / 2 - h / 2 + offset.y * ratio
 
-    // Clip to circle
-    ctx.beginPath()
-    ctx.arc(OUTPUT_SIZE / 2, OUTPUT_SIZE / 2, OUTPUT_SIZE / 2, 0, Math.PI * 2)
-    ctx.clip()
+    if (shape === 'circle') {
+      ctx.beginPath()
+      ctx.arc(OUTPUT_SIZE / 2, OUTPUT_SIZE / 2, OUTPUT_SIZE / 2, 0, Math.PI * 2)
+      ctx.clip()
+    }
     ctx.drawImage(img, x, y, w, h)
 
     out.toBlob((blob) => {
@@ -145,14 +156,34 @@ export function AvatarCropModal({ file, onConfirm, onCancel }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
       <div className="bg-[#0d0d1a] rounded-2xl p-6 w-full max-w-sm shadow-2xl">
         <h3 className="text-white font-black text-lg mb-1 text-center">Crop your photo</h3>
-        <p className="text-white/40 text-xs text-center mb-5">Drag to reposition · scroll to zoom</p>
+        <p className="text-white/40 text-xs text-center mb-4">Drag to reposition · scroll to zoom</p>
+
+        {/* Shape toggle */}
+        <div className="flex justify-center mb-4">
+          <div className="inline-flex rounded-lg bg-white/10 p-0.5 gap-0.5">
+            {(['square', 'circle'] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setShape(s)}
+                className={`px-4 py-1 rounded-md text-xs font-semibold transition-colors ${
+                  shape === s
+                    ? 'bg-jungle-500 text-white'
+                    : 'text-white/50 hover:text-white/80'
+                }`}
+              >
+                {s === 'square' ? 'Square' : 'Circle'}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="flex justify-center mb-5">
           <canvas
             ref={canvasRef}
             width={CANVAS_SIZE}
             height={CANVAS_SIZE}
-            className="rounded-full cursor-grab active:cursor-grabbing touch-none"
+            className={`cursor-grab active:cursor-grabbing touch-none ${shape === 'circle' ? 'rounded-full' : 'rounded-xl'}`}
             style={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
