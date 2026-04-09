@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ProfileForm } from '@/components/profile/ProfileForm'
+import { StudioSettingsForm } from '@/components/studio/StudioSettingsForm'
 import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
@@ -26,7 +27,19 @@ export default async function ProfilePage() {
         <p className="text-stone-500 mb-8">
           {profile ? `@${profile.username}` : 'Set up your public profile'}
         </p>
-        <ProfileForm profile={profile} userId={authUser.id} isCreator={isCreator} />
+        <ProfileForm profile={profile} userId={authUser.id} email={authUser.email} isCreator={isCreator} />
+
+        {isCreator && profile && (
+          <div className="mt-6">
+            <StudioSettingsForm profile={{
+              user_id: profile.user_id,
+              username: profile.username,
+              supported_rate: profile.supported_rate ?? 1,
+              community_rate: profile.community_rate ?? 2,
+              abundance_rate: profile.abundance_rate ?? 3,
+            }} />
+          </div>
+        )}
       </div>
     </div>
   )

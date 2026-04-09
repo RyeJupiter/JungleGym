@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { PriceInput } from './PriceInput'
 
 type Profile = {
   user_id: string
@@ -56,69 +56,32 @@ export function StudioSettingsForm({ profile }: { profile: Profile }) {
   }
 
   return (
-    <div className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {error && <p className="bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</p>}
+      {saved && <p className="bg-jungle-50 text-jungle-700 rounded-lg px-4 py-3 text-sm">Rates saved ✓</p>}
 
-      {/* Profile identity CTA */}
-      <div className="bg-jungle-50 border border-jungle-200 rounded-2xl p-5 flex items-center justify-between gap-4">
+      <section className="bg-white rounded-2xl border border-stone-200 p-8 space-y-5">
         <div>
-          <p className="text-sm font-semibold text-jungle-900">Profile identity</p>
-          <p className="text-xs text-jungle-600 mt-0.5">Name, photo, bio, tags, and location are edited on your Treehouse.</p>
-        </div>
-        <Link
-          href={`/@${profile.username}?edit=true`}
-          className="flex-shrink-0 bg-jungle-700 hover:bg-jungle-600 text-jungle-100 text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
-        >
-          Edit Treehouse →
-        </Link>
-      </div>
-
-      {/* Pricing rates */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {error && <p className="bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</p>}
-        {saved && <p className="bg-jungle-50 text-jungle-700 rounded-lg px-4 py-3 text-sm">Rates saved ✓</p>}
-
-        <div className="bg-white rounded-2xl border border-stone-200 p-8 space-y-5">
-          <div>
-            <h2 className="font-bold text-stone-900">Pricing rates</h2>
-            <p className="text-sm text-stone-400 mt-0.5">Dollars per minute of video content. Applied to all future uploads.</p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: 'Supported', emoji: '🌱', hint: '~$1/min', value: supportedRate, onChange: setSupportedRate },
-              { label: 'Community', emoji: '🌿', hint: '~$2/min', value: communityRate, onChange: setCommunityRate },
-              { label: 'Abundance', emoji: '🌳', hint: '~$3/min', value: abundanceRate, onChange: setAbundanceRate },
-            ].map(({ label, emoji, hint, value, onChange }) => (
-              <div key={label}>
-                <label className="block text-xs font-medium text-stone-500 mb-1">
-                  {emoji} {label} <span className="text-stone-400">{hint}</span>
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={value}
-                  onChange={(e) => onChange(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-stone-400">
-            Prices round down to fun numbers ($1.11, $2.22, $3.33, $4.20…)
-          </p>
+          <h2 className="font-bold text-stone-900">Pricing rates</h2>
+          <p className="text-sm text-stone-400 mt-0.5">Dollars per minute of video content — applied to all future uploads.</p>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
-        >
-          {loading ? 'Saving…' : 'Save rates'}
-        </button>
-      </form>
-    </div>
+        <div className="grid grid-cols-3 gap-4">
+          <PriceInput label="🌱 Supported" hint="~$1/min" value={supportedRate} onChange={setSupportedRate} />
+          <PriceInput label="🌿 Community" hint="~$2/min" value={communityRate} onChange={setCommunityRate} />
+          <PriceInput label="🌳 Abundance" hint="~$3/min" value={abundanceRate} onChange={setAbundanceRate} />
+        </div>
+
+        <p className="text-xs text-stone-400">Prices round down to fun numbers ($1.11, $2.22, $3.33, $4.20…)</p>
+      </section>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
+      >
+        {loading ? 'Saving…' : 'Save rates'}
+      </button>
+    </form>
   )
 }
-
-const inputClass = 'w-full rounded-lg border border-stone-200 px-3 py-2.5 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-jungle-400'

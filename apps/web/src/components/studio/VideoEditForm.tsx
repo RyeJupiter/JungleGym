@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { TagInput } from './TagInput'
 import { VideoThumbnailPicker } from './VideoThumbnailPicker'
+import { PriceInput } from './PriceInput'
 import { suggestTagsFromTitle } from '@/lib/movementTags'
 
 type Video = {
@@ -24,72 +25,6 @@ type Props = {
   video: Video
   videoPublicUrl: string | null
   onSaved?: () => void
-}
-
-function getStep(value: number): number {
-  if (value < 0.50) return 0.05
-  if (value < 1.00) return 0.10
-  if (value < 3.00) return 0.25
-  if (value < 10.00) return 0.50
-  return 1.00
-}
-
-function PriceInput({ label, value, onChange, disabled }: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  disabled?: boolean
-}) {
-  function increment() {
-    const current = parseFloat(value) || 0
-    const step = getStep(current)
-    onChange((Math.round((current + step) * 100) / 100).toFixed(2))
-  }
-  function decrement() {
-    const current = parseFloat(value) || 0
-    // Use step for the value just below current so boundary transitions feel natural
-    const step = getStep(Math.max(0, current - 0.001))
-    onChange((Math.max(0, Math.round((current - step) * 100) / 100)).toFixed(2))
-  }
-  return (
-    <div>
-      <label className="block text-xs text-stone-500 mb-1">{label}</label>
-      <div className={`flex items-center rounded-lg border border-stone-200 bg-white overflow-hidden ${disabled ? '' : 'focus-within:ring-2 focus-within:ring-jungle-400'}`}>
-        <button
-          type="button"
-          onClick={decrement}
-          disabled={disabled}
-          className="px-2.5 py-2 text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors select-none"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        <div className="relative flex-1">
-          <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-stone-400 text-xs">$</span>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            disabled={disabled}
-            className="w-full pl-4 pr-1 py-2 text-sm text-stone-900 text-center bg-transparent focus:outline-none"
-            placeholder="0.00"
-          />
-        </div>
-        <button
-          type="button"
-          onClick={increment}
-          disabled={disabled}
-          className="px-2.5 py-2 text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors select-none"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  )
 }
 
 function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: () => void; disabled?: boolean }) {

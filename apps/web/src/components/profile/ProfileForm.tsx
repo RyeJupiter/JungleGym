@@ -222,22 +222,6 @@ export function ProfileForm({ profile, userId, email, isCreator }: Props) {
         </form>
       </section>
 
-      {/* Creator — link to studio pricing */}
-      {isCreator && (
-        <section className="bg-white rounded-2xl border border-stone-200 p-8 flex items-center justify-between gap-4">
-          <div>
-            <h2 className="font-bold text-stone-900">Pricing rates</h2>
-            <p className="text-sm text-stone-500 mt-0.5">Set your per-minute rates in Studio Settings.</p>
-          </div>
-          <Link
-            href="/studio/settings"
-            className="flex-shrink-0 bg-stone-100 hover:bg-stone-200 text-stone-700 text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-          >
-            Studio Settings →
-          </Link>
-        </section>
-      )}
-
       {/* Danger Zone */}
       <section className="bg-white rounded-2xl border border-red-200 p-8 space-y-4">
         <h2 className="font-bold text-red-700">Danger zone</h2>

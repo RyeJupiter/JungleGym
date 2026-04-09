@@ -51,7 +51,7 @@ export default async function StudioPage() {
               + Schedule session
             </Link>
             <Link
-              href="/studio/settings"
+              href="/profile"
               className="bg-white hover:bg-stone-50 text-stone-800 font-semibold px-5 py-2.5 rounded-lg text-sm border border-stone-200 transition-colors"
             >
               Settings
