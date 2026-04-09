@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { formatDuration } from '@junglegym/shared'
 import { CheckoutFlow } from '@/components/video/CheckoutFlow'
+import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
 type Props = { params: Promise<{ id: string }> }
@@ -55,12 +56,7 @@ export default async function CheckoutPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-jungle-900">
-      {/* Minimal header */}
-      <header className="border-b border-jungle-800 px-6 h-14 flex items-center">
-        <Link href={`/video/${id}`} className="text-jungle-400 hover:text-jungle-300 text-sm font-medium transition-colors">
-          &larr; Back to video
-        </Link>
-      </header>
+      <Navbar />
 
       <div className="max-w-4xl mx-auto px-6 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
