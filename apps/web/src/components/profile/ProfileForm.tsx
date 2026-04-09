@@ -60,7 +60,7 @@ export function ProfileForm({ profile, userId, email }: Props) {
       const redirectTo = `${window.location.origin}/auth/callback?next=/auth/reset-password`
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
       if (error) throw error
-      setResetMsg({ ok: true, text: 'Check your email — we sent a reset link valid for 20 minutes.' })
+      setResetMsg({ ok: true, text: 'Check your email — we sent a reset link valid for 1 hour.' })
     } catch (err: unknown) {
       setResetMsg({ ok: false, text: err instanceof Error ? err.message : 'Failed to send reset email.' })
     } finally {
@@ -130,7 +130,7 @@ export function ProfileForm({ profile, userId, email }: Props) {
         <div className="pt-2 border-t border-stone-100 space-y-3">
           <div>
             <p className="text-sm font-medium text-stone-700">Password</p>
-            <p className="text-xs text-stone-400 mt-0.5">We&apos;ll send a secure reset link to your email, valid for 20 minutes.</p>
+            <p className="text-xs text-stone-400 mt-0.5">We&apos;ll send a secure reset link to your email, valid for 1 hour.</p>
           </div>
           {resetMsg && (
             <p className={`text-sm px-3 py-2 rounded-lg ${resetMsg.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
