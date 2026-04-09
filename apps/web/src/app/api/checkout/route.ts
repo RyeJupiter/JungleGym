@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import Stripe from 'stripe'
+import { getStripe } from '@/lib/stripe'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { calculateGiftTotal } from '@junglegym/shared'
 import type { PriceTier } from '@junglegym/shared'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' })
-
 export async function POST(request: NextRequest) {
+  const stripe = getStripe()
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
