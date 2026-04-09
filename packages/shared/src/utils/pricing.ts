@@ -67,6 +67,15 @@ export function formatPrice(dollars: number): string {
 
 export const PLATFORM_FEE_PCT = 20
 
+export function calculateGiftTotal(basePrice: number, tipPct: number): {
+  platformAmount: number
+  total: number
+} {
+  const total = Math.round(basePrice * (1 + tipPct / 100) * 100) / 100
+  const platformAmount = Math.round(total * (PLATFORM_FEE_PCT / 100) * 100) / 100
+  return { platformAmount, total }
+}
+
 export function calculatePriceBreakdown(total: number): {
   creatorAmount: number
   platformFee: number
