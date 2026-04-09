@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { formatPrice, formatDuration } from '@junglegym/shared'
+import { Navbar } from '@/components/Navbar'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Explore' }
@@ -8,20 +9,16 @@ export const metadata: Metadata = { title: 'Explore' }
 export default async function ExplorePage({
   searchParams,
 }: {
-  searchParams: Promise<{ tag?: string; q?: string }>
+  searchParams: Promise<{ tag?: string; q?: string; sort?: string }>
 }) {
-  const { tag, q } = await searchParams
+  const { tag, q, sort } = await searchParams
   const supabase = await createServerSupabaseClient()
 
-  // Auth state for nav
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // Build video query — apply all filters before awaiting
+  // Build video query — no FK join (unreliable), two-step instead
   let videoQuery = supabase
     .from('videos')
-    .select('*, profiles!creator_id(display_name, username, photo_url)')
+    .select('*')
     .eq('published', true)
-    .order('created_at', { ascending: false })
     .limit(30)
 
   if (tag) {
@@ -30,13 +27,26 @@ export default async function ExplorePage({
   if (q) {
     videoQuery = videoQuery.ilike('title', `%${q}%`)
   }
+  if (sort === 'popular') {
+    videoQuery = videoQuery.order('view_count', { ascending: false })
+  } else {
+    videoQuery = videoQuery.order('created_at', { ascending: false })
+  }
 
-  // Fetch creator IDs first, then profiles — avoids unreliable join filter
+  // Fetch videos + creator users in parallel
   const [{ data: videos }, { data: creatorUsers }] = await Promise.all([
     videoQuery,
     supabase.from('users').select('id').eq('role', 'creator').limit(8),
   ])
 
+  // Two-step join: look up profiles for video creators
+  const videoCreatorIds = [...new Set((videos ?? []).map((v) => v.creator_id))]
+  const { data: videoProfiles } = videoCreatorIds.length
+    ? await supabase.from('profiles').select('user_id, display_name, username, photo_url').in('user_id', videoCreatorIds)
+    : { data: [] }
+  const profileByUserId = Object.fromEntries((videoProfiles ?? []).map((p) => [p.user_id, p]))
+
+  // Two-step: look up creator profiles for Teachers section
   const creatorIds = creatorUsers?.map((u) => u.id) ?? []
   const { data: creators } = creatorIds.length
     ? await supabase
@@ -52,31 +62,30 @@ export default async function ExplorePage({
     'breathwork', 'meditation', 'bodyweight', 'flexibility',
   ]
 
+  function sortUrl(s: string) {
+    const params = new URLSearchParams()
+    if (tag) params.set('tag', tag)
+    if (q) params.set('q', q)
+    if (s !== 'newest') params.set('sort', s)
+    const qs = params.toString()
+    return `/explore${qs ? `?${qs}` : ''}`
+  }
+
   return (
     <div className="min-h-screen bg-stone-50">
-      <header className="bg-jungle-900 border-b border-jungle-800 px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="font-black text-xl text-white">
-          jungle<span className="text-jungle-400">gym</span>
-        </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium text-jungle-300">
-          <Link href="/explore" className="text-white font-bold">Explore</Link>
-          <Link href="/sessions" className="hover:text-white transition-colors">Sessions</Link>
-          {user ? (
-            <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
-          ) : (
-            <>
-              <Link href="/auth/login" className="hover:text-white transition-colors">Sign in</Link>
-              <Link href="/auth/signup" className="bg-earth-400 text-white px-4 py-2 rounded-lg hover:bg-earth-500 transition-colors font-semibold">
-                Join
-              </Link>
-            </>
-          )}
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="mb-8">
+          <h1 className="text-4xl font-black text-stone-900">Classes</h1>
+          <p className="text-stone-500 mt-2">
+            Movement classes from skilled guides. Pay once, own forever.
+          </p>
+        </div>
+
         {/* Search */}
         <form method="get" className="mb-8">
+          {tag && <input type="hidden" name="tag" value={tag} />}
           <div className="flex gap-3 max-w-lg">
             <input
               name="q"
@@ -91,7 +100,7 @@ export default async function ExplorePage({
         </form>
 
         {/* Tag pills */}
-        <div className="flex gap-2 flex-wrap mb-10">
+        <div className="flex gap-2 flex-wrap mb-6">
           <Link
             href="/explore"
             className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
@@ -115,10 +124,30 @@ export default async function ExplorePage({
           ))}
         </div>
 
-        {/* Videos section */}
-        <h2 className="text-2xl font-black text-jungle-900 mb-6">
-          {q ? `Results for "${q}"` : tag ? `#${tag}` : 'Latest videos'}
-        </h2>
+        {/* Sort + heading */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-black text-jungle-900">
+            {q ? `Results for "${q}"` : tag ? `#${tag}` : 'Latest videos'}
+          </h2>
+          <div className="flex gap-1 text-sm">
+            <Link
+              href={sortUrl('newest')}
+              className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                sort !== 'popular' ? 'bg-stone-200 text-stone-800' : 'text-stone-500 hover:text-stone-700'
+              }`}
+            >
+              Newest
+            </Link>
+            <Link
+              href={sortUrl('popular')}
+              className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                sort === 'popular' ? 'bg-stone-200 text-stone-800' : 'text-stone-500 hover:text-stone-700'
+              }`}
+            >
+              Popular
+            </Link>
+          </div>
+        </div>
 
         {(videos ?? []).length === 0 ? (
           <div className="text-center py-16 mb-16 text-stone-400 bg-white rounded-2xl border border-stone-200">
@@ -133,7 +162,7 @@ export default async function ExplorePage({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-16">
             {videos!.map((video) => {
-              const creator = video.profiles as { display_name: string; username: string; photo_url: string | null } | null
+              const creator = profileByUserId[video.creator_id] ?? null
               return (
                 <Link key={video.id} href={`/video/${video.id}`}>
                   <div className="bg-white rounded-2xl overflow-hidden border border-stone-200 hover:border-jungle-400 hover:shadow-md transition-all group">
@@ -143,6 +172,7 @@ export default async function ExplorePage({
                           src={video.thumbnail_url}
                           alt={video.title}
                           className="w-full h-full object-cover"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-4xl">🌿</div>
@@ -159,7 +189,17 @@ export default async function ExplorePage({
                       )}
                     </div>
                     <div className="p-4">
-                      <p className="text-xs text-jungle-600 font-semibold mb-1">@{creator?.username}</p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-6 h-6 rounded-full bg-jungle-100 overflow-hidden flex items-center justify-center text-xs flex-shrink-0">
+                          {creator?.photo_url ? (
+                            <img src={creator.photo_url} alt="" className="w-full h-full object-cover" />
+                          ) : '🌿'}
+                        </div>
+                        <p className="text-xs text-jungle-600 font-semibold truncate">{creator?.display_name ?? creator?.username ?? 'Guide'}</p>
+                        {video.view_count > 0 && (
+                          <span className="text-xs text-stone-400 ml-auto flex-shrink-0">{video.view_count} views</span>
+                        )}
+                      </div>
                       <h3 className="font-bold text-stone-900 text-sm leading-snug mb-2 group-hover:text-jungle-700 transition-colors">
                         {video.title}
                       </h3>
@@ -178,7 +218,7 @@ export default async function ExplorePage({
           </div>
         )}
 
-        {/* Teachers section */}
+        {/* Teachers section (from Rye) */}
         {(creators ?? []).length > 0 && (
           <>
             <h2 className="text-2xl font-black text-jungle-900 mb-6">Teachers</h2>
