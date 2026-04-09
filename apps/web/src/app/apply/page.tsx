@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { ApplyToTeachForm } from '@/components/apply/ApplyToTeachForm'
+import { FooterCompact } from '@/components/FooterCompact'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Apply to Teach' }
@@ -56,6 +57,7 @@ export default async function ApplyPage() {
           <ApplyToTeachForm userId={authUser.id} />
         )}
       </div>
+      <FooterCompact />
     </main>
   )
 }

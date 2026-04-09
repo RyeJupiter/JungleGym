@@ -1,6 +1,7 @@
 import { createServiceSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
+import { FooterCompact } from '@/components/FooterCompact'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Movement Guides' }
@@ -144,6 +145,7 @@ export default async function GuidesPage({
           </div>
         )}
       </div>
+      <FooterCompact />
     </div>
   )
 }

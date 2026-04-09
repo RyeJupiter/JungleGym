@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
+import { FooterCompact } from '@/components/FooterCompact'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Dashboard' }
@@ -100,6 +101,7 @@ export default async function DashboardPage() {
           </div>
         )}
       </div>
+      <FooterCompact />
     </div>
   )
 }

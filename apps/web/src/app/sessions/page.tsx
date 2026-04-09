@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { GiftButton } from '@/components/session/GiftButton'
 import { AddSessionToCalendarButton } from '@/components/session/AddSessionToCalendarButton'
 import { Navbar } from '@/components/Navbar'
+import { FooterCompact } from '@/components/FooterCompact'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Live Sessions' }
@@ -102,6 +103,7 @@ export default async function SessionsPage() {
           </div>
         )}
       </div>
+      <FooterCompact />
     </div>
   )
 }

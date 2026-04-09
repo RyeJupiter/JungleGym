@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { formatDuration, formatPrice } from '@junglegym/shared'
 import { Navbar } from '@/components/Navbar'
+import { FooterCompact } from '@/components/FooterCompact'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'My Library' }
@@ -86,6 +87,7 @@ export default async function LibraryPage() {
           </div>
         )}
       </div>
+      <FooterCompact />
     </div>
   )
 }

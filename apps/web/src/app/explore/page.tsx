@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { formatPrice, formatDuration } from '@junglegym/shared'
 import { Navbar } from '@/components/Navbar'
+import { FooterCompact } from '@/components/FooterCompact'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Explore' }
@@ -245,6 +246,7 @@ export default async function ExplorePage({
           </>
         )}
       </div>
+      <FooterCompact />
     </div>
   )
 }

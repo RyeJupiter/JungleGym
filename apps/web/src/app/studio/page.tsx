@@ -5,6 +5,7 @@ import { VideoRow } from '@/components/studio/VideoRow'
 import { PurchaseToast } from '@/components/studio/PurchaseToast'
 import { PastSessionsDropdown } from '@/components/studio/PastSessionsDropdown'
 import { Navbar } from '@/components/Navbar'
+import { FooterCompact } from '@/components/FooterCompact'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Studio' }
@@ -121,6 +122,7 @@ export default async function StudioPage() {
           )}
         </section>
       </div>
+      <FooterCompact />
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
+import { FooterCompact } from '@/components/FooterCompact'
 import { GiftButton } from '@/components/session/GiftButton'
 import { AddSessionToCalendarButton } from '@/components/session/AddSessionToCalendarButton'
 import type { Metadata } from 'next'
@@ -142,6 +143,7 @@ export default async function SessionDetailPage({ params }: Props) {
           </Link>
         </div>
       </div>
+      <FooterCompact />
     </div>
   )
 }

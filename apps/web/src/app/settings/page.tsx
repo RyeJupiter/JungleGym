@@ -5,6 +5,7 @@ import { StudioSettingsForm } from '@/components/studio/StudioSettingsForm'
 import { DangerZone } from '@/components/profile/DangerZone'
 import { EmailPreferences } from '@/components/profile/EmailPreferences'
 import { Navbar } from '@/components/Navbar'
+import { FooterCompact } from '@/components/FooterCompact'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Settings' }
@@ -53,6 +54,7 @@ export default async function SettingsPage() {
           </div>
         )}
       </div>
+      <FooterCompact />
     </div>
   )
 }

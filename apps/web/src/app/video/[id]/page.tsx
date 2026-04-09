@@ -8,6 +8,7 @@ import { PurchaseConfirm } from '@/components/video/PurchaseConfirm'
 import { ShareButton } from '@/components/video/ShareButton'
 import { AddToCalendarButton } from '@/components/video/AddToCalendarButton'
 import { Navbar } from '@/components/Navbar'
+import { FooterCompact } from '@/components/FooterCompact'
 import type { Metadata } from 'next'
 
 type Props = { params: Promise<{ id: string }> }
@@ -174,6 +175,7 @@ export default async function VideoPage({ params }: Props) {
           </div>
         </div>
       </div>
+      <FooterCompact />
     </div>
   )
 }

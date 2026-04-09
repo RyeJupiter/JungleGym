@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { formatDuration } from '@junglegym/shared'
 import { CheckoutFlow } from '@/components/video/CheckoutFlow'
 import { Navbar } from '@/components/Navbar'
+import { FooterCompact } from '@/components/FooterCompact'
 import type { Metadata } from 'next'
 
 type Props = { params: Promise<{ id: string }> }
@@ -124,6 +125,7 @@ export default async function CheckoutPage({ params }: Props) {
           </div>
         </div>
       </div>
+      <FooterCompact />
     </div>
   )
 }
