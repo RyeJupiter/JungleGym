@@ -17,6 +17,15 @@ export default async function ClassesPage({
   const { tag, q, sort } = await searchParams
   const supabase = await createServerSupabaseClient()
 
+  // If searching, find creators matching by name first
+  let matchingCreatorIds: string[] = []
+  if (q) {
+    const { data: matchingProfiles } = await supabase
+      .from('profiles').select('user_id')
+      .or(`display_name.ilike.%${q}%,username.ilike.%${q}%`)
+    matchingCreatorIds = (matchingProfiles ?? []).map((p) => p.user_id)
+  }
+
   // Build video query — no FK join (unreliable), two-step instead
   let videoQuery = supabase
     .from('videos')
@@ -28,7 +37,7 @@ export default async function ClassesPage({
     videoQuery = videoQuery.contains('tags', [tag])
   }
   if (q) {
-    videoQuery = videoQuery.or(buildVideoSearchFilter(q))
+    videoQuery = videoQuery.or(buildVideoSearchFilter(q, matchingCreatorIds))
   }
   if (sort === 'popular') {
     videoQuery = videoQuery.order('view_count', { ascending: false })
@@ -38,15 +47,17 @@ export default async function ClassesPage({
 
   const { data: rawVideos } = await videoQuery
 
-  // Rank by relevance when searching
-  const videos = q ? sortByRelevance(q, rawVideos ?? []) : (rawVideos ?? [])
-
   // Two-step join: look up profiles for video creators
-  const videoCreatorIds = [...new Set(videos.map((v) => v.creator_id))]
+  const videoCreatorIds = [...new Set((rawVideos ?? []).map((v) => v.creator_id))]
   const { data: videoProfiles } = videoCreatorIds.length
     ? await supabase.from('profiles').select('user_id, display_name, username, photo_url').in('user_id', videoCreatorIds)
     : { data: [] }
   const profileByUserId = Object.fromEntries((videoProfiles ?? []).map((p) => [p.user_id, p]))
+
+  // Rank by relevance when searching (after profiles are available for creator name scoring)
+  const videos = q
+    ? sortByRelevance(q, rawVideos ?? [], (v) => profileByUserId[v.creator_id]?.display_name)
+    : (rawVideos ?? [])
 
   function sortUrl(s: string) {
     const params = new URLSearchParams()

@@ -45,12 +45,13 @@ export function buildTagSearchTerms(query: string): string[] {
 
 /**
  * Build a PostgREST `.or()` filter string for video search.
- * Matches against: title, description, tags (public), ghost_tags (AI-generated).
+ * Matches against: title, description, tags (public), ghost_tags (AI-generated),
+ * and optionally creator IDs (from a prior profile name search).
  *
  * Usage:
- *   videoQuery = videoQuery.or(buildVideoSearchFilter(q))
+ *   videoQuery = videoQuery.or(buildVideoSearchFilter(q, matchingCreatorIds))
  */
-export function buildVideoSearchFilter(query: string): string {
+export function buildVideoSearchFilter(query: string, creatorIds?: string[]): string {
   const q = query.trim().replace(/[%\\]/g, '')
   if (!q) return ''
 
@@ -67,6 +68,10 @@ export function buildVideoSearchFilter(query: string): string {
     filters.push(`ghost_tags.ov.{${tagList}}`)
   }
 
+  if (creatorIds && creatorIds.length > 0) {
+    filters.push(`creator_id.in.(${creatorIds.join(',')})`)
+  }
+
   return filters.join(',')
 }
 
@@ -76,8 +81,10 @@ export function buildVideoSearchFilter(query: string): string {
  *
  * Scoring hierarchy:
  *   Title exact match          100
+ *   Creator name exact match    90
  *   Title starts with query     80
  *   Title contains query        60
+ *   Creator name contains query 50
  *   Full-phrase tag match       40  ("morning-yoga-flow" in tags)
  *   Bigram tag match            25  ("morning-yoga" in tags)
  *   Description contains query  20
@@ -86,6 +93,7 @@ export function buildVideoSearchFilter(query: string): string {
 export function scoreVideoRelevance(
   query: string,
   video: { title?: string; description?: string | null; tags?: string[] | null; ghost_tags?: string[] | null },
+  creatorName?: string,
 ): number {
   const q = query.toLowerCase().trim()
   if (!q) return 0
@@ -99,6 +107,13 @@ export function scoreVideoRelevance(
   if (title === q) score += 100
   else if (title.startsWith(q)) score += 80
   else if (title.includes(q)) score += 60
+
+  // Creator name matches
+  if (creatorName) {
+    const name = creatorName.toLowerCase()
+    if (name === q) score += 90
+    else if (name.includes(q)) score += 50
+  }
 
   // Description match
   if (desc.includes(q)) score += 20
@@ -125,13 +140,17 @@ export function scoreVideoRelevance(
 
 /**
  * Sort videos by relevance to a query, preserving original order as tiebreaker.
+ * Pass getCreatorName to include creator display_name in scoring.
  */
 export function sortByRelevance<T extends { title?: string; description?: string | null; tags?: string[] | null; ghost_tags?: string[] | null }>(
   query: string,
   items: T[],
+  getCreatorName?: (item: T) => string | undefined,
 ): T[] {
   if (!query?.trim()) return items
-  return [...items].sort((a, b) => scoreVideoRelevance(query, b) - scoreVideoRelevance(query, a))
+  return [...items].sort((a, b) =>
+    scoreVideoRelevance(query, b, getCreatorName?.(b)) - scoreVideoRelevance(query, a, getCreatorName?.(a))
+  )
 }
 
 /**
@@ -141,6 +160,7 @@ export function sortByRelevance<T extends { title?: string; description?: string
 export function videoMatchesQuery(
   query: string,
   video: { title?: string; description?: string | null; tags?: string[] | null; ghost_tags?: string[] | null },
+  creatorName?: string,
 ): boolean {
-  return scoreVideoRelevance(query, video) > 0
+  return scoreVideoRelevance(query, video, creatorName) > 0
 }

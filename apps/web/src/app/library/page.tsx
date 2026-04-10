@@ -36,17 +36,21 @@ export default async function LibraryPage({
     : { data: [] }
   const profileById = Object.fromEntries((creatorProfiles ?? []).map((p) => [p.user_id, p]))
 
-  // Filter by search query (match on title, description, tags, ghost_tags) and rank by relevance
+  // Filter by search query (match on title, description, tags, ghost_tags, creator name) and rank by relevance
+  type VideoData = { title: string; description?: string | null; tags?: string[] | null; ghost_tags?: string[] | null; creator_id: string }
   const filteredPurchases = q
     ? (purchases ?? [])
         .filter((p) => {
-          const video = p.videos as { title: string; description?: string | null; tags?: string[] | null; ghost_tags?: string[] | null } | null
-          return video ? videoMatchesQuery(q, video) : false
+          const video = p.videos as VideoData | null
+          const creatorName = video ? profileById[video.creator_id]?.display_name : undefined
+          return video ? videoMatchesQuery(q, video, creatorName) : false
         })
         .sort((a, b) => {
-          const va = a.videos as { title: string; description?: string | null; tags?: string[] | null; ghost_tags?: string[] | null } | null
-          const vb = b.videos as { title: string; description?: string | null; tags?: string[] | null; ghost_tags?: string[] | null } | null
-          return scoreVideoRelevance(q, vb ?? {}) - scoreVideoRelevance(q, va ?? {})
+          const va = a.videos as VideoData | null
+          const vb = b.videos as VideoData | null
+          const nameA = va ? profileById[va.creator_id]?.display_name : undefined
+          const nameB = vb ? profileById[vb.creator_id]?.display_name : undefined
+          return scoreVideoRelevance(q, vb ?? {}, nameB) - scoreVideoRelevance(q, va ?? {}, nameA)
         })
     : (purchases ?? [])
 

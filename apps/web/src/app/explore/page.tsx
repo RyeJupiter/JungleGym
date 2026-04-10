@@ -17,6 +17,15 @@ export default async function ExplorePage({
   const { q, tag } = await searchParams
   const supabase = await createServerSupabaseClient()
 
+  // If searching, find creators matching by name first (needed for video filter)
+  let matchingCreatorIds: string[] = []
+  if (q) {
+    const { data: matchingProfiles } = await supabase
+      .from('profiles').select('user_id')
+      .or(`display_name.ilike.%${q}%,username.ilike.%${q}%`)
+    matchingCreatorIds = (matchingProfiles ?? []).map((p) => p.user_id)
+  }
+
   // Build queries — apply search filter across all sections
   let videoQuery = supabase
     .from('videos')
@@ -33,8 +42,11 @@ export default async function ExplorePage({
     .limit(4)
 
   if (q) {
-    videoQuery = videoQuery.or(buildVideoSearchFilter(q))
-    sessionQuery = sessionQuery.or(`title.ilike.%${q}%,description.ilike.%${q}%`)
+    videoQuery = videoQuery.or(buildVideoSearchFilter(q, matchingCreatorIds))
+    const sessionCreatorFilter = matchingCreatorIds.length
+      ? `,creator_id.in.(${matchingCreatorIds.join(',')})`
+      : ''
+    sessionQuery = sessionQuery.or(`title.ilike.%${q}%,description.ilike.%${q}%${sessionCreatorFilter}`)
   }
   if (tag) {
     videoQuery = videoQuery.contains('tags', [tag])
@@ -46,17 +58,19 @@ export default async function ExplorePage({
     sessionQuery,
   ])
 
-  // Rank by relevance when searching
-  const videos = q ? sortByRelevance(q, rawVideos ?? []) : (rawVideos ?? [])
-
-  // Two-step: video creator profiles
-  const videoCreatorIds = [...new Set(videos.map((v) => v.creator_id))]
+  // Two-step: video + session creator profiles
+  const videoCreatorIds = [...new Set((rawVideos ?? []).map((v) => v.creator_id))]
   const sessionCreatorIds = [...new Set((sessions ?? []).map((s) => s.creator_id))]
   const allCreatorIds = [...new Set([...videoCreatorIds, ...sessionCreatorIds])]
   const { data: allProfiles } = allCreatorIds.length
     ? await supabase.from('profiles').select('user_id, display_name, username, photo_url, tags').in('user_id', allCreatorIds)
     : { data: [] }
   const profileByUserId = Object.fromEntries((allProfiles ?? []).map((p) => [p.user_id, p]))
+
+  // Rank by relevance when searching (after profiles are available for creator name scoring)
+  const videos = q
+    ? sortByRelevance(q, rawVideos ?? [], (v) => profileByUserId[v.creator_id]?.display_name)
+    : (rawVideos ?? [])
 
   // Tag filter for sessions — sessions don't have tags, so filter by creator tags
   const filteredSessions = tag
