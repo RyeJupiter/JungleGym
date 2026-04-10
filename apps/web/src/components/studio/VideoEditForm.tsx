@@ -97,8 +97,13 @@ export function VideoEditForm({ video, videoPublicUrl, onSaved }: Props) {
       setNewThumbnailFile(null)
       onSaved?.()
 
-      // Fire-and-forget ghost tag update — never blocks save, silently skipped on failure
-      fetch('/api/autotag', {
+      // Fire-and-forget ghost tag update — only when searchable content changed
+      const contentChanged =
+        title !== video.title ||
+        description !== (video.description ?? '') ||
+        JSON.stringify([...tags].sort()) !== JSON.stringify([...video.tags].sort())
+
+      if (contentChanged) fetch('/api/autotag', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, description, userTags: tags }),
