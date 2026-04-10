@@ -9,6 +9,7 @@ import { ShareButton } from '@/components/video/ShareButton'
 import { AddToCalendarButton } from '@/components/video/AddToCalendarButton'
 import { Navbar } from '@/components/Navbar'
 import { FooterCompact } from '@/components/FooterCompact'
+import { checkIsAdmin } from '@/lib/admin'
 import type { Metadata } from 'next'
 
 type Props = { params: Promise<{ id: string }> }
@@ -39,6 +40,8 @@ export default async function VideoPage({ params }: Props) {
     supabase.from('profiles').select('display_name, username, photo_url, bio, tags').eq('user_id', video.creator_id).limit(1),
   ])
   const creator = profileRows?.[0] ?? null
+
+  const isAdmin = user?.email ? await checkIsAdmin(user.email, supabase) : false
 
   // Check if learner already purchased this
   const { data: purchase } = user
@@ -132,6 +135,25 @@ export default async function VideoPage({ params }: Props) {
 
             {video.description && (
               <p className="text-stone-600 leading-relaxed mb-6">{video.description}</p>
+            )}
+
+            {/* Ghost tags — admin only */}
+            {isAdmin && (video.ghost_tags?.length > 0) && (
+              <div className="mb-6 p-3 rounded-xl bg-violet-50 border border-violet-200">
+                <p className="text-xs font-semibold text-violet-500 uppercase tracking-wide mb-2">
+                  Ghost tags (admin only)
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {video.ghost_tags.map((tag: string) => (
+                    <span
+                      key={tag}
+                      className="bg-violet-100 text-violet-700 text-xs px-2 py-0.5 rounded-full"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
             )}
 
             {/* Creator */}
