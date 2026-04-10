@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
@@ -11,8 +11,8 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 
 const TIERS: { key: PriceTier; label: string; emoji: string; desc: string }[] = [
   { key: 'supported', label: 'Supported', emoji: '🌱', desc: 'Pay what you can' },
-  { key: 'community', label: 'Community', emoji: '🌿', desc: 'Chip in a little more' },
-  { key: 'abundance', label: 'Abundance', emoji: '🌳', desc: "You're thriving — share it" },
+  { key: 'community', label: 'Community', emoji: '🌿', desc: 'The sweet spot' },
+  { key: 'abundance', label: 'Abundance', emoji: '🌳', desc: 'Pay it forward' },
 ]
 
 export function PurchaseButton({
@@ -32,6 +32,7 @@ export function PurchaseButton({
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const fetchedTierRef = useRef<PriceTier | null>(null)
   const router = useRouter()
 
   const prices: Record<PriceTier, number | null> = {
@@ -43,59 +44,46 @@ export function PurchaseButton({
   const selectedPrice = prices[selectedTier] ?? 0
   const { creatorAmount, platformFee } = calculatePriceBreakdown(selectedPrice)
 
-  async function handleCheckout() {
-    if (!isLoggedIn) {
-      router.push(`/auth/login?next=/video/${videoId}`)
-      return
-    }
-    if (!selectedPrice) return
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/checkout/video', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoId, tier: selectedTier }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Checkout failed')
-      setClientSecret(data.clientSecret)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Checkout failed')
-    } finally {
-      setLoading(false)
-    }
-  }
+  // Auto-create PaymentIntent when tier changes (for logged-in users)
+  useEffect(() => {
+    if (!isLoggedIn || !selectedPrice || fetchedTierRef.current === selectedTier) return
 
-  if (clientSecret) {
-    return (
-      <Elements
-        stripe={stripePromise}
-        options={{
-          clientSecret,
-          appearance: {
-            theme: 'stripe',
-            variables: {
-              colorPrimary: '#16a34a',
-              borderRadius: '12px',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-            },
-          },
-        }}
-      >
-        <InlineCheckoutForm
-          videoId={videoId}
-          total={selectedPrice}
-          onCancel={() => setClientSecret(null)}
-          onSuccess={() => router.refresh()}
-        />
-      </Elements>
-    )
+    let cancelled = false
+    async function createIntent() {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch('/api/checkout/video', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ videoId, tier: selectedTier }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error ?? 'Checkout failed')
+        if (!cancelled) {
+          setClientSecret(data.clientSecret)
+          fetchedTierRef.current = selectedTier
+        }
+      } catch (err: unknown) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Checkout failed')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    createIntent()
+    return () => { cancelled = true }
+  }, [isLoggedIn, selectedPrice, selectedTier, videoId])
+
+  function handleTierChange(tier: PriceTier) {
+    if (tier === selectedTier) return
+    setSelectedTier(tier)
+    setClientSecret(null)
+    fetchedTierRef.current = null
   }
 
   return (
     <div className="bg-white border border-stone-200 rounded-2xl p-5 space-y-4">
-      <h3 className="font-bold text-stone-900 text-sm">Choose your tier</h3>
       {error && <p className="text-red-600 text-xs">{error}</p>}
 
       {/* Tier picker */}
@@ -107,7 +95,7 @@ export function PurchaseButton({
             <button
               key={key}
               type="button"
-              onClick={() => setSelectedTier(key)}
+              onClick={() => handleTierChange(key)}
               className={`w-full text-left rounded-xl p-3 border-2 transition-colors ${
                 selectedTier === key
                   ? 'border-jungle-500 bg-jungle-50'
@@ -129,34 +117,48 @@ export function PurchaseButton({
         })}
       </div>
 
-      {/* Price breakdown — flat 20% fee */}
-      {selectedPrice > 0 && (
-        <div className="bg-jungle-50 border border-jungle-100 rounded-xl p-4 space-y-1.5 text-sm">
-          <div className="flex justify-between text-stone-700">
-            <span>To creator (80%)</span>
-            <span className="font-semibold">{formatPrice(creatorAmount)}</span>
-          </div>
-          <div className="flex justify-between text-stone-500 text-xs">
-            <span>Platform fee ({PLATFORM_FEE_PCT}%)</span>
-            <span>{formatPrice(platformFee)}</span>
-          </div>
-          <div className="flex justify-between font-black text-stone-900 pt-1 border-t border-jungle-100">
-            <span>Total</span>
-            <span>{formatPrice(selectedPrice)}</span>
-          </div>
-        </div>
-      )}
-
-      <button
-        onClick={handleCheckout}
-        disabled={loading}
-        className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
-      >
-        {loading ? 'Loading...' : isLoggedIn ? 'Unlock this class' : 'Sign in to unlock'}
-      </button>
+      {/* Breakdown as inline text */}
       <p className="text-xs text-stone-400 text-center">
-        The price you see is the price you pay. 80% to the creator, {PLATFORM_FEE_PCT}% platform fee.
+        {formatPrice(selectedPrice)} total — {formatPrice(creatorAmount)} to creator, {formatPrice(platformFee)} platform fee ({PLATFORM_FEE_PCT}%).
       </p>
+
+      {/* Payment form inline — ready for one-click if card is saved */}
+      {clientSecret ? (
+        <Elements
+          stripe={stripePromise}
+          options={{
+            clientSecret,
+            appearance: {
+              theme: 'stripe',
+              variables: {
+                colorPrimary: '#16a34a',
+                borderRadius: '12px',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+              },
+            },
+          }}
+        >
+          <InlineCheckoutForm
+            videoId={videoId}
+            total={selectedPrice}
+            onSuccess={() => router.refresh()}
+          />
+        </Elements>
+      ) : loading ? (
+        <div className="flex items-center justify-center py-4">
+          <svg className="animate-spin w-5 h-5 text-jungle-500" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+          </svg>
+        </div>
+      ) : !isLoggedIn ? (
+        <button
+          onClick={() => router.push(`/auth/login?next=/video/${videoId}`)}
+          className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors"
+        >
+          Sign in to unlock
+        </button>
+      ) : null}
     </div>
   )
 }
@@ -164,12 +166,10 @@ export function PurchaseButton({
 function InlineCheckoutForm({
   videoId,
   total,
-  onCancel,
   onSuccess,
 }: {
   videoId: string
   total: number
-  onCancel: () => void
   onSuccess: () => void
 }) {
   const stripe = useStripe()
@@ -202,7 +202,7 @@ function InlineCheckoutForm({
       return
     }
 
-    // Record the purchase in the database
+    // Record the purchase
     if (paymentIntent?.id) {
       try {
         await fetch('/api/checkout/video/confirm', {
@@ -211,7 +211,7 @@ function InlineCheckoutForm({
           body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
         })
       } catch {
-        // Payment succeeded even if confirm fails — webhook will catch it
+        // Payment succeeded — webhook will catch it if confirm fails
       }
     }
 
@@ -220,24 +220,16 @@ function InlineCheckoutForm({
   }
 
   return (
-    <div className="bg-white border border-stone-200 rounded-2xl p-5 space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-bold text-stone-900 text-sm">Payment details</h3>
-        <button type="button" onClick={onCancel} className="text-xs text-stone-400 hover:text-stone-600">
-          ← Change tier
-        </button>
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-3">
       {error && <p className="text-red-600 text-xs">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <PaymentElement />
-        <button
-          type="submit"
-          disabled={loading || !stripe}
-          className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
-        >
-          {loading ? 'Processing...' : `Pay ${formatPrice(total)}`}
-        </button>
-      </form>
-    </div>
+      <PaymentElement />
+      <button
+        type="submit"
+        disabled={loading || !stripe}
+        className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
+      >
+        {loading ? 'Processing...' : `Unlock for ${formatPrice(total)}`}
+      </button>
+    </form>
   )
 }
