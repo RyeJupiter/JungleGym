@@ -80,26 +80,6 @@ export function VideoUploadForm({
   const supabase = createBrowserSupabaseClient()
 
   const tagSuggestions = useMemo(() => suggestTagsFromTitle(title), [title])
-  const [autoTagging, setAutoTagging] = useState(false)
-
-  async function handleAutoTag() {
-    setAutoTagging(true)
-    try {
-      const res = await fetch('/api/autotag', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description }),
-      })
-      const data = await res.json()
-      if (data.tags?.length) {
-        setTags((prev) => [...new Set([...prev, ...data.tags])])
-      }
-    } catch {
-      // silently fall back — local suggestions still show
-    } finally {
-      setAutoTagging(false)
-    }
-  }
 
   const duration = parseInt(durationSecs) || 0
   const calculatedPrices = duration > 0 ? calculateTierPrices(duration, defaultRates) : null
@@ -189,22 +169,27 @@ export function VideoUploadForm({
       }
 
       setProgress('Saving…')
-      const { error: insertError } = await supabase.from('videos').insert({
-        id: videoId,
-        creator_id: creatorId,
-        title,
-        description: description || null,
-        tags,
-        duration_seconds: duration || null,
-        is_free: isFree,
-        price_supported: (!isFree && prices) ? prices.supported : null,
-        price_community: (!isFree && prices) ? prices.community : null,
-        price_abundance: (!isFree && prices) ? prices.abundance : null,
-        video_url: videoStoragePath,
-        thumbnail_url: thumbnailPublicUrl,
-        published: false,
+      const saveRes = await fetch('/api/videos/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: videoId,
+          title,
+          description: description || null,
+          tags,
+          duration_seconds: duration || null,
+          is_free: isFree,
+          price_supported: (!isFree && prices) ? prices.supported : null,
+          price_community: (!isFree && prices) ? prices.community : null,
+          price_abundance: (!isFree && prices) ? prices.abundance : null,
+          video_url: videoStoragePath,
+          thumbnail_url: thumbnailPublicUrl,
+        }),
       })
-      if (insertError) throw insertError
+      if (!saveRes.ok) {
+        const err = await saveRes.json().catch(() => ({ error: 'Save failed' }))
+        throw new Error(err.error ?? 'Save failed')
+      }
 
       router.push('/studio')
       router.refresh()
@@ -316,17 +301,7 @@ export function VideoUploadForm({
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} placeholder="What will learners take away?" />
         </div>
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="text-sm font-medium text-stone-700">Tags</label>
-            <button
-              type="button"
-              onClick={handleAutoTag}
-              disabled={autoTagging || !title}
-              className="text-xs text-jungle-600 hover:text-jungle-700 font-medium disabled:opacity-40 transition-colors"
-            >
-              {autoTagging ? 'Suggesting...' : '✨ Auto-suggest tags'}
-            </button>
-          </div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">Tags</label>
           <TagInput
             tags={tags}
             onChange={setTags}
