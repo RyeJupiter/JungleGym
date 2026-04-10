@@ -29,10 +29,14 @@ export function GiftButton({
   const rawAmount = parseFloat(amount) || 0
   const { creatorAmount, platformFee, total } = calculatePriceBreakdown(rawAmount)
 
-  // Auto-create PaymentIntent when amount changes (debounced)
+  const [amountStale, setAmountStale] = useState(false)
+
+  // Auto-create PaymentIntent when amount changes (debounced 1s)
+  // Keeps the old Elements mounted to avoid layout shift — only swaps on success
   useEffect(() => {
     if (!open || rawAmount <= 0 || fetchedAmountRef.current === rawAmount) return
 
+    setAmountStale(true)
     const timeout = setTimeout(async () => {
       setLoading(true)
       setError(null)
@@ -46,23 +50,21 @@ export function GiftButton({
         if (!res.ok) throw new Error(data.error ?? 'Failed to start payment')
         setClientSecret(data.clientSecret)
         fetchedAmountRef.current = rawAmount
+        setAmountStale(false)
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Failed to start payment')
+        setAmountStale(false)
       } finally {
         setLoading(false)
       }
-    }, 500)
+    }, 1000)
 
     return () => clearTimeout(timeout)
   }, [open, rawAmount, sessionId, message])
 
   function handleAmountChange(val: string) {
     setAmount(val)
-    // Reset so a new intent is created for the new amount
-    if (clientSecret) {
-      setClientSecret(null)
-      fetchedAmountRef.current = null
-    }
+    fetchedAmountRef.current = null
   }
 
   function handleClose() {
@@ -170,6 +172,7 @@ export function GiftButton({
                       platformFee={platformFee}
                       total={total}
                       message={message}
+                      disabled={amountStale}
                       onSuccess={() => {
                         setSuccess(true)
                         setTimeout(handleClose, 1500)
@@ -219,6 +222,7 @@ function GiftPaymentForm({
   platformFee,
   total,
   message,
+  disabled,
   onSuccess,
   onError,
 }: {
@@ -227,6 +231,7 @@ function GiftPaymentForm({
   platformFee: number
   total: number
   message: string
+  disabled?: boolean
   onSuccess: () => void
   onError: (msg: string) => void
 }) {
@@ -283,10 +288,10 @@ function GiftPaymentForm({
       <PaymentElement options={{ layout: 'tabs' }} />
       <button
         type="submit"
-        disabled={!stripe || processing}
+        disabled={!stripe || processing || disabled}
         className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50"
       >
-        {processing ? 'Processing...' : `Send ${formatPrice(total)} gift`}
+        {processing ? 'Processing...' : disabled ? 'Updating...' : `Send ${formatPrice(total)} gift`}
       </button>
     </form>
   )
