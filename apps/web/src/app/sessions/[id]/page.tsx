@@ -5,6 +5,8 @@ import { Navbar } from '@/components/Navbar'
 import { FooterCompact } from '@/components/FooterCompact'
 import { GiftButton } from '@/components/session/GiftButton'
 import { AddSessionToCalendarButton } from '@/components/session/AddSessionToCalendarButton'
+import { StreamPlayer, StreamPlaceholder } from '@/components/session/StreamPlayer'
+import { getPlaybackUrls } from '@/lib/cloudflare-stream'
 import type { Metadata } from 'next'
 
 type Props = { params: Promise<{ id: string }> }
@@ -41,6 +43,10 @@ export default async function SessionDetailPage({ params }: Props) {
   const scheduledDate = new Date(session.scheduled_at)
   const isLive = session.status === 'live'
   const isPast = session.status === 'completed' || session.status === 'cancelled'
+
+  // Stream player — only available if CF Stream is provisioned for this session
+  const cfInputId = (session as Record<string, unknown>).cf_input_id as string | null
+  const playbackUrls = cfInputId ? getPlaybackUrls(cfInputId) : null
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -124,24 +130,28 @@ export default async function SessionDetailPage({ params }: Props) {
           </div>
         )}
 
-        {/* Placeholder for future features */}
-        <div className="bg-jungle-50 border border-jungle-200 rounded-2xl p-8 text-center">
-          <p className="text-4xl mb-3">🌿</p>
-          <p className="font-bold text-jungle-800 mb-1">
-            {isLive ? 'The session is happening now!' : isPast ? 'This session has ended.' : 'Session starts soon'}
-          </p>
-          <p className="text-jungle-600 text-sm">
-            {isLive
-              ? 'Live stream, comments, and gifts are coming soon. For now, connect with the teacher directly.'
-              : isPast
-              ? 'Thanks for attending! Check out more sessions below.'
-              : `Come back ${scheduledDate.toLocaleDateString(undefined, { weekday: 'long' })} to join.`
-            }
-          </p>
+        {/* Stream player or placeholder */}
+        {playbackUrls && isLive ? (
+          <div className="mb-8">
+            <StreamPlayer iframeSrc={playbackUrls.iframe} isLive />
+          </div>
+        ) : playbackUrls && isPast ? (
+          <div className="mb-8">
+            <StreamPlayer iframeSrc={playbackUrls.iframe} isRecording />
+          </div>
+        ) : (
+          <StreamPlaceholder
+            isLive={isLive}
+            isPast={isPast}
+            scheduledDay={scheduledDate.toLocaleDateString(undefined, { weekday: 'long' })}
+          />
+        )}
+
+        {!isPast && (
           <Link href="/sessions" className="mt-4 inline-block text-jungle-700 font-semibold text-sm hover:underline">
             Browse all sessions →
           </Link>
-        </div>
+        )}
       </div>
       <FooterCompact />
     </div>

@@ -63,6 +63,8 @@ export default async function SessionManageRoute({ params }: { params: Promise<{
           duration_minutes: session.duration_minutes,
           status: session.status,
           max_participants: session.max_participants ?? null,
+          cf_input_id: (session as Record<string, unknown>).cf_input_id as string | null ?? null,
+          cf_stream_key: (session as Record<string, unknown>).cf_stream_key as string | null ?? null,
         }}
         metrics={{ giftCount: transactions.length, totalGifts, totalCreator }}
         transactions={transactions}

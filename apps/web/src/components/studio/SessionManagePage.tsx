@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { StreamSetup } from './StreamSetup'
 
 type Session = {
   id: string
@@ -14,6 +15,8 @@ type Session = {
   duration_minutes: number
   status: string
   max_participants: number | null
+  cf_input_id: string | null
+  cf_stream_key: string | null
 }
 
 type Metrics = {
@@ -39,7 +42,7 @@ type Props = {
   transactions: GiftTransaction[]
 }
 
-type Tab = 'overview' | 'settings'
+type Tab = 'overview' | 'stream' | 'settings'
 
 const STATUS_LABELS: Record<string, string> = {
   scheduled: 'Scheduled',
@@ -175,7 +178,7 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
 
       {/* Tabs */}
       <div className="flex gap-1 mb-8 bg-stone-100 p-1 rounded-xl w-fit">
-        {(['overview', 'settings'] as Tab[]).map((t) => (
+        {(['overview', 'stream', 'settings'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -244,6 +247,15 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
             )}
           </section>
         </div>
+      )}
+
+      {/* ── Stream ───────────────────────────────────────────────────── */}
+      {tab === 'stream' && (
+        <StreamSetup
+          sessionId={initial.id}
+          cfInputId={initial.cf_input_id}
+          cfStreamKey={initial.cf_stream_key}
+        />
       )}
 
       {/* ── Settings ──────────────────────────────────────────────────── */}
