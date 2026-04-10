@@ -53,8 +53,7 @@ export default async function TreehousePage({ params }: Props) {
         .from('live_sessions')
         .select('id, title, description, scheduled_at, duration_minutes, status, max_participants')
         .eq('creator_id', profile.user_id)
-        .in('status', ['scheduled', 'live'])
-        .gte('scheduled_at', new Date().toISOString())
+        .or(`status.eq.live,and(status.eq.scheduled,scheduled_at.gte.${new Date().toISOString()})`)
         .order('scheduled_at', { ascending: true })
         .limit(4),
       supabase.auth.getUser(),

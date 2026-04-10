@@ -39,7 +39,7 @@ export const SINGLETON_SECTIONS: SectionType[] = [
 
 // User-friendly labels for each section type
 export const SECTION_LABELS: Record<SectionType, string> = {
-  hero: 'Hero Banner',
+  hero: 'Profile',
   intro_video: 'Intro Video',
   live_sessions: 'Live Sessions',
   free_videos: 'Free Videos',

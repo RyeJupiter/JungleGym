@@ -93,7 +93,7 @@ export function HeroSection({
   if (variant === 'compact') {
     return (
       <>
-      <div className={`relative ${hasBanner ? 'bg-transparent' : theme.heroBg} border-b ${theme.cardBorder}/50`}>
+      <div className={`relative ${hasBanner ? 'bg-transparent' : theme.heroBg}`}>
         <div className="relative max-w-5xl mx-auto px-6 py-8">
           <div className="flex items-center gap-4">
             {/* Avatar */}
@@ -172,7 +172,7 @@ export function HeroSection({
   if (variant === 'centered') {
     return (
       <>
-      <div className={`relative ${hasBanner ? 'bg-transparent' : theme.heroBg} border-b ${theme.cardBorder}/50`}>
+      <div className={`relative ${hasBanner ? 'bg-transparent' : theme.heroBg}`}>
         <HeroOverlay theme={theme} />
         <div className="relative max-w-5xl mx-auto px-6 py-12 text-center">
           {/* Avatar centered */}
@@ -261,7 +261,7 @@ export function HeroSection({
 
   // ── Default variant (current layout) ──
   return (
-    <div className={`relative ${hasBanner ? 'bg-transparent' : theme.heroBg} border-b ${theme.cardBorder}/50`}>
+    <div className={`relative ${hasBanner ? 'bg-transparent' : theme.heroBg}`}>
       <HeroOverlay theme={theme} />
       <div className="relative max-w-5xl mx-auto px-6 py-12">
         {/* Treehouse label */}
