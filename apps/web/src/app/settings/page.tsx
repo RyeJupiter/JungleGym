@@ -36,10 +36,20 @@ export default async function SettingsPage() {
           <div className="mt-6">
             <StudioSettingsForm profile={{
               user_id: profile.user_id,
+              display_name: profile.display_name ?? '',
               username: profile.username,
+              bio: profile.bio ?? null,
+              tagline: profile.tagline ?? null,
+              location: profile.location ?? null,
+              tags: profile.tags ?? [],
+              photo_url: profile.photo_url ?? null,
               supported_rate: profile.supported_rate ?? 1,
               community_rate: profile.community_rate ?? 2,
               abundance_rate: profile.abundance_rate ?? 3,
+              suggested_tip: (profile as Record<string, unknown>).suggested_tip as number ?? 5,
+              notification_pref: (profile as Record<string, unknown>).notification_pref as string ?? 'every',
+              notification_threshold: (profile as Record<string, unknown>).notification_threshold as number ?? 0,
+              notification_email: (profile as Record<string, unknown>).notification_email as string ?? null,
             }} />
           </div>
         )}
