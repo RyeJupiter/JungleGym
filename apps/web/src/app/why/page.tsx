@@ -46,7 +46,7 @@ export default function WhyPage() {
             The best teachers I&apos;ve met weren&apos;t in a gym. They were at festivals, in community
             spaces, in someone&apos;s backyard. The yogi who learned from a lineage. The contact
             dancer who can make you forget gravity. The breathwork guide who held you through
-            the kind of release you didn&apos;t know you needed.
+            the kind of release you didn&apos;t know was possible.
           </p>
           <p className="mt-5">
             They were teaching anyone who showed up — often for free — because nobody had
