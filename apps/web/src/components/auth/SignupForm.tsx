@@ -14,7 +14,7 @@ export function SignupForm() {
   const [loading, setLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const searchParams = useSearchParams()
-  const next = searchParams.get('next') ?? '/dashboard'
+  const next = searchParams.get('next') ?? '/explore'
   const supabase = createBrowserSupabaseClient()
 
   async function handleSubmit(e: React.FormEvent) {

@@ -78,27 +78,49 @@ export default async function ExplorePage({
 
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-stone-900">Classes</h1>
+          <h1 className="text-4xl font-black text-stone-900">Explore</h1>
           <p className="text-stone-500 mt-2">
             Movement classes from skilled guides. Pay once, own forever.
           </p>
         </div>
 
-        {/* Search */}
-        <form method="get" className="mb-8">
-          {tag && <input type="hidden" name="tag" value={tag} />}
-          <div className="flex gap-3 max-w-lg">
-            <input
-              name="q"
-              defaultValue={q ?? ''}
-              placeholder="Search videos..."
-              className="flex-1 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-jungle-400 placeholder:text-stone-400"
-            />
-            <button type="submit" className="bg-jungle-700 hover:bg-jungle-800 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
-              Search
-            </button>
+        {/* Section tabs + Search */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
+          <div className="flex gap-2">
+            <Link
+              href="/explore"
+              className="bg-jungle-700 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-colors hover:bg-jungle-800"
+            >
+              Classes
+            </Link>
+            <Link
+              href="/guides"
+              className="bg-white text-stone-700 font-semibold px-4 py-2.5 rounded-xl text-sm border border-stone-200 transition-colors hover:bg-stone-50"
+            >
+              Guides
+            </Link>
+            <Link
+              href="/sessions"
+              className="bg-white text-stone-700 font-semibold px-4 py-2.5 rounded-xl text-sm border border-stone-200 transition-colors hover:bg-stone-50"
+            >
+              Live
+            </Link>
           </div>
-        </form>
+          <form method="get" className="flex-1">
+            {tag && <input type="hidden" name="tag" value={tag} />}
+            <div className="flex gap-3 max-w-lg">
+              <input
+                name="q"
+                defaultValue={q ?? ''}
+                placeholder="Search videos..."
+                className="flex-1 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-jungle-400 placeholder:text-stone-400"
+              />
+              <button type="submit" className="bg-jungle-700 hover:bg-jungle-800 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
+                Search
+              </button>
+            </div>
+          </form>
+        </div>
 
         {/* Tag pills */}
         <div className="flex gap-2 flex-wrap mb-6">

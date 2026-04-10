@@ -12,6 +12,10 @@ export const MOVEMENT_TAGS: string[] = [
   'qi-gong', 'tai-chi', 'capoeira', 'breakdancing', 'ballet',
   'contemporary', 'hip-hop', 'salsa', 'swing', 'pole',
   'surfing', 'skateboarding', 'rock-climbing',
+  'aerial', 'silks', 'trapeze', 'contortion', 'tumbling', 'tricking', 'freerunning',
+  'swimming', 'cycling', 'rowing', 'running',
+  'functional', 'corrective', 'somatic', 'feldenkrais',
+  'contact-improv', 'floorwork', 'acrobatics',
 
   // Yoga styles
   'vinyasa', 'hatha', 'yin', 'ashtanga', 'restorative', 'flow',
@@ -23,14 +27,25 @@ export const MOVEMENT_TAGS: string[] = [
   // Body focus
   'core', 'upper-body', 'lower-body', 'full-body', 'back', 'hips',
   'shoulders', 'arms', 'legs', 'glutes', 'chest', 'neck',
+  'spine', 'wrists', 'ankles', 'knees', 'pelvic-floor', 'posture', 'alignment',
 
   // Equipment
   'bodyweight', 'no-equipment', 'dumbbell', 'barbell', 'resistance-band',
   'mat', 'block', 'strap', 'ring', 'parallette', 'pull-up-bar',
+  'reformer', 'suspension', 'cable',
 
-  // Intent / format
-  'warmup', 'cooldown', 'recovery', 'morning', 'evening', 'quick',
-  'tutorial', 'flow', 'masterclass', 'drill', 'challenge',
+  // Teaching format
+  'tutorial', 'masterclass', 'drill', 'challenge', 'workshop',
+  'series', 'program', 'sequence', 'practice', 'technique', 'fundamentals',
+  'foundations', 'breakdown', 'guided', 'follow-along',
+
+  // Session style
+  'flow', 'warmup', 'cooldown', 'recovery', 'morning', 'evening', 'quick',
+  'slow', 'intense', 'gentle', 'dynamic', 'static', 'partner', 'solo',
+
+  // Intent / feeling
+  'stress-relief', 'energy', 'focus', 'relaxation', 'activation',
+  'grounding', 'centering', 'nervous-system', 'fascia',
 ]
 
 // Keyword aliases — if the title contains the key, suggest the value tag.
@@ -51,6 +66,11 @@ const ALIASES: [RegExp, string][] = [
   [/\bmuay[\s-]?thai/i, 'kickboxing'],
   [/\bbjj\b/i, 'jiu-jitsu'],
   [/\bmma\b/i, 'martial-arts'],
+  [/\bnerv(ous|e)\b/i, 'nervous-system'],
+  [/\bfasci/i, 'fascia'],
+  [/\bpelvic/i, 'pelvic-floor'],
+  [/\bbreak(down)?\b/i, 'breakdown'],
+  [/\bfollow[\s-]?along/i, 'follow-along'],
 ]
 
 export function suggestTagsFromTitle(title: string): string[] {

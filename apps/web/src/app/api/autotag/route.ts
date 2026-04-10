@@ -32,9 +32,11 @@ export async function POST(request: Request) {
 
   // Use Groq API with a lightweight model
   const tagList = MOVEMENT_TAGS.join(', ')
-  const prompt = `You are a tag classifier for a movement/fitness video platform. Given a video title and optional description, select the most relevant tags from the allowed list below. Return ONLY a JSON array of tag strings, nothing else.
+  const prompt = `You are a tag classifier for a movement and teaching video platform called JungleGym — yoga, dance, martial arts, breathwork, strength, and beyond. Given a video title and optional description, suggest the most relevant tags.
 
-Allowed tags: ${tagList}
+Recommended tags (use these when they fit — they keep tags consistent across the platform): ${tagList}
+
+You may also create short, lowercase, hyphenated tags not on this list if the content clearly calls for it. Prioritize specificity and searchability. Return ONLY a JSON array of tag strings, nothing else.
 
 Video title: ${title}
 ${description ? `Description: ${description}` : ''}
@@ -49,7 +51,7 @@ Return 3-8 tags as a JSON array.`
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gemma2-9b-it',
+        model: 'llama-3.1-8b-instant',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
         max_tokens: 200,
@@ -75,10 +77,10 @@ Return 3-8 tags as a JSON array.`
     }
 
     const rawTags: string[] = JSON.parse(jsonMatch[0])
-    // Filter to only valid tags from our vocabulary
+    // Normalize and sanity-check — allow any short, lowercase, hyphenated tag
     const validTags = rawTags
-      .map((t) => t.toLowerCase().trim())
-      .filter((t) => MOVEMENT_TAGS.includes(t))
+      .map((t) => t.toLowerCase().trim().replace(/\s+/g, '-'))
+      .filter((t) => /^[a-z0-9-]{2,40}$/.test(t))
 
     return NextResponse.json({ tags: validTags, source: 'llm' })
   } catch (err) {

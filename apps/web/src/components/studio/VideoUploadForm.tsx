@@ -80,6 +80,26 @@ export function VideoUploadForm({
   const supabase = createBrowserSupabaseClient()
 
   const tagSuggestions = useMemo(() => suggestTagsFromTitle(title), [title])
+  const [autoTagging, setAutoTagging] = useState(false)
+
+  async function handleAutoTag() {
+    setAutoTagging(true)
+    try {
+      const res = await fetch('/api/autotag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description }),
+      })
+      const data = await res.json()
+      if (data.tags?.length) {
+        setTags((prev) => [...new Set([...prev, ...data.tags])])
+      }
+    } catch {
+      // silently fall back — local suggestions still show
+    } finally {
+      setAutoTagging(false)
+    }
+  }
 
   const duration = parseInt(durationSecs) || 0
   const calculatedPrices = duration > 0 ? calculateTierPrices(duration, defaultRates) : null
@@ -296,7 +316,17 @@ export function VideoUploadForm({
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} placeholder="What will learners take away?" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">Tags</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-sm font-medium text-stone-700">Tags</label>
+            <button
+              type="button"
+              onClick={handleAutoTag}
+              disabled={autoTagging || !title}
+              className="text-xs text-jungle-600 hover:text-jungle-700 font-medium disabled:opacity-40 transition-colors"
+            >
+              {autoTagging ? 'Suggesting...' : '✨ Auto-suggest tags'}
+            </button>
+          </div>
           <TagInput
             tags={tags}
             onChange={setTags}
