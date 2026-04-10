@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'You're Invited — JungleGym',
-  description: 'You've been personally invited to co-create on JungleGym. Here's what that means.',
+  title: "You're Invited — JungleGym",
+  description: "You've been personally invited to co-create on JungleGym. Here's what that means.",
   robots: { index: false, follow: false },
 }
 
