@@ -7,24 +7,38 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Explore' }
 
-export default async function ExplorePage() {
+export default async function ExplorePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
+  const { q } = await searchParams
   const supabase = await createServerSupabaseClient()
 
-  // Fetch latest videos, guides (creators), and upcoming sessions in parallel
+  // Build queries — apply search filter across all sections
+  let videoQuery = supabase
+    .from('videos')
+    .select('*')
+    .eq('published', true)
+    .order('created_at', { ascending: false })
+    .limit(6)
+
+  let sessionQuery = supabase
+    .from('live_sessions')
+    .select('id, title, description, scheduled_at, duration_minutes, status, creator_id')
+    .or(`status.eq.live,and(status.eq.scheduled,scheduled_at.gte.${new Date().toISOString()})`)
+    .order('scheduled_at', { ascending: true })
+    .limit(4)
+
+  if (q) {
+    videoQuery = videoQuery.ilike('title', `%${q}%`)
+    sessionQuery = sessionQuery.ilike('title', `%${q}%`)
+  }
+
   const [{ data: videos }, { data: creatorUsers }, { data: sessions }] = await Promise.all([
-    supabase
-      .from('videos')
-      .select('*')
-      .eq('published', true)
-      .order('created_at', { ascending: false })
-      .limit(6),
+    videoQuery,
     supabase.from('users').select('id').eq('role', 'creator').limit(8),
-    supabase
-      .from('live_sessions')
-      .select('id, title, description, scheduled_at, duration_minutes, status, creator_id')
-      .or(`status.eq.live,and(status.eq.scheduled,scheduled_at.gte.${new Date().toISOString()})`)
-      .order('scheduled_at', { ascending: true })
-      .limit(4),
+    sessionQuery,
   ])
 
   // Two-step: video creator profiles
@@ -38,21 +52,46 @@ export default async function ExplorePage() {
 
   // Two-step: guide profiles
   const guideIds = creatorUsers?.map((u) => u.id) ?? []
-  const { data: guides } = guideIds.length
-    ? await supabase.from('profiles').select('*').in('user_id', guideIds).limit(8).order('created_at', { ascending: false })
-    : { data: [] }
+  let guidesQuery = guideIds.length
+    ? supabase.from('profiles').select('*').in('user_id', guideIds).limit(8).order('created_at', { ascending: false })
+    : null
+  if (guidesQuery && q) {
+    guidesQuery = guidesQuery.ilike('display_name', `%${q}%`)
+  }
+  const { data: guides } = guidesQuery ? await guidesQuery : { data: [] }
 
   return (
     <div className="min-h-screen bg-stone-50">
       <Navbar />
 
       <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="mb-10">
+        <div className="mb-8">
           <h1 className="text-4xl font-black text-stone-900">Explore</h1>
           <p className="text-stone-500 mt-2">
             Discover movement classes, guides, and live sessions.
           </p>
         </div>
+
+        {/* Search across all sections */}
+        <form method="get" className="mb-10">
+          <div className="flex gap-3 max-w-lg">
+            <input
+              name="q"
+              defaultValue={q ?? ''}
+              placeholder="Search classes, guides, sessions..."
+              className="flex-1 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-jungle-400 placeholder:text-stone-400"
+            />
+            <button type="submit" className="bg-jungle-700 hover:bg-jungle-800 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
+              Search
+            </button>
+          </div>
+          {q && (
+            <div className="mt-3 flex items-center gap-2">
+              <span className="text-sm text-stone-500">Showing results for &ldquo;{q}&rdquo;</span>
+              <Link href="/explore" className="text-sm text-jungle-600 font-semibold hover:underline">Clear</Link>
+            </div>
+          )}
+        </form>
 
         {/* ── Latest Videos ─────────────────────────────────── */}
         <section className="mb-14">

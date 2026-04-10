@@ -58,7 +58,6 @@ export function NavLinks({ isLoggedIn, isCreator, isAdmin, photoUrl, username }:
         {isLoggedIn ? (
           <>
             <Link href="/library" className={cls('/library')}>Library</Link>
-            {isCreator && <Link href="/studio" className={cls('/studio')}>Studio</Link>}
 
             {/* Profile picture dropdown */}
             <div className="relative" ref={dropdownRef}>
@@ -85,6 +84,15 @@ export function NavLinks({ isLoggedIn, isCreator, isAdmin, photoUrl, username }:
                       className="flex items-center gap-2.5 px-4 py-3 text-sm text-jungle-200 hover:bg-jungle-700 transition-colors"
                     >
                       My Profile
+                    </Link>
+                  )}
+                  {isCreator && (
+                    <Link
+                      href="/studio"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-3 text-sm text-jungle-200 hover:bg-jungle-700 transition-colors"
+                    >
+                      Studio
                     </Link>
                   )}
                   {isAdmin && (
@@ -154,11 +162,11 @@ export function NavLinks({ isLoggedIn, isCreator, isAdmin, photoUrl, username }:
           {isLoggedIn ? (
             <>
               <Link href="/library" className={mobileClsBlock('/library')}>Library</Link>
-              {isCreator && <Link href="/studio" className={mobileClsBlock('/studio')}>Studio</Link>}
               <div className="border-t border-jungle-800 mt-2 pt-2 space-y-1">
                 {username && (
                   <Link href={`/@${username}`} className={mobileClsBlock(`/@${username}`)}>My Profile</Link>
                 )}
+                {isCreator && <Link href="/studio" className={mobileClsBlock('/studio')}>Studio</Link>}
                 {isAdmin && <Link href="/admin" className={mobileClsBlock('/admin')}>Admin</Link>}
                 <Link href="/settings" className={mobileClsBlock('/settings')}>Settings</Link>
                 <LogoutButton className="block w-full text-left px-4 py-3 text-base font-medium text-jungle-400 hover:bg-jungle-700 hover:text-jungle-200 rounded-xl transition-colors" />
