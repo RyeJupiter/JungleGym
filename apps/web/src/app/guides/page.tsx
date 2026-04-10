@@ -2,14 +2,10 @@ import { createServiceSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
 import { FooterCompact } from '@/components/FooterCompact'
+import { SearchBar } from '@/components/SearchBar'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Movement Guides' }
-
-const FEATURED_TAGS = [
-  'yoga', 'strength', 'mobility', 'hiit', 'kettlebell',
-  'breathwork', 'meditation', 'bodyweight', 'flexibility', 'dance',
-]
 
 export default async function GuidesPage({
   searchParams,
@@ -41,7 +37,7 @@ export default async function GuidesPage({
     guidesQuery = guidesQuery.contains('tags', [tag])
   }
   if (guidesQuery && q) {
-    guidesQuery = guidesQuery.ilike('display_name', `%${q}%`)
+    guidesQuery = guidesQuery.or(`display_name.ilike.%${q}%,username.ilike.%${q}%`)
   }
 
   const { data: guides } = guidesQuery ? await guidesQuery : { data: [] }
@@ -58,46 +54,13 @@ export default async function GuidesPage({
           </p>
         </div>
 
-        {/* Search */}
-        <form method="get" className="mb-6">
-          <div className="flex gap-3 max-w-lg">
-            <input
-              name="q"
-              defaultValue={q ?? ''}
-              placeholder="Search guides..."
-              className="flex-1 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-jungle-400 placeholder:text-stone-400"
-            />
-            {tag && <input type="hidden" name="tag" value={tag} />}
-            <button type="submit" className="bg-jungle-700 hover:bg-jungle-800 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
-              Search
-            </button>
-          </div>
-        </form>
-
-        {/* Tag pills */}
-        <div className="flex gap-2 flex-wrap mb-10">
-          <Link
-            href={q ? `/guides?q=${encodeURIComponent(q)}` : '/guides'}
-            className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
-              !tag ? 'bg-jungle-900 text-white' : 'bg-white text-jungle-800 border border-jungle-200 hover:bg-jungle-50'
-            }`}
-          >
-            All
-          </Link>
-          {FEATURED_TAGS.map((t) => (
-            <Link
-              key={t}
-              href={q ? `/guides?tag=${t}&q=${encodeURIComponent(q)}` : `/guides?tag=${t}`}
-              className={`px-4 py-2 rounded-full text-sm font-semibold capitalize transition-colors ${
-                tag === t
-                  ? 'bg-jungle-700 text-white'
-                  : 'bg-white text-jungle-800 border border-jungle-200 hover:bg-jungle-50'
-              }`}
-            >
-              {t}
-            </Link>
-          ))}
-        </div>
+        <SearchBar
+          basePath="/guides"
+          placeholder="Search guides..."
+          query={q}
+          tag={tag}
+          showTags
+        />
 
         {(guides ?? []).length === 0 ? (
           <div className="text-center py-20 text-stone-400">

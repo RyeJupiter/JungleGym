@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { formatPrice, formatDuration } from '@junglegym/shared'
 import { Navbar } from '@/components/Navbar'
 import { FooterCompact } from '@/components/FooterCompact'
+import { SearchBar } from '@/components/SearchBar'
+import { buildVideoSearchFilter, sortByRelevance } from '@/lib/search'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Explore' }
@@ -10,9 +12,9 @@ export const metadata: Metadata = { title: 'Explore' }
 export default async function ExplorePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; tag?: string }>
 }) {
-  const { q } = await searchParams
+  const { q, tag } = await searchParams
   const supabase = await createServerSupabaseClient()
 
   // Build queries — apply search filter across all sections
@@ -31,18 +33,24 @@ export default async function ExplorePage({
     .limit(4)
 
   if (q) {
-    videoQuery = videoQuery.ilike('title', `%${q}%`)
-    sessionQuery = sessionQuery.ilike('title', `%${q}%`)
+    videoQuery = videoQuery.or(buildVideoSearchFilter(q))
+    sessionQuery = sessionQuery.or(`title.ilike.%${q}%,description.ilike.%${q}%`)
+  }
+  if (tag) {
+    videoQuery = videoQuery.contains('tags', [tag])
   }
 
-  const [{ data: videos }, { data: creatorUsers }, { data: sessions }] = await Promise.all([
+  const [{ data: rawVideos }, { data: creatorUsers }, { data: sessions }] = await Promise.all([
     videoQuery,
     supabase.from('users').select('id').eq('role', 'creator').limit(8),
     sessionQuery,
   ])
 
+  // Rank by relevance when searching
+  const videos = q ? sortByRelevance(q, rawVideos ?? []) : (rawVideos ?? [])
+
   // Two-step: video creator profiles
-  const videoCreatorIds = [...new Set((videos ?? []).map((v) => v.creator_id))]
+  const videoCreatorIds = [...new Set(videos.map((v) => v.creator_id))]
   const sessionCreatorIds = [...new Set((sessions ?? []).map((s) => s.creator_id))]
   const allCreatorIds = [...new Set([...videoCreatorIds, ...sessionCreatorIds])]
   const { data: allProfiles } = allCreatorIds.length
@@ -50,13 +58,24 @@ export default async function ExplorePage({
     : { data: [] }
   const profileByUserId = Object.fromEntries((allProfiles ?? []).map((p) => [p.user_id, p]))
 
+  // Tag filter for sessions — sessions don't have tags, so filter by creator tags
+  const filteredSessions = tag
+    ? (sessions ?? []).filter((s) => {
+        const profile = profileByUserId[s.creator_id]
+        return profile?.tags?.includes(tag) ?? false
+      })
+    : (sessions ?? [])
+
   // Two-step: guide profiles
   const guideIds = creatorUsers?.map((u) => u.id) ?? []
   let guidesQuery = guideIds.length
     ? supabase.from('profiles').select('*').in('user_id', guideIds).limit(8).order('created_at', { ascending: false })
     : null
   if (guidesQuery && q) {
-    guidesQuery = guidesQuery.ilike('display_name', `%${q}%`)
+    guidesQuery = guidesQuery.or(`display_name.ilike.%${q}%,username.ilike.%${q}%`)
+  }
+  if (guidesQuery && tag) {
+    guidesQuery = guidesQuery.contains('tags', [tag])
   }
   const { data: guides } = guidesQuery ? await guidesQuery : { data: [] }
 
@@ -72,26 +91,13 @@ export default async function ExplorePage({
           </p>
         </div>
 
-        {/* Search across all sections */}
-        <form method="get" className="mb-10">
-          <div className="flex gap-3 max-w-lg">
-            <input
-              name="q"
-              defaultValue={q ?? ''}
-              placeholder="Search classes, guides, sessions..."
-              className="flex-1 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-jungle-400 placeholder:text-stone-400"
-            />
-            <button type="submit" className="bg-jungle-700 hover:bg-jungle-800 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
-              Search
-            </button>
-          </div>
-          {q && (
-            <div className="mt-3 flex items-center gap-2">
-              <span className="text-sm text-stone-500">Showing results for &ldquo;{q}&rdquo;</span>
-              <Link href="/explore" className="text-sm text-jungle-600 font-semibold hover:underline">Clear</Link>
-            </div>
-          )}
-        </form>
+        <SearchBar
+          basePath="/explore"
+          placeholder="Search classes, guides, sessions..."
+          query={q}
+          tag={tag}
+          showTags
+        />
 
         {/* ── Latest Videos ─────────────────────────────────── */}
         <section className="mb-14">
@@ -103,14 +109,14 @@ export default async function ExplorePage({
             </Link>
           </div>
 
-          {(videos ?? []).length === 0 ? (
+          {videos.length === 0 ? (
             <div className="text-center py-12 text-stone-400 bg-white rounded-2xl border border-stone-200">
               <p className="text-4xl mb-3">🌿</p>
               <p className="font-medium text-stone-600">No videos yet.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {videos!.map((video) => {
+              {videos.map((video) => {
                 const creator = profileByUserId[video.creator_id] ?? null
                 return (
                   <Link key={video.id} href={`/video/${video.id}`}>
@@ -194,7 +200,7 @@ export default async function ExplorePage({
             </Link>
           </div>
 
-          {(sessions ?? []).length === 0 ? (
+          {filteredSessions.length === 0 ? (
             <div className="text-center py-12 text-stone-400 bg-white rounded-2xl border border-stone-200">
               <p className="text-4xl mb-3">📅</p>
               <p className="font-medium text-stone-600">No upcoming sessions.</p>
@@ -202,7 +208,7 @@ export default async function ExplorePage({
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {sessions!.map((s) => {
+              {filteredSessions.map((s) => {
                 const creator = profileByUserId[s.creator_id] ?? null
                 const isLive = s.status === 'live'
                 return (

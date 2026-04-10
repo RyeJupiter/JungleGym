@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { formatPrice, formatDuration } from '@junglegym/shared'
 import { Navbar } from '@/components/Navbar'
 import { FooterCompact } from '@/components/FooterCompact'
+import { SearchBar } from '@/components/SearchBar'
+import { buildVideoSearchFilter, sortByRelevance } from '@/lib/search'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Classes' }
@@ -26,7 +28,7 @@ export default async function ClassesPage({
     videoQuery = videoQuery.contains('tags', [tag])
   }
   if (q) {
-    videoQuery = videoQuery.ilike('title', `%${q}%`)
+    videoQuery = videoQuery.or(buildVideoSearchFilter(q))
   }
   if (sort === 'popular') {
     videoQuery = videoQuery.order('view_count', { ascending: false })
@@ -34,19 +36,17 @@ export default async function ClassesPage({
     videoQuery = videoQuery.order('created_at', { ascending: false })
   }
 
-  const { data: videos } = await videoQuery
+  const { data: rawVideos } = await videoQuery
+
+  // Rank by relevance when searching
+  const videos = q ? sortByRelevance(q, rawVideos ?? []) : (rawVideos ?? [])
 
   // Two-step join: look up profiles for video creators
-  const videoCreatorIds = [...new Set((videos ?? []).map((v) => v.creator_id))]
+  const videoCreatorIds = [...new Set(videos.map((v) => v.creator_id))]
   const { data: videoProfiles } = videoCreatorIds.length
     ? await supabase.from('profiles').select('user_id, display_name, username, photo_url').in('user_id', videoCreatorIds)
     : { data: [] }
   const profileByUserId = Object.fromEntries((videoProfiles ?? []).map((p) => [p.user_id, p]))
-
-  const FEATURED_TAGS = [
-    'yoga', 'strength', 'mobility', 'hiit', 'kettlebell',
-    'breathwork', 'meditation', 'bodyweight', 'flexibility',
-  ]
 
   function sortUrl(s: string) {
     const params = new URLSearchParams()
@@ -69,46 +69,14 @@ export default async function ClassesPage({
           </p>
         </div>
 
-        {/* Search */}
-        <form method="get" className="mb-8">
-          {tag && <input type="hidden" name="tag" value={tag} />}
-          <div className="flex gap-3 max-w-lg">
-            <input
-              name="q"
-              defaultValue={q ?? ''}
-              placeholder="Search videos..."
-              className="flex-1 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-jungle-400 placeholder:text-stone-400"
-            />
-            <button type="submit" className="bg-jungle-700 hover:bg-jungle-800 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
-              Search
-            </button>
-          </div>
-        </form>
-
-        {/* Tag pills */}
-        <div className="flex gap-2 flex-wrap mb-6">
-          <Link
-            href="/classes"
-            className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
-              !tag ? 'bg-jungle-900 text-white' : 'bg-white text-jungle-800 border border-jungle-200 hover:bg-jungle-50'
-            }`}
-          >
-            All
-          </Link>
-          {FEATURED_TAGS.map((t) => (
-            <Link
-              key={t}
-              href={`/classes?tag=${t}`}
-              className={`px-4 py-2 rounded-full text-sm font-semibold capitalize transition-colors ${
-                tag === t
-                  ? 'bg-jungle-700 text-white'
-                  : 'bg-white text-jungle-800 border border-jungle-200 hover:bg-jungle-50'
-              }`}
-            >
-              {t}
-            </Link>
-          ))}
-        </div>
+        <SearchBar
+          basePath="/classes"
+          placeholder="Search videos..."
+          query={q}
+          tag={tag}
+          showTags
+          preserveParams={sort ? { sort } : {}}
+        />
 
         {/* Sort + heading */}
         <div className="flex items-center justify-between mb-6">
@@ -135,7 +103,7 @@ export default async function ClassesPage({
           </div>
         </div>
 
-        {(videos ?? []).length === 0 ? (
+        {videos.length === 0 ? (
           <div className="text-center py-16 text-stone-400 bg-white rounded-2xl border border-stone-200">
             <div className="text-5xl mb-4">🌿</div>
             <p className="font-medium text-stone-600">No videos found.</p>
@@ -147,7 +115,7 @@ export default async function ClassesPage({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {videos!.map((video) => {
+            {videos.map((video) => {
               const creator = profileByUserId[video.creator_id] ?? null
               return (
                 <Link key={video.id} href={`/video/${video.id}`}>

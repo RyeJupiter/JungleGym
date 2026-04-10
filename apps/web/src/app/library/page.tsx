@@ -4,11 +4,18 @@ import Link from 'next/link'
 import { formatDuration, formatPrice } from '@junglegym/shared'
 import { Navbar } from '@/components/Navbar'
 import { FooterCompact } from '@/components/FooterCompact'
+import { SearchBar } from '@/components/SearchBar'
+import { videoMatchesQuery, scoreVideoRelevance } from '@/lib/search'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'My Library' }
 
-export default async function LibraryPage() {
+export default async function LibraryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
+  const { q } = await searchParams
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
@@ -16,7 +23,7 @@ export default async function LibraryPage() {
   // Step 1: fetch purchases with video data (direct FK works: purchases.video_id → videos.id)
   const { data: purchases } = await supabase
     .from('purchases')
-    .select('*, videos(id, title, thumbnail_url, duration_seconds, tags, creator_id)')
+    .select('*, videos(id, title, description, thumbnail_url, duration_seconds, tags, ghost_tags, creator_id)')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -29,27 +36,60 @@ export default async function LibraryPage() {
     : { data: [] }
   const profileById = Object.fromEntries((creatorProfiles ?? []).map((p) => [p.user_id, p]))
 
+  // Filter by search query (match on title, description, tags, ghost_tags) and rank by relevance
+  const filteredPurchases = q
+    ? (purchases ?? [])
+        .filter((p) => {
+          const video = p.videos as { title: string; description?: string | null; tags?: string[] | null; ghost_tags?: string[] | null } | null
+          return video ? videoMatchesQuery(q, video) : false
+        })
+        .sort((a, b) => {
+          const va = a.videos as { title: string; description?: string | null; tags?: string[] | null; ghost_tags?: string[] | null } | null
+          const vb = b.videos as { title: string; description?: string | null; tags?: string[] | null; ghost_tags?: string[] | null } | null
+          return scoreVideoRelevance(q, vb ?? {}) - scoreVideoRelevance(q, va ?? {})
+        })
+    : (purchases ?? [])
+
   return (
     <div className="min-h-screen bg-stone-50">
       <Navbar />
 
       <div className="max-w-5xl mx-auto px-6 py-12">
-        <h1 className="text-4xl font-black text-stone-900 mb-10">My Library</h1>
+        <div className="mb-8">
+          <h1 className="text-4xl font-black text-stone-900">My Library</h1>
+          <p className="text-stone-500 mt-2">
+            Classes you&apos;ve unlocked. Yours forever.
+          </p>
+        </div>
 
-        {(purchases ?? []).length === 0 ? (
+        <SearchBar
+          basePath="/library"
+          placeholder="Search your library..."
+          query={q}
+        />
+
+        {filteredPurchases.length === 0 ? (
           <div className="text-center py-20 text-stone-400">
             <div className="text-5xl mb-4">🌿</div>
-            <p className="font-medium">You haven&apos;t unlocked any classes yet.</p>
-            <Link href="/explore" className="mt-4 inline-block text-jungle-600 font-semibold hover:underline">
-              Explore classes →
-            </Link>
+            <p className="font-medium">
+              {q ? 'No classes match your search.' : 'You haven\'t unlocked any classes yet.'}
+            </p>
+            {q ? (
+              <Link href="/library" className="mt-3 inline-block text-jungle-600 font-semibold hover:underline text-sm">
+                Clear search →
+              </Link>
+            ) : (
+              <Link href="/explore" className="mt-4 inline-block text-jungle-600 font-semibold hover:underline">
+                Explore classes →
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {purchases!.map((purchase) => {
+            {filteredPurchases.map((purchase) => {
               const video = purchase.videos as {
-                id: string; title: string; thumbnail_url: string | null;
-                duration_seconds: number | null; tags: string[]; creator_id: string
+                id: string; title: string; description: string | null; thumbnail_url: string | null;
+                duration_seconds: number | null; tags: string[]; ghost_tags: string[] | null; creator_id: string
               } | null
               if (!video) return null
               const creator = profileById[video.creator_id] ?? null

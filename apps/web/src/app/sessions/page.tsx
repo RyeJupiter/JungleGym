@@ -2,14 +2,10 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
 import { FooterCompact } from '@/components/FooterCompact'
+import { SearchBar } from '@/components/SearchBar'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Live Sessions' }
-
-const FEATURED_TAGS = [
-  'yoga', 'strength', 'mobility', 'hiit', 'kettlebell',
-  'breathwork', 'meditation', 'bodyweight', 'flexibility', 'dance',
-]
 
 export default async function SessionsPage({
   searchParams,
@@ -35,8 +31,8 @@ export default async function SessionsPage({
     .order('scheduled_at', { ascending: true })
 
   if (q) {
-    liveQuery = liveQuery.ilike('title', `%${q}%`)
-    upcomingQuery = upcomingQuery.ilike('title', `%${q}%`)
+    liveQuery = liveQuery.or(`title.ilike.%${q}%,description.ilike.%${q}%`)
+    upcomingQuery = upcomingQuery.or(`title.ilike.%${q}%,description.ilike.%${q}%`)
   }
 
   const [{ data: liveSessions }, { data: upcomingSessions }] = await Promise.all([
@@ -75,46 +71,13 @@ export default async function SessionsPage({
           </p>
         </div>
 
-        {/* Search */}
-        <form method="get" className="mb-6">
-          <div className="flex gap-3 max-w-lg">
-            <input
-              name="q"
-              defaultValue={q ?? ''}
-              placeholder="Search sessions..."
-              className="flex-1 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-jungle-400 placeholder:text-stone-400"
-            />
-            {tag && <input type="hidden" name="tag" value={tag} />}
-            <button type="submit" className="bg-jungle-700 hover:bg-jungle-800 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
-              Search
-            </button>
-          </div>
-        </form>
-
-        {/* Tag pills */}
-        <div className="flex gap-2 flex-wrap mb-10">
-          <Link
-            href={q ? `/sessions?q=${encodeURIComponent(q)}` : '/sessions'}
-            className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
-              !tag ? 'bg-jungle-900 text-white' : 'bg-white text-jungle-800 border border-jungle-200 hover:bg-jungle-50'
-            }`}
-          >
-            All
-          </Link>
-          {FEATURED_TAGS.map((t) => (
-            <Link
-              key={t}
-              href={q ? `/sessions?tag=${t}&q=${encodeURIComponent(q)}` : `/sessions?tag=${t}`}
-              className={`px-4 py-2 rounded-full text-sm font-semibold capitalize transition-colors ${
-                tag === t
-                  ? 'bg-jungle-700 text-white'
-                  : 'bg-white text-jungle-800 border border-jungle-200 hover:bg-jungle-50'
-              }`}
-            >
-              {t}
-            </Link>
-          ))}
-        </div>
+        <SearchBar
+          basePath="/sessions"
+          placeholder="Search sessions..."
+          query={q}
+          tag={tag}
+          showTags
+        />
 
         {!hasAnything ? (
           <div className="text-center py-20 text-stone-400">
