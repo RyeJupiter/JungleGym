@@ -124,7 +124,7 @@ function SessionCard({
   const scheduledDate = new Date(s.scheduled_at)
 
   return (
-    <div className={`bg-white rounded-2xl border p-6 ${isLive ? 'border-red-200 shadow-sm' : 'border-stone-200'} hover:shadow-md transition-shadow`}>
+    <Link href={`/sessions/${s.id}`} className={`block bg-white rounded-2xl border p-6 ${isLive ? 'border-red-200 shadow-sm' : 'border-stone-200'} hover:shadow-md transition-shadow`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-jungle-100 overflow-hidden flex items-center justify-center text-2xl flex-shrink-0">
@@ -142,9 +142,7 @@ function SessionCard({
               <h3 className="font-bold text-stone-900">{s.title}</h3>
             </div>
             {creator && (
-              <Link href={`/@${creator.username}`} className="text-sm text-jungle-700 hover:underline">
-                {creator.display_name}
-              </Link>
+              <span className="text-sm text-jungle-700">{creator.display_name}</span>
             )}
           </div>
         </div>
@@ -164,14 +162,8 @@ function SessionCard({
       )}
 
       <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-4">
-          <p className="text-xs text-stone-400">🎁 Gift-based — give freely, no pressure</p>
-          {!isLive && <AddSessionToCalendarButton session={s} />}
-        </div>
-        {isLive && authUserId && (
-          <GiftButton sessionId={s.id} creatorName={creator?.display_name ?? ''} />
-        )}
+        <p className="text-xs text-stone-400">🎁 Gift-based — give freely, no pressure</p>
       </div>
-    </div>
+    </Link>
   )
 }
