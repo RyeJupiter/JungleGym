@@ -4,6 +4,7 @@ export function toGCalDate(date: Date): string {
 }
 
 export function buildSessionCalUrl(session: {
+  id: string
   title: string
   description: string | null
   scheduled_at: string
@@ -11,10 +12,11 @@ export function buildSessionCalUrl(session: {
 }): string {
   const start = new Date(session.scheduled_at)
   const end = new Date(start.getTime() + session.duration_minutes * 60 * 1000)
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://junglegym.academy'
   const details = [
     session.description ?? '',
     '',
-    'Join live on JungleGym: ' + (typeof window !== 'undefined' ? window.location.origin : 'https://junglegym.academy') + '/sessions',
+    'Join live on JungleGym: ' + origin + '/sessions/' + session.id,
   ].filter(Boolean).join('\n').trim()
 
   const params = new URLSearchParams({
@@ -64,6 +66,7 @@ export function downloadIcs(filename: string, content: string) {
 }
 
 export function buildSessionIcs(session: {
+  id: string
   title: string
   description: string | null
   scheduled_at: string
@@ -71,9 +74,11 @@ export function buildSessionIcs(session: {
 }): string {
   const start = new Date(session.scheduled_at)
   const end = new Date(start.getTime() + session.duration_minutes * 60 * 1000)
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://junglegym.academy'
+  const desc = [session.description ?? '', '', origin + '/sessions/' + session.id].filter(Boolean).join('\n').trim()
   return buildIcsContent({
     title: session.title,
-    description: session.description ?? undefined,
+    description: desc,
     start,
     end,
     location: 'JungleGym Live (online)',

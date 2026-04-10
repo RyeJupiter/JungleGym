@@ -7,6 +7,7 @@ export function AddSessionToCalendarButton({
   session,
 }: {
   session: {
+    id: string
     title: string
     description: string | null
     scheduled_at: string
