@@ -2,172 +2,212 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: "You're Invited — JungleGym",
-  description: "You've been personally invited to co-create on JungleGym. Here's what that means.",
+  title: 'You have been invited to the JungleGym',
+  description: 'A personal invitation to co-create on JungleGym.',
   robots: { index: false, follow: false },
 }
 
 export default function WelcomePage() {
   return (
-    <div className="min-h-screen bg-jungle-900 text-stone-100">
+    <div className="min-h-screen bg-stone-50 text-stone-900">
+
       {/* Nav */}
-      <header className="px-6 py-5">
-        <Link href="/" className="font-black text-xl text-white">
-          jungle<span className="text-jungle-400">gym</span>
+      <header className="px-6 py-5 bg-white border-b border-stone-100">
+        <Link href="/" className="font-black text-xl text-jungle-900">
+          jungle<span className="text-jungle-500">gym</span>
         </Link>
       </header>
 
-      {/* Hero */}
-      <section className="max-w-3xl mx-auto px-6 pt-12 pb-20 text-center">
-        <div className="flex flex-col items-center mb-12">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Saguinus_imperator_-_Houston_Zoo.jpg/440px-Saguinus_imperator_-_Houston_Zoo.jpg"
-            alt="Emperor tamarin (Saguinus imperator) — known for its magnificent mustache and commanding presence"
-            className="w-44 h-auto opacity-75 mix-blend-luminosity rounded-full"
-          />
-          <p className="text-xs text-jungle-400 mt-3 italic">
-            Emperor tamarin · <em>Saguinus imperator</em> · public domain
-          </p>
+      {/* Hero — warm stone gradient with blurred dot overlays */}
+      <section className="relative bg-gradient-to-b from-white to-stone-100 overflow-hidden">
+        {/* Treehouse-style dot overlays */}
+        <div className="absolute inset-0 opacity-[0.07] pointer-events-none" aria-hidden="true">
+          <div className="absolute -top-10 -left-10 w-72 h-72 rounded-full bg-jungle-400 blur-3xl" />
+          <div className="absolute top-0 right-1/3 w-56 h-56 rounded-full bg-amber-300 blur-3xl" />
+          <div className="absolute -bottom-10 right-0 w-80 h-80 rounded-full bg-jungle-300 blur-3xl" />
         </div>
 
-        <p className="text-jungle-400 font-semibold tracking-widest text-sm uppercase mb-4">
-          Personal invitation
-        </p>
-        <h1 className="text-5xl sm:text-6xl font-black leading-tight mb-6">
-          You've been invited<br />
-          to the <span className="text-jungle-400">Jungle</span>.
-        </h1>
-        <p className="text-xl text-stone-400 leading-relaxed max-w-xl mx-auto">
-          Someone who knows your work thinks it belongs here. We do too.
-        </p>
+        <div className="relative max-w-3xl mx-auto px-6 pt-16 pb-20 text-center">
+          <div className="flex flex-col items-center mb-10">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Saguinus_imperator_-_Houston_Zoo.jpg/440px-Saguinus_imperator_-_Houston_Zoo.jpg"
+              alt="Emperor tamarin — Saguinus imperator"
+              className="w-40 h-auto rounded-full mix-blend-multiply opacity-80 shadow-md"
+            />
+            <p className="text-xs text-stone-400 mt-3 italic">
+              Emperor tamarin · <em>Saguinus imperator</em> · public domain
+            </p>
+          </div>
+
+          <p className="text-jungle-600 font-semibold tracking-widest text-xs uppercase mb-4">
+            Personal invitation
+          </p>
+          <h1 className="text-5xl sm:text-6xl font-black leading-tight text-stone-900 mb-6">
+            You have been invited<br />
+            to the <span className="text-jungle-600">JungleGym</span>.
+          </h1>
+          <p className="text-lg text-stone-500 leading-relaxed max-w-lg mx-auto">
+            Someone who knows your work sent you here. That means something.
+          </p>
+        </div>
       </section>
 
-      {/* Body */}
-      <section className="max-w-2xl mx-auto px-6 pb-24 space-y-16 text-lg leading-relaxed text-stone-300">
-
-        <div>
+      {/* Section 1 — warm white, jungle text */}
+      <section className="bg-white border-t border-stone-100">
+        <div className="max-w-2xl mx-auto px-6 py-16 space-y-6 text-lg leading-relaxed text-stone-600">
           <p>
-            JungleGym exists because the best movement teachers we&apos;ve ever encountered
-            were invisible to the people who needed them most. Teaching at festivals. In
-            community spaces. In someone&apos;s backyard. Sharing something rare — and having
+            The best movement teachers we know aren&apos;t on YouTube. They&apos;re at festivals,
+            in community spaces, in someone&apos;s backyard — sharing something real, with
             nowhere to put it.
           </p>
-          <p className="mt-5">
-            We built them a stage.
+          <p className="text-jungle-800 font-semibold text-xl">
+            JungleGym is the stage we built for them. For you.
+          </p>
+          <p>
+            Not a subscription platform. Not a fitness app. A place where the exchange is
+            honest — you bring your practice, students come ready to learn, and money flows
+            directly to the source.
           </p>
         </div>
+      </section>
 
-        <div className="border-l-2 border-jungle-500 pl-6">
-          <p className="text-2xl font-bold text-white leading-snug">
-            You&apos;re not a content creator here. You&apos;re a movement guide. A lead monkey.
-            The difference matters.
-          </p>
+      {/* Blockquote — amber warmth */}
+      <section className="bg-amber-50 border-t border-b border-amber-100">
+        <div className="max-w-2xl mx-auto px-6 py-14">
+          <div className="border-l-4 border-amber-400 pl-7">
+            <p className="text-2xl font-bold text-amber-900 leading-snug">
+              You&apos;re not a content creator here.<br />
+              You&apos;re a movement guide. A lead monkey.<br />
+              The difference matters.
+            </p>
+          </div>
         </div>
+      </section>
 
-        <div>
-          <h2 className="text-2xl font-black text-white mb-5">How it works for you.</h2>
-          <ul className="space-y-4 text-stone-300">
-            <li className="flex gap-3">
-              <span className="text-jungle-400 font-bold mt-0.5 flex-shrink-0">→</span>
-              <span>
-                <strong className="text-white">You set your own rates.</strong> We use a
-                tiered pricing model — Supported, Community, and Abundance — so students
-                can pay what reflects where they&apos;re at. You choose the floor.
-              </span>
+      {/* Section 2 — the deal, stone bg */}
+      <section className="bg-stone-100 border-t border-stone-200">
+        <div className="max-w-2xl mx-auto px-6 py-16">
+          <h2 className="text-2xl font-black text-stone-800 mb-8">Here is how it works.</h2>
+          <ul className="space-y-6">
+            <li className="flex gap-4">
+              <span className="text-jungle-600 font-black text-lg mt-0.5 flex-shrink-0">→</span>
+              <div>
+                <p className="font-bold text-stone-800">You set your own rates.</p>
+                <p className="text-stone-500 mt-1">
+                  Three tiers — Supported, Community, Abundance. You set the floor.
+                  Students pay what reflects where they are.
+                </p>
+              </div>
             </li>
-            <li className="flex gap-3">
-              <span className="text-jungle-400 font-bold mt-0.5 flex-shrink-0">→</span>
-              <span>
-                <strong className="text-white">80% goes directly to you.</strong> Every
-                sale. No algorithm deciding who eats. No subscriptions cutting into your
-                revenue. Stripe Connect deposits straight to your account.
-              </span>
+            <li className="flex gap-4">
+              <span className="text-amber-600 font-black text-lg mt-0.5 flex-shrink-0">→</span>
+              <div>
+                <p className="font-bold text-stone-800">80% of every sale goes straight to you.</p>
+                <p className="text-stone-500 mt-1">
+                  Stripe Connect deposits directly into your account. No algorithm
+                  deciding who eats this month.
+                </p>
+              </div>
             </li>
-            <li className="flex gap-3">
-              <span className="text-jungle-400 font-bold mt-0.5 flex-shrink-0">→</span>
-              <span>
-                <strong className="text-white">Students buy once, own forever.</strong>{' '}
-                No churn. No renewals. People who invest in your work keep it — and come
-                back when they&apos;re ready to go deeper.
-              </span>
+            <li className="flex gap-4">
+              <span className="text-jungle-600 font-black text-lg mt-0.5 flex-shrink-0">→</span>
+              <div>
+                <p className="font-bold text-stone-800">Students buy once, own it forever.</p>
+                <p className="text-stone-500 mt-1">
+                  No churn. No renewals. People who invest in your work keep it and
+                  come back when they are ready for more.
+                </p>
+              </div>
             </li>
-            <li className="flex gap-3">
-              <span className="text-jungle-400 font-bold mt-0.5 flex-shrink-0">→</span>
-              <span>
-                <strong className="text-white">Live sessions, gift-based.</strong> Teach
-                live, let students gift freely. 100% of gifts go to you — no platform cut
-                on sessions.
-              </span>
+            <li className="flex gap-4">
+              <span className="text-amber-600 font-black text-lg mt-0.5 flex-shrink-0">→</span>
+              <div>
+                <p className="font-bold text-stone-800">Live sessions, gift-based. 100% to you.</p>
+                <p className="text-stone-500 mt-1">
+                  Teach live. Let students give freely. JungleGym takes nothing on
+                  session gifts.
+                </p>
+              </div>
             </li>
-            <li className="flex gap-3">
-              <span className="text-jungle-400 font-bold mt-0.5 flex-shrink-0">→</span>
-              <span>
-                <strong className="text-white">One free video to start.</strong> Help
-                new students discover your work. After that, it&apos;s entirely up to you.
-              </span>
+            <li className="flex gap-4">
+              <span className="text-jungle-600 font-black text-lg mt-0.5 flex-shrink-0">→</span>
+              <div>
+                <p className="font-bold text-stone-800">Start with one free video.</p>
+                <p className="text-stone-500 mt-1">
+                  Let new students find you. After that, everything is on your terms.
+                </p>
+              </div>
             </li>
           </ul>
         </div>
+      </section>
 
-        <div>
-          <h2 className="text-2xl font-black text-white mb-5">What we ask of you.</h2>
-          <ul className="space-y-3 text-stone-300">
+      {/* Section 3 — what we ask, back to white */}
+      <section className="bg-white border-t border-stone-100">
+        <div className="max-w-2xl mx-auto px-6 py-16">
+          <h2 className="text-2xl font-black text-stone-800 mb-6">What we ask.</h2>
+          <ul className="space-y-4 text-stone-600 text-lg leading-relaxed">
             <li className="flex gap-3">
-              <span className="text-jungle-400 font-bold mt-0.5 flex-shrink-0">→</span>
+              <span className="text-stone-400 font-bold mt-0.5 flex-shrink-0">—</span>
               <span>Only upload what you own or have the rights to share — music included.</span>
             </li>
             <li className="flex gap-3">
-              <span className="text-jungle-400 font-bold mt-0.5 flex-shrink-0">→</span>
+              <span className="text-stone-400 font-bold mt-0.5 flex-shrink-0">—</span>
               <span>Bring your real practice. Not a performance of it.</span>
             </li>
             <li className="flex gap-3">
-              <span className="text-jungle-400 font-bold mt-0.5 flex-shrink-0">→</span>
-              <span>Treat students the way you&apos;d want to be treated in someone else&apos;s space.</span>
+              <span className="text-stone-400 font-bold mt-0.5 flex-shrink-0">—</span>
+              <span>Treat students the way you would want to be treated in someone else&apos;s space.</span>
             </li>
           </ul>
-        </div>
-
-        <div>
-          <p>
-            This is a small, vetted community. We&apos;re not trying to be the YouTube of
-            fitness. We&apos;re trying to be the place where the right teacher finds the
-            right student, and the exchange feels honest.
-          </p>
-          <p className="mt-5 text-white font-semibold">
-            We&apos;re glad you&apos;re here.
+          <p className="mt-8 text-stone-500 text-base">
+            This is a small, vetted community. We are not trying to be the YouTube of
+            fitness. We are trying to be the place where the right teacher finds the
+            right student.
           </p>
         </div>
-
       </section>
 
-      {/* CTA */}
-      <section className="border-t border-jungle-800 py-16 px-6 text-center">
-        <p className="text-stone-400 mb-2 text-lg">Ready to set up your space?</p>
-        <p className="text-stone-500 text-sm mb-8">
-          Create an account, then apply to teach. We&apos;ll get you set up from there.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/auth/signup"
-            className="bg-jungle-500 hover:bg-jungle-400 text-white font-bold px-8 py-4 rounded-xl transition-colors"
-          >
-            Create your account
-          </Link>
-          <Link
-            href="/apply"
-            className="border border-jungle-600 hover:border-jungle-400 text-jungle-300 hover:text-jungle-100 font-bold px-8 py-4 rounded-xl transition-colors"
-          >
-            Apply to teach
-          </Link>
+      {/* CTA — dark jungle, full contrast */}
+      <section className="relative bg-jungle-900 overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none" aria-hidden="true">
+          <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full bg-jungle-300 blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-72 h-72 rounded-full bg-amber-300 blur-3xl" />
         </div>
-        <p className="text-stone-600 text-sm mt-8">
-          Questions? Email{' '}
-          <a href="mailto:rye@junglegym.academy" className="text-jungle-500 hover:text-jungle-400 underline">
-            rye@junglegym.academy
-          </a>
-        </p>
+        <div className="relative max-w-2xl mx-auto px-6 py-20 text-center">
+          <p className="text-jungle-300 font-semibold mb-2 text-lg">
+            Glad you are here.
+          </p>
+          <h2 className="text-4xl font-black text-white mb-4 leading-tight">
+            Ready to set up your space?
+          </h2>
+          <p className="text-jungle-400 mb-10 text-base">
+            Create an account, then apply to teach. We will get you from there.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/auth/signup"
+              className="bg-jungle-400 hover:bg-jungle-300 text-jungle-950 font-bold px-8 py-4 rounded-xl transition-colors"
+            >
+              Create your account
+            </Link>
+            <Link
+              href="/apply"
+              className="border border-jungle-600 hover:border-jungle-400 text-jungle-300 hover:text-jungle-100 font-bold px-8 py-4 rounded-xl transition-colors"
+            >
+              Apply to teach
+            </Link>
+          </div>
+          <p className="text-jungle-600 text-sm mt-10">
+            Questions?{' '}
+            <a href="mailto:rye@junglegym.academy" className="text-jungle-500 hover:text-jungle-400 underline">
+              rye@junglegym.academy
+            </a>
+          </p>
+        </div>
       </section>
+
     </div>
   )
 }
