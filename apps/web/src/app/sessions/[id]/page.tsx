@@ -33,7 +33,7 @@ export default async function SessionDetailPage({ params }: Props) {
   // Two-step: get creator profile
   const { data: profileRows } = await supabase
     .from('profiles')
-    .select('display_name, username, photo_url, bio')
+    .select('display_name, username, photo_url, bio, suggested_tip')
     .eq('user_id', session.creator_id)
     .limit(1)
   const creator = profileRows?.[0] ?? null
@@ -96,7 +96,7 @@ export default async function SessionDetailPage({ params }: Props) {
           <div className="flex items-center gap-4 flex-wrap">
             {!isPast && <AddSessionToCalendarButton session={session} />}
             {isLive && user && (
-              <GiftButton sessionId={session.id} creatorName={creator?.display_name ?? ''} />
+              <GiftButton sessionId={session.id} creatorName={creator?.display_name ?? ''} suggestedTip={(creator as Record<string, unknown>)?.suggested_tip as number ?? 5} />
             )}
           </div>
         </div>

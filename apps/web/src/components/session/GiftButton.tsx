@@ -11,12 +11,14 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 export function GiftButton({
   sessionId,
   creatorName,
+  suggestedTip = 5,
 }: {
   sessionId: string
   creatorName: string
+  suggestedTip?: number
 }) {
   const [open, setOpen] = useState(false)
-  const [amount, setAmount] = useState('20')
+  const [amount, setAmount] = useState(String(suggestedTip))
   const [message, setMessage] = useState('')
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -68,7 +70,7 @@ export function GiftButton({
     setClientSecret(null)
     setSuccess(false)
     setError(null)
-    setAmount('20')
+    setAmount(String(suggestedTip))
     setMessage('')
     fetchedAmountRef.current = null
   }

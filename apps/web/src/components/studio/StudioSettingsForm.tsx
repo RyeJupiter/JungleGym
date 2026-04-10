@@ -18,6 +18,7 @@ type Profile = {
   supported_rate: number
   community_rate: number
   abundance_rate: number
+  suggested_tip: number
   notification_pref: NotificationPref
   notification_threshold: number
   notification_email: string | null
@@ -34,6 +35,7 @@ export function StudioSettingsForm({ profile }: { profile: Profile }) {
   const [supportedRate, setSupportedRate] = useState(profile.supported_rate.toString())
   const [communityRate, setCommunityRate] = useState(profile.community_rate.toString())
   const [abundanceRate, setAbundanceRate] = useState(profile.abundance_rate.toString())
+  const [suggestedTip, setSuggestedTip] = useState((profile.suggested_tip ?? 5).toString())
   const [notificationPref, setNotificationPref] = useState<NotificationPref>(profile.notification_pref ?? 'every')
   const [notificationThreshold, setNotificationThreshold] = useState(profile.notification_threshold?.toString() ?? '0')
   const [notificationEmail, setNotificationEmail] = useState(profile.notification_email ?? '')
@@ -86,6 +88,7 @@ export function StudioSettingsForm({ profile }: { profile: Profile }) {
           supported_rate: sRate,
           community_rate: cRate,
           abundance_rate: aRate,
+          suggested_tip: parseFloat(suggestedTip) || 5,
           notification_pref: notificationPref,
           notification_threshold: parseFloat(notificationThreshold) || 0,
           notification_email: notificationEmail || null,
@@ -189,6 +192,22 @@ export function StudioSettingsForm({ profile }: { profile: Profile }) {
         <p className="text-xs text-stone-400">
           Prices round down to fun numbers ($1.11, $2.22, $3.33, $4.20…)
         </p>
+
+        <div className="border-t border-stone-200 pt-5 mt-5">
+          <label className="block text-sm font-medium text-stone-700 mb-1">Suggested gift amount</label>
+          <p className="text-xs text-stone-400 mb-2">Default amount shown in the gift modal for your live sessions.</p>
+          <div className="relative max-w-[140px]">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">$</span>
+            <input
+              type="number"
+              step="1"
+              min="1"
+              value={suggestedTip}
+              onChange={(e) => setSuggestedTip(e.target.value)}
+              className={inputClass + ' pl-7'}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Notifications */}
