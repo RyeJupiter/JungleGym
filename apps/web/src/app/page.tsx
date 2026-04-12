@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
-import { MembershipButton } from '@/components/MembershipButton'
 import { Footer } from '@/components/Footer'
 
 export default async function HomePage() {
@@ -71,27 +70,8 @@ export default async function HomePage() {
             <p className="text-xs font-semibold text-jungle-500 uppercase tracking-widest mb-3">Radical Transparency</p>
             <h2 className="text-4xl font-black text-jungle-900 mb-3">Here's how the money flows.</h2>
             <p className="text-jungle-600 max-w-xl mx-auto text-lg">
-              Buy classes, yours permanently. Every video is priced by the minute — 80% goes to the teacher, 20% platform fee keeps JungleGym running.
+              Each video has three prices set by the teacher. Pick the one that fits you — 80% goes to the teacher, 20% platform fee keeps JungleGym running.
             </p>
-          </div>
-
-          {/* Example */}
-          <div className="bg-white border border-jungle-200 rounded-2xl p-6 mb-8 max-w-lg mx-auto text-center">
-            <p className="text-xs font-semibold text-jungle-500 uppercase tracking-widest mb-3">Example: 10-minute kettlebell class</p>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { emoji: '🌱', tier: 'Supported', rate: '$1/min', price: '$10' },
-                { emoji: '🌿', tier: 'Community', rate: '$2/min', price: '$20' },
-                { emoji: '🌳', tier: 'Abundance', rate: '$3/min', price: '$30' },
-              ].map((t) => (
-                <div key={t.tier} className="bg-jungle-50 rounded-xl p-3">
-                  <div className="text-2xl mb-1">{t.emoji}</div>
-                  <p className="font-black text-jungle-900 text-lg">{t.price}</p>
-                  <p className="text-xs text-jungle-600 font-semibold">{t.tier}</p>
-                  <p className="text-xs text-jungle-400">{t.rate}</p>
-                </div>
-              ))}
-            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -101,7 +81,6 @@ export default async function HomePage() {
                 tier: 'Supported',
                 tagline: 'The floor',
                 desc: 'Full access, no asterisks. Pick this when money is tight.',
-                badge: '$1/min',
                 bg: 'bg-white',
                 border: 'border-jungle-200',
               },
@@ -110,7 +89,6 @@ export default async function HomePage() {
                 tier: 'Community',
                 tagline: 'The sweet spot',
                 desc: "Sustaining someone's practice. The tier most people choose.",
-                badge: '$2/min',
                 bg: 'bg-jungle-50',
                 border: 'border-jungle-300',
               },
@@ -119,17 +97,13 @@ export default async function HomePage() {
                 tier: 'Abundance',
                 tagline: 'Pay it forward',
                 desc: "When you're doing well, this is how you spread it.",
-                badge: '$3/min',
                 bg: 'bg-jungle-100',
                 border: 'border-jungle-400',
               },
             ].map((t) => (
               <div key={t.tier} className={`${t.bg} border ${t.border} rounded-2xl p-6`}>
                 <div className="text-3xl mb-3">{t.emoji}</div>
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-black text-jungle-900 text-lg">{t.tier}</h3>
-                  <span className="bg-jungle-900 text-jungle-300 text-xs font-bold px-3 py-1 rounded-full">{t.badge}</span>
-                </div>
+                <h3 className="font-black text-jungle-900 text-lg mb-1">{t.tier}</h3>
                 <p className="text-jungle-600 text-xs font-semibold uppercase tracking-wide mb-2">{t.tagline}</p>
                 <p className="text-jungle-700 text-sm leading-relaxed">{t.desc}</p>
               </div>
@@ -140,28 +114,6 @@ export default async function HomePage() {
             <p className="text-jungle-900 text-sm font-bold">The price you see is the price you pay. 80% goes to the teacher, 20% platform fee.</p>
             <p className="text-jungle-500 text-sm">No hidden fees. No surprises. Just a clean, honest split.</p>
             <p className="text-jungle-500 text-sm">You can also share any video you own with one friend — on us.</p>
-          </div>
-
-          {/* Membership */}
-          <div id="membership" className="mt-16 bg-jungle-900 rounded-3xl p-10 text-center">
-            <p className="text-xs font-semibold text-jungle-400 uppercase tracking-widest mb-3">Membership</p>
-            <h3 className="text-3xl font-black text-white mb-3">Six videos. One month. $100.</h3>
-            <p className="text-jungle-300 text-lg mb-2 max-w-lg mx-auto leading-relaxed">
-              Pick any six videos from the catalog and own them for the month.
-              Swap your picks each renewal.
-            </p>
-            <p className="text-jungle-400 text-sm mb-8 max-w-md mx-auto">
-              <strong className="text-jungle-200">80% goes to the creators</strong> whose videos you pick.
-              20% platform fee keeps JungleGym running.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-8 text-sm text-jungle-300">
-              {['Access to any 6 videos', 'Swap picks each month', '80% to creators', 'Cancel any time'].map((f) => (
-                <span key={f} className="flex items-center gap-1.5 justify-center">
-                  <span className="text-jungle-400">✓</span> {f}
-                </span>
-              ))}
-            </div>
-            <MembershipButton />
           </div>
         </div>
       </section>
