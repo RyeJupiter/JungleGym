@@ -2,153 +2,33 @@ import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 
-// ── Naturalist illustrations — engraving / botanical plate style ──────────────
-const K = "#c49660"   // warm amber ink
-const D = "#9a7240"   // deeper sepia for hatching
+// ── Public-domain natural history illustrations (Wikimedia Commons) ───────────
+// Gorilla lithograph by Jonathan Kingdon, Wellcome Collection — CC BY 4.0
+const GORILLA_URL = "https://upload.wikimedia.org/wikipedia/commons/a/a5/A_gorilla._Lithograph_by_Jonathan_Kingdon._Wellcome_L0024957.jpg"
 
-// Left: seated gorilla, 3/4 right-facing, contemplative. After Brehm & Huxley.
 function GorillaLeft() {
   return (
-    <svg viewBox="0 0 155 275" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" className="w-32 xl:w-44 opacity-60">
-      <ellipse cx="77" cy="270" rx="50" ry="5" fill={K} opacity="0.14"/>
-      {/* seated legs */}
-      <path d="M28 220 C22 238 34 254 56 258 C68 260 76 250 78 246 C80 250 88 260 100 258 C122 254 134 238 128 220" stroke={K} strokeWidth="1.6" fill={`${K}10`}/>
-      <path d="M24 244 C20 257 30 266 44 265 C56 264 62 255 60 245" stroke={K} strokeWidth="1.2" fill={`${K}0c`}/>
-      <path d="M132 244 C136 257 126 266 112 265 C100 264 94 255 96 245" stroke={K} strokeWidth="1.2" fill={`${K}0c`}/>
-      <path d="M34 224 L28 240" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M42 222 L36 238" stroke={D} strokeWidth="0.5" opacity="0.4"/>
-      <path d="M118 222 L124 238" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M110 224 L116 240" stroke={D} strokeWidth="0.5" opacity="0.4"/>
-      {/* torso */}
-      <path d="M32 172 C24 150 22 126 28 102 C36 78 52 70 66 68 C60 54 56 36 60 20 C64 8 74 3 86 3 C98 3 108 11 112 26 C116 42 112 58 106 72 C120 74 136 88 142 110 C148 134 146 160 138 182 C126 204 106 216 84 218 C60 220 44 200 32 172 Z" stroke={K} strokeWidth="1.8" fill={`${K}08`}/>
-      {/* chest contour lines */}
-      <path d="M54 118 Q86 110 118 118" stroke={D} strokeWidth="0.7" opacity="0.45"/>
-      <path d="M52 126 Q86 118 120 126" stroke={D} strokeWidth="0.6" opacity="0.4"/>
-      <path d="M54 134 Q86 126 118 134" stroke={D} strokeWidth="0.5" opacity="0.35"/>
-      {/* shoulder masses */}
-      <path d="M30 106 C18 98 14 112 20 124 C24 133 34 136 42 130" stroke={K} strokeWidth="1.3" fill={`${K}0a`}/>
-      <path d="M126 104 C138 96 142 110 136 122 C132 131 122 134 114 128" stroke={K} strokeWidth="1.3" fill={`${K}0a`}/>
-      {/* left arm */}
-      <path d="M28 112 C16 128 12 158 16 186 C18 200 28 208 40 206 C52 204 56 192 54 178 C52 162 48 140 48 120" stroke={K} strokeWidth="1.5" fill={`${K}0c`}/>
-      <path d="M14 196 C12 208 18 218 32 218 C46 218 56 210 54 202" stroke={K} strokeWidth="1.3" fill={`${K}10`}/>
-      <path d="M18 206 L14 214" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M26 210 L24 218" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M34 212 L34 220" stroke={D} strokeWidth="0.6" opacity="0.5"/>
-      {/* right arm */}
-      <path d="M130 110 C142 126 146 156 142 184 C140 198 130 206 118 204 C106 202 102 192 104 178 C106 162 110 142 110 122" stroke={K} strokeWidth="1.5" fill={`${K}0c`}/>
-      <path d="M144 194 C146 206 140 216 126 216 C112 216 102 210 104 202" stroke={K} strokeWidth="1.3" fill={`${K}10`}/>
-      <path d="M140 204 L144 212" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M132 208 L134 216" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M124 210 L124 218" stroke={D} strokeWidth="0.6" opacity="0.5"/>
-      {/* neck */}
-      <path d="M64 70 C60 82 62 96 72 100 C80 98 90 94 90 84 C92 74 88 68 84 70" stroke={K} strokeWidth="1.3" fill={`${K}08`}/>
-      <path d="M66 76 L64 90" stroke={D} strokeWidth="0.55" opacity="0.4"/><path d="M88 76 L90 88" stroke={D} strokeWidth="0.55" opacity="0.4"/>
-      {/* cranium */}
-      <path d="M58 20 C48 14 34 22 30 40 C26 56 32 74 44 84 C36 90 34 102 42 110 C50 120 66 124 82 124 C98 124 114 118 120 106 C128 94 124 80 116 74 C128 62 130 46 124 32 C118 18 104 8 88 10 C76 8 66 20 58 20 Z" stroke={K} strokeWidth="1.8" fill={`${K}0a`}/>
-      {/* sagittal crest */}
-      <path d="M68 10 C72 3 88 3 90 10" stroke={K} strokeWidth="1.3" fill="none"/>
-      <path d="M71 9 L70 4" stroke={K} strokeWidth="0.5" opacity="0.4"/><path d="M77 7 L77 2" stroke={K} strokeWidth="0.5" opacity="0.4"/><path d="M83 8 L85 3" stroke={K} strokeWidth="0.5" opacity="0.4"/>
-      {/* heavy brow ridge */}
-      <path d="M34 58 C46 46 60 42 80 42 C100 42 114 48 122 58" stroke={K} strokeWidth="3.5" fill="none" strokeLinecap="round"/>
-      <path d="M36 61 C48 50 62 46 80 46 C98 46 112 52 120 61" stroke={D} strokeWidth="0.9" fill="none" opacity="0.45"/>
-      <path d="M38 60 L34 70" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M44 58 L40 68" stroke={D} strokeWidth="0.6" opacity="0.45"/>
-      <path d="M118 58 L122 68" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M112 58 L116 68" stroke={D} strokeWidth="0.6" opacity="0.45"/>
-      {/* ears */}
-      <path d="M32 74 C24 68 20 76 20 85 C20 94 26 102 34 100" stroke={K} strokeWidth="1.3" fill={`${K}0a`}/>
-      <path d="M26 76 C23 82 24 91 28 96" stroke={D} strokeWidth="0.7" fill="none" opacity="0.5"/>
-      <path d="M124 74 C132 68 136 76 136 85 C136 94 130 102 122 100" stroke={K} strokeWidth="1.3" fill={`${K}0a`}/>
-      <path d="M130 76 C133 82 132 91 128 96" stroke={D} strokeWidth="0.7" fill="none" opacity="0.5"/>
-      {/* muzzle */}
-      <ellipse cx="80" cy="96" rx="33" ry="25" stroke={K} strokeWidth="1.5" fill={`${K}08`}/>
-      {/* eyes — deep-set */}
-      <ellipse cx="64" cy="68" rx="8" ry="6" stroke={K} strokeWidth="1" fill={`${D}35`}/>
-      <circle cx="64" cy="68" r="4" fill={D} opacity="0.9"/>
-      <circle cx="66" cy="67" r="1.5" fill="white" opacity="0.35"/>
-      <path d="M58 65 Q64 62 70 65" stroke={D} strokeWidth="0.8" fill="none"/>
-      <ellipse cx="96" cy="68" rx="8" ry="6" stroke={K} strokeWidth="1" fill={`${D}35`}/>
-      <circle cx="96" cy="68" r="4" fill={D} opacity="0.9"/>
-      <circle cx="98" cy="67" r="1.5" fill="white" opacity="0.35"/>
-      <path d="M90 65 Q96 62 102 65" stroke={D} strokeWidth="0.8" fill="none"/>
-      {/* nose */}
-      <path d="M66 82 C62 86 62 94 68 96 C72 98 90 98 94 96 C100 94 100 86 96 82" stroke={K} strokeWidth="1.4" fill={`${D}14`}/>
-      <ellipse cx="70" cy="92" rx="5" ry="3.5" stroke={D} strokeWidth="0.9" fill={`${D}28`}/>
-      <ellipse cx="90" cy="92" rx="5" ry="3.5" stroke={D} strokeWidth="0.9" fill={`${D}28`}/>
-      <path d="M80 96 L80 103" stroke={D} strokeWidth="0.7" opacity="0.4"/>
-      {/* lips */}
-      <path d="M60 106 C68 112 94 112 100 106" stroke={K} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-      <path d="M62 108 C70 114 90 114 98 108" stroke={D} strokeWidth="0.6" fill="none" opacity="0.4"/>
-      {/* body shadow hatching */}
-      <path d="M34 122 L26 144" stroke={D} strokeWidth="0.7" opacity="0.45"/><path d="M30 136 L22 158" stroke={D} strokeWidth="0.6" opacity="0.4"/><path d="M28 150 L22 170" stroke={D} strokeWidth="0.6" opacity="0.35"/>
-      <path d="M126 120 L134 142" stroke={D} strokeWidth="0.7" opacity="0.45"/><path d="M130 134 L138 156" stroke={D} strokeWidth="0.6" opacity="0.4"/><path d="M132 148 L138 168" stroke={D} strokeWidth="0.6" opacity="0.35"/>
-      <path d="M34 150 L28 156" stroke={D} strokeWidth="0.5" opacity="0.35"/><path d="M36 158 L30 164" stroke={D} strokeWidth="0.5" opacity="0.3"/>
-      <path d="M122 152 L128 158" stroke={D} strokeWidth="0.5" opacity="0.35"/><path d="M120 160 L126 166" stroke={D} strokeWidth="0.5" opacity="0.3"/>
-    </svg>
+    <img
+      src={GORILLA_URL}
+      alt="Gorilla — lithograph, Wellcome Collection (public domain)"
+      className="w-36 xl:w-52 h-auto invert mix-blend-screen opacity-35"
+    />
   )
 }
 
-// Right: seated gorilla, facing left, slightly more upright. Complementary plate.
 function GorillaRight() {
   return (
-    <svg viewBox="0 0 155 275" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" className="w-32 xl:w-44 opacity-60">
-      <ellipse cx="78" cy="270" rx="50" ry="5" fill={K} opacity="0.14"/>
-      {/* seated legs */}
-      <path d="M28 218 C22 236 34 252 56 256 C68 258 76 248 78 244 C80 248 88 258 100 256 C122 252 134 236 128 218" stroke={K} strokeWidth="1.6" fill={`${K}10`}/>
-      <path d="M24 242 C20 255 30 264 44 263 C56 262 62 253 60 243" stroke={K} strokeWidth="1.2" fill={`${K}0c`}/>
-      <path d="M132 242 C136 255 126 264 112 263 C100 262 94 253 96 243" stroke={K} strokeWidth="1.2" fill={`${K}0c`}/>
-      <path d="M34 222 L28 238" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M42 220 L36 236" stroke={D} strokeWidth="0.5" opacity="0.4"/>
-      <path d="M116 220 L122 236" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M108 222 L114 238" stroke={D} strokeWidth="0.5" opacity="0.4"/>
-      {/* torso — slightly more upright */}
-      <path d="M30 168 C22 148 20 124 26 100 C34 76 50 68 64 66 C58 52 54 34 58 18 C62 6 72 1 86 1 C100 1 110 9 114 24 C118 40 114 56 108 70 C122 72 138 86 144 108 C150 132 148 158 140 180 C128 202 108 214 84 216 C60 218 42 198 30 168 Z" stroke={K} strokeWidth="1.8" fill={`${K}08`}/>
-      <path d="M56 116 Q86 108 116 116" stroke={D} strokeWidth="0.7" opacity="0.45"/>
-      <path d="M54 124 Q86 116 118 124" stroke={D} strokeWidth="0.6" opacity="0.4"/>
-      <path d="M56 132 Q86 124 116 132" stroke={D} strokeWidth="0.5" opacity="0.35"/>
-      <path d="M28 104 C16 96 12 110 18 122 C22 131 32 134 40 128" stroke={K} strokeWidth="1.3" fill={`${K}0a`}/>
-      <path d="M128 102 C140 94 144 108 138 120 C134 129 124 132 116 126" stroke={K} strokeWidth="1.3" fill={`${K}0a`}/>
-      {/* arms */}
-      <path d="M26 110 C14 126 10 156 14 184 C16 198 26 206 38 204 C50 202 54 190 52 176 C50 160 46 138 46 118" stroke={K} strokeWidth="1.5" fill={`${K}0c`}/>
-      <path d="M12 192 C10 204 16 214 30 214 C44 214 54 206 52 198" stroke={K} strokeWidth="1.3" fill={`${K}10`}/>
-      <path d="M16 202 L12 210" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M24 206 L22 214" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M32 208 L32 216" stroke={D} strokeWidth="0.6" opacity="0.5"/>
-      <path d="M130 108 C142 124 146 154 142 182 C140 196 130 204 118 202 C106 200 102 190 104 176 C106 160 110 140 110 120" stroke={K} strokeWidth="1.5" fill={`${K}0c`}/>
-      <path d="M144 190 C146 202 140 212 126 212 C112 212 102 206 104 198" stroke={K} strokeWidth="1.3" fill={`${K}10`}/>
-      <path d="M140 200 L144 208" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M132 204 L134 212" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M124 206 L124 214" stroke={D} strokeWidth="0.6" opacity="0.5"/>
-      {/* neck */}
-      <path d="M62 68 C58 80 60 94 70 98 C78 96 88 92 88 82 C90 72 86 66 82 68" stroke={K} strokeWidth="1.3" fill={`${K}08`}/>
-      <path d="M64 74 L62 88" stroke={D} strokeWidth="0.55" opacity="0.4"/><path d="M86 74 L88 86" stroke={D} strokeWidth="0.55" opacity="0.4"/>
-      {/* cranium — head tilted slightly upward */}
-      <path d="M56 18 C46 12 32 20 28 38 C24 54 30 72 42 82 C34 88 32 100 40 108 C48 118 64 122 82 122 C100 122 116 116 122 104 C130 92 126 78 118 72 C130 60 132 44 126 30 C120 16 106 6 90 8 C78 6 64 18 56 18 Z" stroke={K} strokeWidth="1.8" fill={`${K}0a`}/>
-      <path d="M66 8 C70 1 88 1 90 8" stroke={K} strokeWidth="1.3" fill="none"/>
-      <path d="M69 7 L68 2" stroke={K} strokeWidth="0.5" opacity="0.4"/><path d="M75 5 L75 0" stroke={K} strokeWidth="0.5" opacity="0.4"/><path d="M81 6 L83 1" stroke={K} strokeWidth="0.5" opacity="0.4"/>
-      {/* heavy brow ridge */}
-      <path d="M32 56 C44 44 58 40 80 40 C102 40 116 46 122 56" stroke={K} strokeWidth="3.5" fill="none" strokeLinecap="round"/>
-      <path d="M34 59 C46 48 60 44 80 44 C100 44 114 50 120 59" stroke={D} strokeWidth="0.9" fill="none" opacity="0.45"/>
-      <path d="M36 58 L32 68" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M42 56 L38 66" stroke={D} strokeWidth="0.6" opacity="0.45"/>
-      <path d="M118 56 L122 66" stroke={D} strokeWidth="0.6" opacity="0.5"/><path d="M112 56 L116 66" stroke={D} strokeWidth="0.6" opacity="0.45"/>
-      {/* ears */}
-      <path d="M30 72 C22 66 18 74 18 83 C18 92 24 100 32 98" stroke={K} strokeWidth="1.3" fill={`${K}0a`}/>
-      <path d="M24 74 C21 80 22 89 26 94" stroke={D} strokeWidth="0.7" fill="none" opacity="0.5"/>
-      <path d="M122 72 C130 66 134 74 134 83 C134 92 128 100 120 98" stroke={K} strokeWidth="1.3" fill={`${K}0a`}/>
-      <path d="M128 74 C131 80 130 89 126 94" stroke={D} strokeWidth="0.7" fill="none" opacity="0.5"/>
-      {/* muzzle */}
-      <ellipse cx="80" cy="94" rx="33" ry="25" stroke={K} strokeWidth="1.5" fill={`${K}08`}/>
-      {/* eyes */}
-      <ellipse cx="64" cy="66" rx="8" ry="6" stroke={K} strokeWidth="1" fill={`${D}35`}/>
-      <circle cx="64" cy="66" r="4" fill={D} opacity="0.9"/>
-      <circle cx="66" cy="65" r="1.5" fill="white" opacity="0.35"/>
-      <path d="M58 63 Q64 60 70 63" stroke={D} strokeWidth="0.8" fill="none"/>
-      <ellipse cx="96" cy="66" rx="8" ry="6" stroke={K} strokeWidth="1" fill={`${D}35`}/>
-      <circle cx="96" cy="66" r="4" fill={D} opacity="0.9"/>
-      <circle cx="98" cy="65" r="1.5" fill="white" opacity="0.35"/>
-      <path d="M90 63 Q96 60 102 63" stroke={D} strokeWidth="0.8" fill="none"/>
-      {/* nose */}
-      <path d="M66 80 C62 84 62 92 68 94 C72 96 90 96 94 94 C100 92 100 84 96 80" stroke={K} strokeWidth="1.4" fill={`${D}14`}/>
-      <ellipse cx="70" cy="90" rx="5" ry="3.5" stroke={D} strokeWidth="0.9" fill={`${D}28`}/>
-      <ellipse cx="90" cy="90" rx="5" ry="3.5" stroke={D} strokeWidth="0.9" fill={`${D}28`}/>
-      <path d="M80 94 L80 101" stroke={D} strokeWidth="0.7" opacity="0.4"/>
-      {/* lips */}
-      <path d="M60 104 C68 110 94 110 100 104" stroke={K} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-      <path d="M62 106 C70 112 90 112 98 106" stroke={D} strokeWidth="0.6" fill="none" opacity="0.4"/>
-      {/* body shadow hatching */}
-      <path d="M32 120 L24 142" stroke={D} strokeWidth="0.7" opacity="0.45"/><path d="M28 134 L20 156" stroke={D} strokeWidth="0.6" opacity="0.4"/><path d="M26 148 L20 168" stroke={D} strokeWidth="0.6" opacity="0.35"/>
-      <path d="M126 118 L134 140" stroke={D} strokeWidth="0.7" opacity="0.45"/><path d="M130 132 L138 154" stroke={D} strokeWidth="0.6" opacity="0.4"/><path d="M132 146 L138 166" stroke={D} strokeWidth="0.6" opacity="0.35"/>
-      <path d="M32 148 L26 154" stroke={D} strokeWidth="0.5" opacity="0.35"/><path d="M34 156 L28 162" stroke={D} strokeWidth="0.5" opacity="0.3"/>
-      <path d="M120 150 L126 156" stroke={D} strokeWidth="0.5" opacity="0.35"/><path d="M118 158 L124 164" stroke={D} strokeWidth="0.5" opacity="0.3"/>
-    </svg>
+    <img
+      src={GORILLA_URL}
+      alt="Gorilla — lithograph, Wellcome Collection (public domain)"
+      className="w-36 xl:w-52 h-auto invert mix-blend-screen opacity-35 scale-x-[-1]"
+    />
   )
 }
+
+// ── MonkeyOnBranch SVG palette (philosophy section) ──────────────────────────
+const K = "#c49660"
+const D = "#9a7240"
 
 // Wide landscape plate: monkey on a branch. After 19th-c. natural history engravings.
 function MonkeyOnBranch() {
