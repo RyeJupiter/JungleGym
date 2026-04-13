@@ -200,14 +200,14 @@ export default async function HomePage() {
             <p className="text-stone-600 text-lg mb-8">
               Creator sets their price. Choose your tier — 80% goes directly to the teacher, 20% to JungleGym.
             </p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
                 { emoji: '🌱', tier: 'Supported', bg: 'bg-stone-50', border: 'border-stone-200' },
                 { emoji: '🌿', tier: 'Community', bg: 'bg-jungle-50', border: 'border-jungle-200' },
                 { emoji: '🌳', tier: 'Abundance', bg: 'bg-jungle-100', border: 'border-jungle-300' },
               ].map((t) => (
-                <div key={t.tier} className={`${t.bg} border ${t.border} rounded-xl p-5 text-center`}>
-                  <div className="text-3xl mb-2">{t.emoji}</div>
+                <div key={t.tier} className={`${t.bg} border ${t.border} rounded-xl p-5 flex sm:flex-col items-center sm:items-center gap-3 sm:gap-2 sm:text-center`}>
+                  <div className="text-3xl">{t.emoji}</div>
                   <h3 className="font-black text-stone-900 text-sm">{t.tier}</h3>
                 </div>
               ))}
