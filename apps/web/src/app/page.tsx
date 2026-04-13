@@ -1,6 +1,9 @@
 import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+
+const WELCOME_VIDEO_ID = '6beae5fe-eb48-4caa-9e39-4e35452bf50f'
 
 // ── Public-domain natural history illustrations (Wikimedia Commons) ───────────
 // Gorilla lithograph by Jonathan Kingdon, Wellcome Collection — CC BY 4.0
@@ -111,6 +114,13 @@ function MonkeyOnBranch() {
 }
 
 export default async function HomePage() {
+  const supabase = await createServerSupabaseClient()
+  const { data: welcomeVideo } = await supabase
+    .from('videos')
+    .select('id, title, thumbnail_url')
+    .eq('id', WELCOME_VIDEO_ID)
+    .single()
+
   return (
     <div className="min-h-screen">
 
@@ -181,27 +191,61 @@ export default async function HomePage() {
 
       {/* Pricing — fun & transparent */}
       <section className="py-20 px-6 bg-white">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+          {/* Left: pricing info */}
+          <div>
             <p className="text-xs font-semibold text-jungle-500 uppercase tracking-widest mb-3">Radical Transparency</p>
             <h2 className="text-4xl font-black text-stone-900 mb-3">Buy classes from lovers of movement.</h2>
-            <p className="text-stone-600 max-w-xl mx-auto text-lg">
-              Choose your tier. 80% goes directly to the teacher, 20% to JungleGym.
+            <p className="text-stone-600 text-lg mb-8">
+              Creator sets their price. Choose your tier — 80% goes directly to the teacher, 20% to JungleGym.
             </p>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { emoji: '🌱', tier: 'Supported', bg: 'bg-stone-50', border: 'border-stone-200' },
+                { emoji: '🌿', tier: 'Community', bg: 'bg-jungle-50', border: 'border-jungle-200' },
+                { emoji: '🌳', tier: 'Abundance', bg: 'bg-jungle-100', border: 'border-jungle-300' },
+              ].map((t) => (
+                <div key={t.tier} className={`${t.bg} border ${t.border} rounded-xl p-5 text-center`}>
+                  <div className="text-3xl mb-2">{t.emoji}</div>
+                  <h3 className="font-black text-stone-900 text-sm">{t.tier}</h3>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {[
-              { emoji: '🌱', tier: 'Supported', bg: 'bg-stone-50', border: 'border-stone-200' },
-              { emoji: '🌿', tier: 'Community', bg: 'bg-jungle-50', border: 'border-jungle-200' },
-              { emoji: '🌳', tier: 'Abundance', bg: 'bg-jungle-100', border: 'border-jungle-300' },
-            ].map((t) => (
-              <div key={t.tier} className={`${t.bg} border ${t.border} rounded-2xl p-8 text-center`}>
-                <div className="text-4xl mb-4">{t.emoji}</div>
-                <h3 className="font-black text-stone-900 text-xl">{t.tier}</h3>
+          {/* Right: welcome video */}
+          <div>
+            <Link
+              href={`/video/${WELCOME_VIDEO_ID}`}
+              className="group block rounded-2xl overflow-hidden border border-stone-200 hover:border-jungle-300 transition-colors shadow-sm hover:shadow-md"
+            >
+              <div className="aspect-video bg-stone-900 relative">
+                {welcomeVideo?.thumbnail_url && (
+                  <img
+                    src={welcomeVideo.thumbnail_url}
+                    alt={welcomeVideo.title ?? 'Welcome to JungleGym'}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                {/* Play overlay */}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                  <div className="w-16 h-16 rounded-full bg-white/90 group-hover:bg-white flex items-center justify-center shadow-lg transition-colors">
+                    <svg className="w-6 h-6 text-jungle-800 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  </div>
+                </div>
               </div>
-            ))}
+              <div className="px-5 py-4 bg-white">
+                <p className="text-xs font-semibold text-jungle-600 uppercase tracking-widest mb-1">Watch</p>
+                <p className="font-bold text-stone-900 text-base leading-snug">
+                  {welcomeVideo?.title ?? 'Welcome to JungleGym'}
+                </p>
+              </div>
+            </Link>
           </div>
+
         </div>
       </section>
 
