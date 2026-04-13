@@ -69,7 +69,7 @@ export default async function VideoPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-jungle-950">
       <Navbar />
 
       <div className="max-w-4xl mx-auto px-6 py-12">
@@ -115,7 +115,7 @@ export default async function VideoPage({ params }: Props) {
           {/* Tags */}
           <div className="flex flex-wrap gap-2 mb-3">
             {video.is_free && (
-              <span className="bg-jungle-100 text-jungle-800 text-xs font-bold px-2 py-1 rounded-full">
+              <span className="bg-jungle-700 text-jungle-100 text-xs font-bold px-2 py-1 rounded-full">
                 Free
               </span>
             )}
@@ -123,17 +123,17 @@ export default async function VideoPage({ params }: Props) {
               <Link
                 key={tag}
                 href={`/explore?tag=${tag}`}
-                className="bg-stone-100 text-stone-600 text-xs px-2 py-1 rounded-full hover:bg-stone-200 capitalize"
+                className="bg-jungle-800/60 text-jungle-300 text-xs px-2 py-1 rounded-full hover:bg-jungle-700 capitalize border border-jungle-700"
               >
                 {tag}
               </Link>
             ))}
           </div>
 
-          <h1 className="text-3xl font-black text-stone-900 mb-3">{video.title}</h1>
+          <h1 className="text-3xl font-black text-white mb-3">{video.title}</h1>
 
           {video.description && (
-            <p className="text-stone-600 leading-relaxed mb-6">{video.description}</p>
+            <p className="text-jungle-300 leading-relaxed mb-6">{video.description}</p>
           )}
 
           {/* Payment — full width, directly under description */}
@@ -181,16 +181,16 @@ export default async function VideoPage({ params }: Props) {
 
           {/* Creator */}
           <Link href={`/@${creator?.username}`} className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full bg-jungle-100 overflow-hidden flex items-center justify-center text-xl flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-jungle-700 overflow-hidden flex items-center justify-center text-xl flex-shrink-0">
               {creator?.photo_url ? (
                 <img src={creator.photo_url} alt="" className="w-full h-full object-cover" />
               ) : '🌿'}
             </div>
             <div>
-              <p className="font-bold text-stone-900 group-hover:text-jungle-700 transition-colors">
+              <p className="font-bold text-white group-hover:text-jungle-300 transition-colors">
                 {creator?.display_name}
               </p>
-              <p className="text-xs text-stone-400">@{creator?.username}</p>
+              <p className="text-xs text-jungle-500">@{creator?.username}</p>
             </div>
           </Link>
         </div>

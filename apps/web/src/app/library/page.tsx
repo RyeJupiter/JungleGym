@@ -55,13 +55,13 @@ export default async function LibraryPage({
     : (purchases ?? [])
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-jungle-950">
       <Navbar />
 
       <div className="max-w-5xl mx-auto px-6 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-stone-900">My Library</h1>
-          <p className="text-stone-500 mt-2">
+          <h1 className="text-4xl font-black text-white">My Library</h1>
+          <p className="text-jungle-400 mt-2">
             Classes you&apos;ve unlocked. Yours forever.
           </p>
         </div>
@@ -73,9 +73,9 @@ export default async function LibraryPage({
         />
 
         {filteredPurchases.length === 0 ? (
-          <div className="text-center py-20 text-stone-400">
+          <div className="text-center py-20 text-jungle-500">
             <div className="text-5xl mb-4">🌿</div>
-            <p className="font-medium">
+            <p className="font-medium text-jungle-300">
               {q ? 'No classes match your search.' : 'You haven\'t unlocked any classes yet.'}
             </p>
             {q ? (
@@ -99,8 +99,8 @@ export default async function LibraryPage({
               const creator = profileById[video.creator_id] ?? null
               return (
                 <Link key={purchase.id} href={`/video/${video.id}`}>
-                  <div className="bg-white rounded-2xl overflow-hidden border border-stone-200 hover:border-jungle-300 transition-colors group shadow-sm">
-                    <div className="aspect-video bg-stone-100 relative">
+                  <div className="bg-jungle-800/60 rounded-2xl overflow-hidden border border-jungle-700 hover:border-jungle-400 transition-colors group">
+                    <div className="aspect-video bg-jungle-900 relative">
                       {video.thumbnail_url ? (
                         <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
                       ) : (
@@ -119,10 +119,10 @@ export default async function LibraryPage({
                       <p className="text-xs text-jungle-700 font-semibold mb-1">
                         {creator ? `@${creator.username}` : 'Guide'}
                       </p>
-                      <h3 className="font-bold text-stone-900 text-sm leading-snug group-hover:text-jungle-700 transition-colors">
+                      <h3 className="font-bold text-white text-sm leading-snug group-hover:text-jungle-300 transition-colors">
                         {video.title}
                       </h3>
-                      <p className="text-xs text-stone-400 mt-1">Unlocked · {formatPrice(purchase.amount_paid)}</p>
+                      <p className="text-xs text-jungle-500 mt-1">Unlocked · {formatPrice(purchase.amount_paid)}</p>
                     </div>
                   </div>
                 </Link>
