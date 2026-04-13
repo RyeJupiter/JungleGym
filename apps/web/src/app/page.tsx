@@ -198,7 +198,7 @@ export default async function HomePage() {
             <p className="text-xs font-semibold text-jungle-500 uppercase tracking-widest mb-3">Radical Transparency</p>
             <h2 className="text-4xl font-black text-stone-900 mb-3">Buy classes from lovers of movement.</h2>
             <p className="text-stone-600 text-lg mb-8">
-              Creator sets their price. Choose your tier — 80% goes directly to the teacher, 20% to JungleGym.
+              Creator sets their price. Choose your tier.<br />80% goes directly to the teacher, 20% to JungleGym.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
