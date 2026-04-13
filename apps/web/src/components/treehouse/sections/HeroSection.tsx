@@ -194,7 +194,6 @@ export function HeroSection({
             style={{ background: `linear-gradient(to bottom, transparent, ${theme.pageBgHex})` }}
           />
         )}
-        {bannerUrl && <VineDecoration />}
         <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 text-center">
           {/* Avatar centered */}
           <div className="flex justify-center mb-4">
@@ -294,7 +293,6 @@ export function HeroSection({
           style={{ background: `linear-gradient(to bottom, transparent, ${theme.pageBgHex})` }}
         />
       )}
-      {bannerUrl && <VineDecoration />}
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-12">
         {/* Treehouse label */}
         <div className="flex items-center gap-2 mb-6">
@@ -554,7 +552,7 @@ function SocialRow({
           <input
             type="text"
             defaultValue={profile.instagram_url ?? ''}
-            onBlur={(e) => onFieldChange?.('instagram_url', e.currentTarget.value)}
+            onChange={(e) => onFieldChange?.('instagram_url', e.currentTarget.value)}
             placeholder="instagram.com/you"
             className="bg-transparent border-b border-dashed border-current/50 focus:outline-none focus:border-current text-xs w-36 placeholder-current/30"
           />
@@ -567,7 +565,7 @@ function SocialRow({
           <input
             type="text"
             defaultValue={profile.website_url ?? ''}
-            onBlur={(e) => onFieldChange?.('website_url', e.currentTarget.value)}
+            onChange={(e) => onFieldChange?.('website_url', e.currentTarget.value)}
             placeholder="yoursite.com"
             className="bg-transparent border-b border-dashed border-current/50 focus:outline-none focus:border-current text-xs w-36 placeholder-current/30"
           />

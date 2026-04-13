@@ -2,6 +2,123 @@ import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 
+// ── Gorilla SVGs ──────────────────────────────────────────────────────────────
+// Left: chilling cross-legged, hands on knees
+function GorillaLeft() {
+  return (
+    <svg viewBox="0 0 130 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" className="w-32 xl:w-40 opacity-80">
+      {/* Shadow */}
+      <ellipse cx="65" cy="196" rx="42" ry="5" fill="#0a1c14" opacity="0.4"/>
+      {/* Crossed legs base */}
+      <path d="M20 158 Q18 178 65 180 Q112 178 110 158 Q92 148 65 146 Q38 148 20 158Z" fill="#1b4332"/>
+      {/* Body */}
+      <path d="M32 138 Q28 120 32 102 Q43 88 65 87 Q87 88 98 102 Q102 120 98 138 Q84 147 65 148 Q46 147 32 138Z" fill="#237a51"/>
+      {/* Shoulder humps */}
+      <ellipse cx="26" cy="108" rx="20" ry="14" fill="#237a51"/>
+      <ellipse cx="104" cy="108" rx="20" ry="14" fill="#237a51"/>
+      {/* Chest definition */}
+      <path d="M42 112 Q65 105 88 112" stroke="#2d9e69" strokeWidth="2" fill="none" opacity="0.5"/>
+      {/* Left arm resting on knee */}
+      <path d="M18 112 Q10 126 12 148 Q14 160 22 162 Q30 162 32 152 Q33 133 36 116" fill="#237a51"/>
+      {/* Right arm resting on knee */}
+      <path d="M112 112 Q120 126 118 148 Q116 160 108 162 Q100 162 98 152 Q97 133 94 116" fill="#237a51"/>
+      {/* Left hand */}
+      <ellipse cx="14" cy="160" rx="11" ry="7" fill="#1b4332" transform="rotate(-12 14 160)"/>
+      {/* Right hand */}
+      <ellipse cx="116" cy="160" rx="11" ry="7" fill="#1b4332" transform="rotate(12 116 160)"/>
+      {/* Neck */}
+      <path d="M52 90 Q52 78 65 76 Q78 78 78 90" fill="#237a51"/>
+      {/* Head */}
+      <ellipse cx="65" cy="57" rx="32" ry="30" fill="#237a51"/>
+      {/* Ears */}
+      <ellipse cx="35" cy="58" rx="10" ry="9" fill="#237a51"/>
+      <ellipse cx="95" cy="58" rx="10" ry="9" fill="#237a51"/>
+      {/* Ear canal detail */}
+      <ellipse cx="35" cy="58" rx="5" ry="4" fill="#1b4332"/>
+      <ellipse cx="95" cy="58" rx="5" ry="4" fill="#1b4332"/>
+      {/* Brow ridge */}
+      <path d="M37 46 Q65 39 93 46" stroke="#1b4332" strokeWidth="6" fill="none" strokeLinecap="round"/>
+      {/* Muzzle */}
+      <ellipse cx="65" cy="67" rx="22" ry="19" fill="#1b4332"/>
+      {/* Eyes — calm, slightly droopy (chilling) */}
+      <circle cx="53" cy="51" r="5" fill="#0a0e0a"/>
+      <circle cx="77" cy="51" r="5" fill="#0a0e0a"/>
+      <circle cx="55" cy="49" r="2" fill="white" opacity="0.5"/>
+      <circle cx="79" cy="49" r="2" fill="white" opacity="0.5"/>
+      {/* Half-closed eyelids */}
+      <path d="M48 49 Q53 47 58 49" stroke="#1b4332" strokeWidth="3" fill="none" strokeLinecap="round"/>
+      <path d="M72 49 Q77 47 82 49" stroke="#1b4332" strokeWidth="3" fill="none" strokeLinecap="round"/>
+      {/* Nostrils */}
+      <circle cx="59" cy="65" r="3.5" fill="#0a0e0a"/>
+      <circle cx="71" cy="65" r="3.5" fill="#0a0e0a"/>
+      {/* Relaxed content smile */}
+      <path d="M54 75 Q65 82 76 75" stroke="#0a0e0a" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      {/* Arm muscle hint */}
+      <path d="M12 132 Q15 122 20 116" stroke="#2d9e69" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.5"/>
+      <path d="M118 132 Q115 122 110 116" stroke="#2d9e69" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.5"/>
+    </svg>
+  )
+}
+
+// Right: seated, one arm raised in casual flex, slight grin
+function GorillaRight() {
+  return (
+    <svg viewBox="0 0 130 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" className="w-32 xl:w-40 opacity-80 scale-x-[-1]">
+      {/* Shadow */}
+      <ellipse cx="65" cy="196" rx="42" ry="5" fill="#0a1c14" opacity="0.4"/>
+      {/* Sitting legs */}
+      <path d="M20 152 Q18 172 65 174 Q112 172 110 152 Q92 143 65 141 Q38 143 20 152Z" fill="#1b4332"/>
+      {/* Body */}
+      <path d="M30 132 Q26 114 30 96 Q42 82 65 81 Q88 82 100 96 Q104 114 100 132 Q86 141 65 143 Q44 141 30 132Z" fill="#237a51"/>
+      {/* Shoulder humps */}
+      <ellipse cx="24" cy="102" rx="18" ry="13" fill="#237a51"/>
+      <ellipse cx="106" cy="96" rx="22" ry="16" fill="#237a51"/>
+      {/* Chest */}
+      <path d="M40 106 Q65 99 90 106" stroke="#2d9e69" strokeWidth="2" fill="none" opacity="0.5"/>
+      {/* Left arm — relaxed at side */}
+      <path d="M18 108 Q10 122 12 142 Q14 154 22 156 Q30 156 32 146 Q33 128 36 112" fill="#237a51"/>
+      {/* Left hand */}
+      <ellipse cx="14" cy="154" rx="11" ry="7" fill="#1b4332" transform="rotate(-10 14 154)"/>
+      {/* Right arm — RAISED flex */}
+      <path d="M106 94 Q116 76 110 56 Q105 44 97 48 Q89 53 94 65 Q98 76 96 88" fill="#237a51"/>
+      {/* Bicep peak */}
+      <ellipse cx="110" cy="72" rx="10" ry="14" fill="#2d9e69" transform="rotate(20 110 72)"/>
+      {/* Forearm */}
+      <path d="M96 88 Q92 98 97 108 Q102 116 110 110 Q116 103 110 94" fill="#237a51"/>
+      {/* Fist */}
+      <ellipse cx="106" cy="113" rx="9" ry="8" fill="#1b4332"/>
+      {/* Knuckle lines */}
+      <path d="M100 110 Q106 108 112 111" stroke="#237a51" strokeWidth="1" fill="none"/>
+      {/* Neck */}
+      <path d="M52 84 Q52 72 65 70 Q78 72 78 84" fill="#237a51"/>
+      {/* Head — slight tilt toward raised arm */}
+      <ellipse cx="67" cy="49" rx="30" ry="28" fill="#237a51" transform="rotate(5 67 49)"/>
+      {/* Ears */}
+      <ellipse cx="37" cy="50" rx="9" ry="8" fill="#237a51"/>
+      <ellipse cx="97" cy="49" rx="9" ry="8" fill="#237a51"/>
+      <ellipse cx="37" cy="50" rx="5" ry="4" fill="#1b4332"/>
+      <ellipse cx="97" cy="49" rx="5" ry="4" fill="#1b4332"/>
+      {/* Brow — one raised (smug) */}
+      <path d="M39 38 Q67 31 93 38" stroke="#1b4332" strokeWidth="5" fill="none" strokeLinecap="round"/>
+      <path d="M74 34 Q84 30 92 34" stroke="#1b4332" strokeWidth="4" fill="none" strokeLinecap="round"/>
+      {/* Muzzle */}
+      <ellipse cx="67" cy="59" rx="21" ry="18" fill="#1b4332"/>
+      {/* Eyes */}
+      <circle cx="55" cy="44" r="4.5" fill="#0a0e0a"/>
+      <circle cx="78" cy="43" r="4.5" fill="#0a0e0a"/>
+      <circle cx="57" cy="42" r="1.8" fill="white" opacity="0.5"/>
+      <circle cx="80" cy="41" r="1.8" fill="white" opacity="0.5"/>
+      {/* Nostrils */}
+      <circle cx="61" cy="58" r="3.5" fill="#0a0e0a"/>
+      <circle cx="73" cy="58" r="3.5" fill="#0a0e0a"/>
+      {/* Smug grin */}
+      <path d="M55 68 Q67 76 77 70" stroke="#0a0e0a" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      {/* Teeth hint */}
+      <path d="M58 68 Q67 74 74 70" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.3"/>
+    </svg>
+  )
+}
+
 export default async function HomePage() {
   return (
     <div className="min-h-screen">
@@ -10,9 +127,18 @@ export default async function HomePage() {
 
       {/* Hero */}
       <div className="bg-jungle-800">
-        <section className="pt-28 pb-24 px-6 text-center">
-          <div className="max-w-3xl mx-auto">
-                <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 leading-none" style={{ textShadow: '-1px -1px 0 rgba(0,0,0,0.25), 1px -1px 0 rgba(0,0,0,0.25), -1px 1px 0 rgba(0,0,0,0.25), 1px 1px 0 rgba(0,0,0,0.25)' }}>
+        <section className="pt-28 pb-24 px-6 text-center relative overflow-hidden">
+
+          {/* Gorilla decorations */}
+          <div className="hidden lg:block absolute left-4 xl:left-10 bottom-0 pointer-events-none select-none">
+            <GorillaLeft />
+          </div>
+          <div className="hidden lg:block absolute right-4 xl:right-10 bottom-0 pointer-events-none select-none">
+            <GorillaRight />
+          </div>
+
+          <div className="max-w-3xl mx-auto relative z-10">
+            <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 leading-none" style={{ textShadow: '-1px -1px 0 rgba(0,0,0,0.25), 1px -1px 0 rgba(0,0,0,0.25), -1px 1px 0 rgba(0,0,0,0.25), 1px 1px 0 rgba(0,0,0,0.25)' }}>
               Welcome to JungleGym.
               <br />
               <span className="block mt-3 text-jungle-400">Let&apos;s learn &amp; play.</span>
@@ -23,7 +149,7 @@ export default async function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
               <Link
-                href="/explore"
+                href="/classes"
                 className="bg-earth-400 hover:bg-earth-500 text-white font-bold px-8 py-4 rounded-xl text-lg transition-colors"
               >
                 Browse videos →
@@ -35,9 +161,25 @@ export default async function HomePage() {
                 Live sessions
               </Link>
             </div>
+
+            {/* Tag pills — redesigned */}
             <div className="flex flex-wrap justify-center gap-2">
-              {[['yoga','🧘 yoga'], ['strength','💪 strength'], ['mobility','🌀 mobility'], ['kettlebell','🔔 kettlebell'], ['breathwork','🌬️ breathwork'], ['hip-flexors','🦋 hip flexors'], ['contact-dance','🤝 contact dance'], ['dance','💃 dance lifts']].map(([slug, label]) => (
-                <Link key={slug} href={`/explore?tag=${slug}`} className="bg-jungle-700/60 hover:bg-jungle-600/80 text-jungle-200 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors">
+              {[
+                ['yoga',          '🧘', 'yoga'],
+                ['strength',      '💪', 'strength'],
+                ['mobility',      '🌀', 'mobility'],
+                ['kettlebell',    '🔔', 'kettlebell'],
+                ['breathwork',    '🌬️', 'breathwork'],
+                ['hip-flexors',   '🦋', 'hip flexors'],
+                ['contact-dance', '🤝', 'contact dance'],
+                ['dance',         '💃', 'dance lifts'],
+              ].map(([slug, emoji, label]) => (
+                <Link
+                  key={slug}
+                  href={`/classes?tag=${slug}`}
+                  className="group flex items-center gap-1.5 bg-jungle-700/40 hover:bg-jungle-600/60 border border-jungle-500/40 hover:border-jungle-400/80 text-jungle-200 hover:text-white px-4 py-2 rounded-full text-sm font-semibold transition-all hover:scale-105"
+                >
+                  <span className="text-base leading-none">{emoji}</span>
                   {label}
                 </Link>
               ))}
@@ -49,8 +191,8 @@ export default async function HomePage() {
         <section className="pb-20 px-6">
           <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
             {[
-              { emoji: '🔍', title: 'Find a teacher', body: 'Browse by style — yoga, kettlebell, mobility, breathwork, and more.', href: '/explore' },
-              { emoji: '🎬', title: 'Watch & train', body: 'The price you see is the price you pay. 80% goes to the teacher, 20% platform fee.', href: '/explore' },
+              { emoji: '🔍', title: 'Find a teacher', body: 'Browse by style — yoga, kettlebell, mobility, breathwork, and more.', href: '/classes' },
+              { emoji: '🎬', title: 'Watch & train', body: 'The price you see is the price you pay. 80% goes to the teacher, 20% platform fee.', href: '/classes' },
               { emoji: '🎁', title: 'Join live sessions', body: 'Real-time classes, gift-based. Give freely — 80% to the teacher, 20% platform fee.', href: '/sessions' },
             ].map((step) => (
               <Link key={step.title} href={step.href} className="bg-jungle-800/60 hover:bg-jungle-700/80 rounded-2xl p-6 border border-jungle-700 hover:border-jungle-500 transition-colors block">
