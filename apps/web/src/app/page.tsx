@@ -5,6 +5,10 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 const WELCOME_VIDEO_ID = '6beae5fe-eb48-4caa-9e39-4e35452bf50f'
 
+// Pin specific session IDs here to feature them on the homepage.
+// Leave empty to automatically show the next 3 upcoming sessions.
+const PINNED_SESSION_IDS: string[] = []
+
 // ── Public-domain natural history illustrations (Wikimedia Commons) ───────────
 // Orangutan engraving, Wellcome Collection 1658 — CC BY 4.0
 // Chimpanzee head study, Joseph Schippers 1894, Rijksmuseum — CC0
@@ -119,11 +123,38 @@ function MonkeyOnBranch() {
 
 export default async function HomePage() {
   const supabase = await createServerSupabaseClient()
-  const { data: welcomeVideo } = await supabase
-    .from('videos')
-    .select('id, title, thumbnail_url')
-    .eq('id', WELCOME_VIDEO_ID)
-    .single()
+
+  const [{ data: welcomeVideo }, { data: rawSessions }] = await Promise.all([
+    supabase
+      .from('videos')
+      .select('id, title, thumbnail_url')
+      .eq('id', WELCOME_VIDEO_ID)
+      .single(),
+    PINNED_SESSION_IDS.length
+      ? supabase
+          .from('live_sessions')
+          .select('id, title, scheduled_at, duration_minutes, creator_id, status')
+          .in('id', PINNED_SESSION_IDS)
+          .order('scheduled_at', { ascending: true })
+      : supabase
+          .from('live_sessions')
+          .select('id, title, scheduled_at, duration_minutes, creator_id, status')
+          .in('status', ['scheduled', 'live'])
+          .gte('scheduled_at', new Date().toISOString())
+          .order('scheduled_at', { ascending: true })
+          .limit(3),
+  ])
+
+  const sessionCreatorIds = [...new Set((rawSessions ?? []).map((s) => s.creator_id))]
+  const { data: sessionProfiles } = sessionCreatorIds.length
+    ? await supabase
+        .from('profiles')
+        .select('user_id, display_name, photo_url')
+        .in('user_id', sessionCreatorIds)
+    : { data: [] }
+  const profileById = Object.fromEntries((sessionProfiles ?? []).map((p) => [p.user_id, p]))
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const upcomingSessions = ((rawSessions ?? []) as any[]).map((s) => ({ ...s, creator: profileById[s.creator_id] ?? null }))
 
   return (
     <div className="min-h-screen">
@@ -316,14 +347,64 @@ export default async function HomePage() {
 
       {/* Live sessions */}
       <section className="py-14 px-6 bg-stone-50 border-t border-stone-200">
-        <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+
+          {/* Left: blurb */}
           <div>
-            <h2 className="text-2xl font-black text-stone-900 mb-1">We stream live classes.</h2>
-            <p className="text-stone-600 text-sm leading-relaxed">Live classes let you move alongside a real guide, ask questions mid-practice, and get the kind of personalization you just can&apos;t get from a recording. Find a class that&apos;s calling your name — and show up.</p>
+            <h2 className="text-2xl font-black text-stone-900 mb-2">We stream live classes.</h2>
+            <p className="text-stone-600 text-sm leading-relaxed mb-5">
+              Live classes let you move alongside a real guide, ask questions mid-practice, and get the kind of personalization you just can&apos;t get from a recording.
+            </p>
+            <Link href="/sessions" className="inline-block bg-jungle-800 hover:bg-jungle-700 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors">
+              See all sessions →
+            </Link>
           </div>
-          <Link href="/sessions" className="shrink-0 bg-jungle-800 hover:bg-jungle-700 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors whitespace-nowrap">
-            Join a live class →
-          </Link>
+
+          {/* Right: upcoming sessions */}
+          <div className="space-y-3">
+            {upcomingSessions.length === 0 ? (
+              <div className="bg-white border border-stone-200 rounded-xl p-5 text-center">
+                <p className="text-stone-400 text-sm">No sessions scheduled yet.</p>
+                <p className="text-stone-400 text-xs mt-1">Check back soon.</p>
+              </div>
+            ) : (
+              upcomingSessions.map((s) => {
+                const d = new Date(s.scheduled_at)
+                const isLive = s.status === 'live'
+                return (
+                  <Link
+                    key={s.id}
+                    href={`/sessions/${s.id}`}
+                    className="flex items-center gap-4 bg-white border border-stone-200 hover:border-jungle-400 rounded-xl px-4 py-3 transition-colors group"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-stone-100 overflow-hidden flex items-center justify-center text-lg flex-shrink-0">
+                      {s.creator?.photo_url
+                        ? <img src={s.creator.photo_url} alt="" className="w-full h-full object-cover" />
+                        : '🌿'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        {isLive && <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">LIVE</span>}
+                        <p className="font-semibold text-stone-900 text-sm truncate group-hover:text-jungle-700">{s.title}</p>
+                      </div>
+                      {s.creator?.display_name && (
+                        <p className="text-xs text-stone-400">{s.creator.display_name}</p>
+                      )}
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-xs font-semibold text-stone-700">
+                        {d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </p>
+                      <p className="text-xs text-stone-400">
+                        {d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </Link>
+                )
+              })
+            )}
+          </div>
+
         </div>
       </section>
 
