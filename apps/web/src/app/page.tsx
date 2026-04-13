@@ -147,37 +147,20 @@ export default async function HomePage() {
               Movement classes from skilled guides.
               Every class leaves you with something your body didn't have before.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
-              <Link
-                href="/classes"
-                className="bg-earth-400 hover:bg-earth-500 text-white font-bold px-8 py-4 rounded-xl text-lg transition-colors"
-              >
-                Browse videos →
-              </Link>
-              <Link
-                href="/sessions"
-                className="bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-4 rounded-xl text-lg transition-colors border border-white/20"
-              >
-                Live sessions
-              </Link>
-            </div>
-
-            {/* Tag pills — redesigned */}
-            <div className="flex flex-wrap justify-center gap-2">
+            {/* Tag pills — one row, content categories */}
+            <div className="flex flex-wrap justify-center gap-2 mt-2">
               {[
-                ['yoga',          '🧘', 'yoga'],
-                ['strength',      '💪', 'strength'],
-                ['mobility',      '🌀', 'mobility'],
-                ['kettlebell',    '🔔', 'kettlebell'],
-                ['breathwork',    '🌬️', 'breathwork'],
-                ['hip-flexors',   '🦋', 'hip flexors'],
-                ['contact-dance', '🤝', 'contact dance'],
-                ['dance',         '💃', 'dance lifts'],
+                ['yoga',       '🧘', 'yoga'],
+                ['strength',   '💪', 'strength'],
+                ['mobility',   '🌀', 'mobility'],
+                ['breathwork', '🌬️', 'breathwork'],
+                ['dance',      '💃', 'dance'],
+                ['kettlebell', '🔔', 'kettlebell'],
               ].map(([slug, emoji, label]) => (
                 <Link
                   key={slug}
                   href={`/classes?tag=${slug}`}
-                  className="group flex items-center gap-1.5 bg-jungle-700/40 hover:bg-jungle-600/60 border border-jungle-500/40 hover:border-jungle-400/80 text-jungle-200 hover:text-white px-4 py-2 rounded-full text-sm font-semibold transition-all hover:scale-105"
+                  className="flex items-center gap-1.5 bg-jungle-700/40 hover:bg-jungle-600/60 border border-jungle-500/40 hover:border-jungle-400/80 text-jungle-200 hover:text-white px-4 py-2 rounded-full text-sm font-semibold transition-all hover:scale-105"
                 >
                   <span className="text-base leading-none">{emoji}</span>
                   {label}
@@ -192,8 +175,8 @@ export default async function HomePage() {
           <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
             {[
               { emoji: '🔍', title: 'Find a teacher', body: 'Browse by style — yoga, kettlebell, mobility, breathwork, and more.', href: '/classes' },
-              { emoji: '🎬', title: 'Watch & train', body: 'The price you see is the price you pay. 80% goes to the teacher, 20% platform fee.', href: '/classes' },
-              { emoji: '🎁', title: 'Join live sessions', body: 'Real-time classes, gift-based. Give freely — 80% to the teacher, 20% platform fee.', href: '/sessions' },
+              { emoji: '🎬', title: 'Watch & train', body: 'Buy videos from curated guides. 80% to the teacher, 20% to JungleGym.', href: '/classes' },
+              { emoji: '🎁', title: 'Join live sessions', body: 'Real-time classes, gift-based.', href: '/sessions' },
             ].map((step) => (
               <Link key={step.title} href={step.href} className="bg-jungle-800/60 hover:bg-jungle-700/80 rounded-2xl p-6 border border-jungle-700 hover:border-jungle-500 transition-colors block">
                 <div className="text-4xl mb-3">{step.emoji}</div>
