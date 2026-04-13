@@ -253,31 +253,63 @@ export default async function HomePage() {
 
       {/* Philosophy blurb */}
       <section
-        className="py-20 px-6 text-center bg-jungle-900 bg-cover bg-center bg-no-repeat"
+        className="bg-jungle-900 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/jungle-gateway.png')", backgroundAttachment: "fixed" }}
       >
-      <div className="bg-jungle-950/70 backdrop-blur-sm py-20 -my-20">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex justify-center mb-6">
-            <img
-              src={IMG_MONKEY_SECTION}
-              alt="Chimpanzee — Philip Henry Gosse, 1848 (public domain)"
-              className="w-40 h-auto invert mix-blend-screen opacity-55"
-            />
+      <div className="bg-jungle-950/70 backdrop-blur-sm py-20 px-6">
+        <div className="max-w-5xl mx-auto">
+
+          {/* Header — centered */}
+          <div className="text-center mb-12">
+            <div className="flex justify-center mb-5">
+              <img
+                src={IMG_MONKEY_SECTION}
+                alt="Chimpanzee — Philip Henry Gosse, 1848 (public domain)"
+                className="w-32 h-auto invert mix-blend-screen opacity-55"
+              />
+            </div>
+            <p className="text-jungle-400 text-sm font-semibold uppercase tracking-widest mb-3">The oldest wisdom</p>
+            <h2 className="text-4xl font-black text-white">Monkey see. Monkey do.</h2>
           </div>
-          <p className="text-jungle-400 text-sm font-semibold uppercase tracking-widest mb-3">The oldest wisdom</p>
-          <h2 className="text-4xl font-black text-white mb-4">Monkey see. Monkey do.</h2>
-          <p className="text-jungle-300 text-lg leading-relaxed mb-8">
-            Mimicry is the oldest way to learn — and JungleGym is built on that idea.
-            Watch someone move with ease, and your body starts to understand.
-            Vetted teachers who move clearly, so you can read them and grow.
-          </p>
-          <Link
-            href="/auth/signup"
-            className="bg-earth-400 hover:bg-earth-500 text-white font-bold px-10 py-4 rounded-xl text-lg inline-block transition-colors"
-          >
-            Join free — no credit card needed
-          </Link>
+
+          {/* Two columns */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
+
+            {/* Left: purpose statement quote */}
+            <blockquote className="border-l-2 border-jungle-500 pl-6">
+              <p className="text-xl font-bold text-white leading-snug mb-4">
+                &ldquo;Liquidate Physical Education. Replace the standardized, joyless model with vetted
+                teachers sharing what they love, students choosing what moves them, money flowing
+                directly to the source.&rdquo;
+              </p>
+              <Link
+                href="/why"
+                className="text-jungle-400 hover:text-jungle-300 text-sm font-semibold transition-colors"
+              >
+                Read the full purpose statement →
+              </Link>
+            </blockquote>
+
+            {/* Right: updated text */}
+            <div className="text-jungle-200 text-lg leading-relaxed space-y-4">
+              <p>Mimicry is the oldest way to learn.</p>
+              <p>JungleGym is built on that idea.</p>
+              <p>Watch someone move with ease, and your body starts to understand — mirror neurons activate.</p>
+              <p className="text-jungle-400 text-base">Vetted teachers who move clearly, so you can read them and grow.</p>
+            </div>
+
+          </div>
+
+          {/* CTA */}
+          <div className="text-center">
+            <Link
+              href="/auth/signup"
+              className="bg-earth-400 hover:bg-earth-500 text-white font-bold px-10 py-4 rounded-xl text-lg inline-block transition-colors"
+            >
+              Join free — no credit card needed
+            </Link>
+          </div>
+
         </div>
         </div>{/* end overlay */}
       </section>
