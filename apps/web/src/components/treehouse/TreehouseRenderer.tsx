@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import type { TreehouseConfig } from './config'
-import { THEME_MAP, withBannerOverrides } from './themes'
+import { THEME_MAP } from './themes'
 import { SectionRenderer } from './sections/SectionRenderer'
 import type { TreehouseData } from './sections/SectionRenderer'
+import { TreehouseBanner } from './TreehouseBanner'
 
 type Props = {
   config: TreehouseConfig
@@ -10,24 +11,15 @@ type Props = {
 }
 
 export function TreehouseRenderer({ config, data }: Props) {
-  const baseTheme = THEME_MAP[config.theme]
-  const theme = config.banner ? withBannerOverrides(baseTheme) : baseTheme
+  const theme = THEME_MAP[config.theme]
 
   return (
     <div className={`relative min-h-screen ${theme.pageBg}`}>
-      {/* Full-page banner background */}
-      {config.banner && (
-        <div
-          className="fixed inset-0 z-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${config.banner})` }}
-        >
-          <div className="absolute inset-0 bg-black/65" />
-        </div>
-      )}
+      {/* Banner bar with vine arch decoration */}
+      <TreehouseBanner theme={config.theme} bannerUrl={config.banner} />
 
-      {/* Content sits above the background */}
-      <div className="relative z-10">
-        {/* Sections in configured order */}
+      {/* Sections in configured order */}
+      <div>
         {config.sections.map((section) => (
           <SectionRenderer
             key={section.id}

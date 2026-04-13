@@ -118,19 +118,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Live sessions */}
-      <section className="py-14 px-6 bg-white border-t border-stone-100">
-        <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div>
-            <h2 className="text-2xl font-black text-jungle-900 mb-1">Live classes, gift-based.</h2>
-            <p className="text-jungle-600 text-sm">Real-time sessions from vetted teachers. Give what you feel — 80% to the teacher, 20% platform fee.</p>
-          </div>
-          <Link href="/sessions" className="shrink-0 bg-jungle-900 hover:bg-jungle-800 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors whitespace-nowrap">
-            Check out live classes →
-          </Link>
-        </div>
-      </section>
-
       {/* Philosophy blurb */}
       <section className="py-20 px-6 bg-jungle-900 text-center">
         <div className="max-w-2xl mx-auto">
@@ -147,6 +134,19 @@ export default async function HomePage() {
             className="bg-earth-400 hover:bg-earth-500 text-white font-bold px-10 py-4 rounded-xl text-lg inline-block transition-colors"
           >
             Join free — no credit card needed
+          </Link>
+        </div>
+      </section>
+
+      {/* Live sessions */}
+      <section className="py-14 px-6 bg-white border-t border-stone-100">
+        <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div>
+            <h2 className="text-2xl font-black text-jungle-900 mb-1">Want a workout with a little magic in it?</h2>
+            <p className="text-jungle-600 text-sm leading-relaxed">Live classes let you move alongside a real guide, ask questions mid-practice, and get the kind of personalization you just can&apos;t get from a recording. Find a class that&apos;s calling your name — and show up.</p>
+          </div>
+          <Link href="/sessions" className="shrink-0 bg-jungle-900 hover:bg-jungle-800 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors whitespace-nowrap">
+            Join a live class →
           </Link>
         </div>
       </section>

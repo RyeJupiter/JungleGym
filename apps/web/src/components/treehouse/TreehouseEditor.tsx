@@ -19,8 +19,9 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { compressImage } from '@/lib/compressImage'
 import type { TreehouseConfig, SectionConfig, ThemeKey } from './config'
 import { SINGLETON_SECTIONS } from './config'
-import { THEME_MAP, withBannerOverrides } from './themes'
+import { THEME_MAP } from './themes'
 import { SectionRenderer } from './sections/SectionRenderer'
+import { TreehouseBanner } from './TreehouseBanner'
 import type { TreehouseData } from './sections/SectionRenderer'
 import { SortableSection } from './SortableSection'
 import { EditorToolbar } from './EditorToolbar'
@@ -39,8 +40,7 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
 
-  const baseTheme = THEME_MAP[config.theme]
-  const theme = config.banner ? withBannerOverrides(baseTheme) : baseTheme
+  const theme = THEME_MAP[config.theme]
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -222,16 +222,6 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
 
   return (
     <div className={`relative min-h-screen ${theme.pageBg}`}>
-      {/* Full-page banner background */}
-      {config.banner && (
-        <div
-          className="fixed inset-0 z-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${config.banner})` }}
-        >
-          <div className="absolute inset-0 bg-black/65" />
-        </div>
-      )}
-      <div className="relative z-10">
       <EditorToolbar
         config={config}
         onThemeChange={(t: ThemeKey) => setConfig((prev) => ({ ...prev, theme: t }))}
@@ -241,6 +231,15 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
         onSave={handleSave}
         onCancel={handleCancel}
         saving={saving}
+      />
+
+      {/* Banner bar — editable on hover */}
+      <TreehouseBanner
+        theme={config.theme}
+        bannerUrl={config.banner}
+        editing
+        onUpload={handleBannerUpload}
+        onBannerChange={handleBannerChange}
       />
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -285,7 +284,6 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
         currentSections={config.sections}
         onAdd={addSection}
       />
-      </div>  {/* end relative z-10 */}
     </div>
   )
 }

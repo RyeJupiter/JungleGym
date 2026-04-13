@@ -111,69 +111,33 @@ export default async function VideoPage({ params }: Props) {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Left: video info */}
-          <div className="md:col-span-2">
-            <div className="flex flex-wrap gap-2 mb-3">
-              {video.is_free && (
-                <span className="bg-jungle-100 text-jungle-800 text-xs font-bold px-2 py-1 rounded-full">
-                  Free
-                </span>
-              )}
-              {video.tags.map((tag) => (
-                <Link
-                  key={tag}
-                  href={`/explore?tag=${tag}`}
-                  className="bg-stone-100 text-stone-600 text-xs px-2 py-1 rounded-full hover:bg-stone-200 capitalize"
-                >
-                  {tag}
-                </Link>
-              ))}
-            </div>
-
-            <h1 className="text-3xl font-black text-stone-900 mb-3">{video.title}</h1>
-
-            {video.description && (
-              <p className="text-stone-600 leading-relaxed mb-6">{video.description}</p>
+        <div>
+          {/* Tags */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            {video.is_free && (
+              <span className="bg-jungle-100 text-jungle-800 text-xs font-bold px-2 py-1 rounded-full">
+                Free
+              </span>
             )}
-
-            {/* Ghost tags — admin only */}
-            {isAdmin && (video.ghost_tags?.length > 0) && (
-              <div className="mb-6 p-3 rounded-xl bg-violet-50 border border-violet-200">
-                <p className="text-xs font-semibold text-violet-500 uppercase tracking-wide mb-2">
-                  Ghost tags (admin only)
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {video.ghost_tags.map((tag: string) => (
-                    <span
-                      key={tag}
-                      className="bg-violet-100 text-violet-700 text-xs px-2 py-0.5 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Creator */}
-            <Link href={`/@${creator?.username}`} className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-full bg-jungle-100 overflow-hidden flex items-center justify-center text-xl flex-shrink-0">
-                {creator?.photo_url ? (
-                  <img src={creator.photo_url} alt="" className="w-full h-full object-cover" />
-                ) : '🌿'}
-              </div>
-              <div>
-                <p className="font-bold text-stone-900 group-hover:text-jungle-700 transition-colors">
-                  {creator?.display_name}
-                </p>
-                <p className="text-xs text-stone-400">@{creator?.username}</p>
-              </div>
-            </Link>
+            {video.tags.map((tag) => (
+              <Link
+                key={tag}
+                href={`/explore?tag=${tag}`}
+                className="bg-stone-100 text-stone-600 text-xs px-2 py-1 rounded-full hover:bg-stone-200 capitalize"
+              >
+                {tag}
+              </Link>
+            ))}
           </div>
 
-          {/* Right: pricing */}
-          <div>
+          <h1 className="text-3xl font-black text-stone-900 mb-3">{video.title}</h1>
+
+          {video.description && (
+            <p className="text-stone-600 leading-relaxed mb-6">{video.description}</p>
+          )}
+
+          {/* Payment — full width, directly under description */}
+          <div className="mb-8">
             {hasAccess ? (
               <div className="bg-jungle-50 border border-jungle-200 rounded-2xl p-5 text-center">
                 <div className="text-3xl mb-2">✓</div>
@@ -195,6 +159,40 @@ export default async function VideoPage({ params }: Props) {
               />
             )}
           </div>
+
+          {/* Ghost tags — admin only */}
+          {isAdmin && (video.ghost_tags?.length > 0) && (
+            <div className="mb-6 p-3 rounded-xl bg-violet-50 border border-violet-200">
+              <p className="text-xs font-semibold text-violet-500 uppercase tracking-wide mb-2">
+                Ghost tags (admin only)
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {video.ghost_tags.map((tag: string) => (
+                  <span
+                    key={tag}
+                    className="bg-violet-100 text-violet-700 text-xs px-2 py-0.5 rounded-full"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Creator */}
+          <Link href={`/@${creator?.username}`} className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-full bg-jungle-100 overflow-hidden flex items-center justify-center text-xl flex-shrink-0">
+              {creator?.photo_url ? (
+                <img src={creator.photo_url} alt="" className="w-full h-full object-cover" />
+              ) : '🌿'}
+            </div>
+            <div>
+              <p className="font-bold text-stone-900 group-hover:text-jungle-700 transition-colors">
+                {creator?.display_name}
+              </p>
+              <p className="text-xs text-stone-400">@{creator?.username}</p>
+            </div>
+          </Link>
         </div>
       </div>
       <FooterCompact />
