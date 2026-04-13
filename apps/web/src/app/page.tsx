@@ -135,17 +135,9 @@ export default async function HomePage() {
         className="bg-jungle-800 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/jungle-gateway.png')", backgroundAttachment: "fixed" }}
       >
-        {/* Dark overlay so text stays readable */}
-        <div className="bg-jungle-900/55">
+        {/* Dark overlay + blur */}
+        <div className="bg-jungle-950/70 backdrop-blur-sm">
         <section className="pt-28 pb-24 px-6 text-center relative overflow-hidden">
-
-          {/* Gorilla decorations */}
-          <div className="hidden lg:block absolute left-4 xl:left-10 bottom-0 pointer-events-none select-none">
-            <GorillaLeft />
-          </div>
-          <div className="hidden lg:block absolute right-4 xl:right-10 bottom-0 pointer-events-none select-none">
-            <GorillaRight />
-          </div>
 
           <div className="max-w-3xl mx-auto relative z-10">
             <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 leading-none" style={{ textShadow: '-1px -1px 0 rgba(0,0,0,0.25), 1px -1px 0 rgba(0,0,0,0.25), -1px 1px 0 rgba(0,0,0,0.25), 1px 1px 0 rgba(0,0,0,0.25)' }}>
