@@ -351,7 +351,7 @@ export default async function HomePage() {
       <section className="py-14 px-6 bg-stone-50 border-t border-stone-200">
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
-            <h2 className="text-2xl font-black text-stone-900 mb-1">Want a workout with a little magic in it?</h2>
+            <h2 className="text-2xl font-black text-stone-900 mb-1">We stream live classes.</h2>
             <p className="text-stone-600 text-sm leading-relaxed">Live classes let you move alongside a real guide, ask questions mid-practice, and get the kind of personalization you just can&apos;t get from a recording. Find a class that&apos;s calling your name — and show up.</p>
           </div>
           <Link href="/sessions" className="shrink-0 bg-jungle-800 hover:bg-jungle-700 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors whitespace-nowrap">
