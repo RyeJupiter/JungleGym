@@ -174,6 +174,8 @@ This file is the shared source of truth for all Claude Code instances working in
 
 **If you make a significant change, add an entry to the [Change Log](#change-log) at the bottom of this file.** Include: date, what changed, and why. This keeps all Claude instances and both teammates informed across sessions.
 
+**Dev log requests**: When either Rye or Davis asks for a dev log, summary of recent work, or "what have we done" — read the Change Log section of this file. Do NOT attempt to use Notion for dev logs. CLAUDE.md is the source of truth for development history on this repo.
+
 **If you receive new instructions that update how to work in this repo**, update the relevant section here so future instances inherit that knowledge.
 
 ---
