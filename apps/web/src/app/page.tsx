@@ -252,7 +252,11 @@ export default async function HomePage() {
       </section>
 
       {/* Philosophy blurb */}
-      <section className="py-20 px-6 bg-jungle-900 text-center">
+      <section
+        className="py-20 px-6 text-center bg-jungle-900 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/jungle-gateway.png')", backgroundAttachment: "fixed" }}
+      >
+      <div className="bg-jungle-950/70 backdrop-blur-sm py-20 -my-20">
         <div className="max-w-2xl mx-auto">
           <div className="flex justify-center mb-6">
             <img
@@ -275,6 +279,7 @@ export default async function HomePage() {
             Join free — no credit card needed
           </Link>
         </div>
+        </div>{/* end overlay */}
       </section>
 
       {/* Live sessions */}
