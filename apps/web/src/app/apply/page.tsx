@@ -30,7 +30,7 @@ export default async function ApplyPage() {
     <main className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <a href="/" className="font-black text-2xl text-stone-900">
+          <a href="/" className="font-black text-2xl text-stone-900 font-display">
             jungle<span className="text-jungle-600">gym</span>
           </a>
           <h1 className="text-3xl font-black text-stone-900 mt-6">Become a teacher</h1>
