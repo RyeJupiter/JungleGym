@@ -612,7 +612,7 @@ function SocialRow({
 
 // ─── Vine decoration ────────────────────────────────────────────────────────
 // Sits at the bottom of the hero section when a banner is set.
-// Compound-leaf clusters (wisteria / ayahuasca style) along a woody main stem.
+// feTurbulence displacement makes bezier leaf paths look like real organic foliage.
 
 function VineDecoration() {
   return (
@@ -625,131 +625,149 @@ function VineDecoration() {
       className="absolute bottom-0 left-0 right-0 pointer-events-none"
       style={{ zIndex: 5 }}
     >
-      {/* ── Main horizontal woody stem (double stroke for texture) ── */}
+      <defs>
+        {/* Leaf warp — fractal noise displaces leaf shapes so they look organic, not geometric */}
+        <filter id="jg-leaf-warp" x="-50%" y="-50%" width="200%" height="200%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.055 0.08" numOctaves="3" seed="23" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="4.5" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        {/* Stem warp — lower frequency for gentle woody wobble */}
+        <filter id="jg-stem-warp" x="-5%" y="-30%" width="110%" height="160%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.02 0.04" numOctaves="2" seed="7" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+
+      {/* ── Main woody stem (double stroke for bark texture) ── */}
       <path
         d="M-10,92 C60,86 140,95 220,89 C300,83 380,93 460,88 C540,83 620,92 700,87 C780,82 860,92 940,87 C1020,82 1100,91 1180,87 C1260,83 1340,90 1420,87 L1460,88"
-        stroke="#3d1106" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round"
+        stroke="#3d1106" strokeWidth="6.5" fill="none" strokeLinecap="round"
+        filter="url(#jg-stem-warp)"
       />
       <path
-        d="M-10,90 C60,84 140,93 220,87 C300,81 380,91 460,86 C540,81 620,90 700,85 C780,80 860,90 940,85 C1020,80 1100,89 1180,85 C1260,81 1340,88 1420,85 L1460,86"
-        stroke="#6b3015" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"
+        d="M-10,90 C60,84 140,93 220,87 C300,81 380,91 460,86 C540,81 620,90 700,85 C780,80 860,90 940,85 C1020,80 1100,89 1180,85 C1260,81 1340,88 1420,85"
+        stroke="#7a3a18" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.6"
+        filter="url(#jg-stem-warp)"
       />
 
       {/* ── Branch stems ── */}
-      <path d="M72,88 C68,76 62,62 65,46 C67,32 60,20 55,8"         stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-      <path d="M248,86 C252,72 258,54 255,36 C253,22 260,10 264,3"  stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-      <path d="M432,86 C425,70 420,52 422,32 C424,16 415,6 410,0"   stroke="#4a1c08" strokeWidth="3"   fill="none" strokeLinecap="round"/>
-      <path d="M608,84 C612,65 618,44 622,22 C625,8 632,0 636,-4"   stroke="#4a1c08" strokeWidth="3"   fill="none" strokeLinecap="round"/>
-      <path d="M832,84 C826,65 820,46 822,24 C824,10 814,2 810,-2"  stroke="#4a1c08" strokeWidth="3"   fill="none" strokeLinecap="round"/>
-      <path d="M1008,86 C1016,70 1020,52 1016,32 C1013,16 1020,6 1024,0"  stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-      <path d="M1192,87 C1186,72 1183,55 1186,36 C1188,20 1180,8 1176,2"  stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-      <path d="M1368,89 C1364,76 1360,62 1364,46 C1366,32 1358,20 1353,10" stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      <path d="M72,88 C68,76 62,62 65,46 C67,32 60,20 55,8"             stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round" filter="url(#jg-stem-warp)"/>
+      <path d="M248,86 C252,72 258,54 255,36 C253,22 260,10 264,3"      stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round" filter="url(#jg-stem-warp)"/>
+      <path d="M432,86 C425,70 420,52 422,32 C424,16 415,6 410,0"       stroke="#4a1c08" strokeWidth="3"   fill="none" strokeLinecap="round" filter="url(#jg-stem-warp)"/>
+      <path d="M608,84 C612,65 618,44 622,22 C625,8 632,0 636,-4"       stroke="#4a1c08" strokeWidth="3"   fill="none" strokeLinecap="round" filter="url(#jg-stem-warp)"/>
+      <path d="M832,84 C826,65 820,46 822,24 C824,10 814,2 810,-2"      stroke="#4a1c08" strokeWidth="3"   fill="none" strokeLinecap="round" filter="url(#jg-stem-warp)"/>
+      <path d="M1008,86 C1016,70 1020,52 1016,32 C1013,16 1020,6 1024,0" stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round" filter="url(#jg-stem-warp)"/>
+      <path d="M1192,87 C1186,72 1183,55 1186,36 C1188,20 1180,8 1176,2" stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round" filter="url(#jg-stem-warp)"/>
+      <path d="M1368,89 C1364,76 1360,62 1364,46 C1366,32 1358,20 1353,10" stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round" filter="url(#jg-stem-warp)"/>
 
-      {/* ── Compound leaf clusters (5 elliptical leaflets each) ── */}
+      {/* ── Compound leaf clusters — bezier leaf paths + organic displacement filter ── */}
+      {/* Each leaflet: bezier oval with pointed tip, base at origin */}
 
-      {/* Cluster 1 – branch 1 tip */}
-      <g transform="translate(55,8)">
-        <path d="M0,0 L0,-22" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-        <ellipse cx="-9"  cy="-8"  rx="4.5" ry="7"   transform="rotate(-45 -9 -8)"  fill="#2d6a4f" opacity="0.90"/>
-        <ellipse cx="-10" cy="-15" rx="4"   ry="6.5" transform="rotate(-30 -10 -15)" fill="#1a4a2a" opacity="0.85"/>
-        <ellipse cx="9"   cy="-8"  rx="4.5" ry="7"   transform="rotate(45 9 -8)"     fill="#3d9e6b" opacity="0.90"/>
-        <ellipse cx="10"  cy="-15" rx="4"   ry="6.5" transform="rotate(30 10 -15)"   fill="#2d6a4f" opacity="0.85"/>
-        <ellipse cx="0"   cy="-21" rx="4"   ry="6.5"                                  fill="#236841" opacity="0.92"/>
-      </g>
-
-      {/* Cluster 2 – branch 2 tip */}
-      <g transform="translate(264,3) rotate(8)">
+      {/* Cluster 1 */}
+      <g transform="translate(55,8)" filter="url(#jg-leaf-warp)">
         <path d="M0,0 L0,-20" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-        <ellipse cx="-8"  cy="-7"  rx="4"   ry="6.5" transform="rotate(-40 -8 -7)"   fill="#3d9e6b" opacity="0.90"/>
-        <ellipse cx="-9"  cy="-14" rx="4"   ry="6"   transform="rotate(-25 -9 -14)"  fill="#2d6a4f" opacity="0.85"/>
-        <ellipse cx="8"   cy="-7"  rx="4"   ry="6.5" transform="rotate(40 8 -7)"     fill="#236841" opacity="0.90"/>
-        <ellipse cx="9"   cy="-14" rx="4"   ry="6"   transform="rotate(25 9 -14)"    fill="#3d9e6b" opacity="0.85"/>
-        <ellipse cx="0"   cy="-19" rx="4"   ry="6"                                    fill="#1a4a2a" opacity="0.90"/>
+        <path d="M0,0 C-3,-1 -5,-5 -5,-9 C-5,-13 -2.5,-15 0,-15 C2.5,-15 5,-13 5,-9 C5,-5 3,-1 0,0 Z" transform="translate(-9,-8) rotate(-50)"  fill="#2d6a4f" opacity="0.92"/>
+        <path d="M0,0 C-2,-1 -4,-4 -3.5,-9 C-3,-13 -1.5,-16 0,-16 C1.5,-16 3,-13 3.5,-9 C4,-4 2,-1 0,0 Z" transform="translate(-10,-15) rotate(-30)" fill="#1a4a2a" opacity="0.87"/>
+        <path d="M0,0 C-3,-1 -5,-5 -5,-9 C-5,-13 -2.5,-15 0,-15 C2.5,-15 5,-13 5,-9 C5,-5 3,-1 0,0 Z" transform="translate(9,-8) rotate(50)"   fill="#3d9e6b" opacity="0.92"/>
+        <path d="M0,0 C-2,-1 -4,-4 -3.5,-9 C-3,-13 -1.5,-16 0,-16 C1.5,-16 3,-13 3.5,-9 C4,-4 2,-1 0,0 Z" transform="translate(10,-15) rotate(28)"  fill="#2d6a4f" opacity="0.87"/>
+        <path d="M0,0 C-3,-1 -5,-5 -4.5,-9 C-4,-14 -1.5,-17 0,-17 C1.5,-17 4,-14 4.5,-9 C5,-5 3,-1 0,0 Z" transform="translate(0,-19)"             fill="#236841" opacity="0.94"/>
       </g>
 
-      {/* Cluster 3 – branch 3 tip */}
-      <g transform="translate(410,0) rotate(-12)">
-        <path d="M0,0 L0,-22" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-        <ellipse cx="-9"  cy="-8"  rx="4.5" ry="7"   transform="rotate(-45 -9 -8)"   fill="#236841" opacity="0.90"/>
-        <ellipse cx="-10" cy="-16" rx="4"   ry="6.5" transform="rotate(-28 -10 -16)" fill="#3d9e6b" opacity="0.85"/>
-        <ellipse cx="9"   cy="-8"  rx="4.5" ry="7"   transform="rotate(45 9 -8)"     fill="#2d6a4f" opacity="0.90"/>
-        <ellipse cx="10"  cy="-16" rx="4"   ry="6.5" transform="rotate(28 10 -16)"   fill="#1a4a2a" opacity="0.85"/>
-        <ellipse cx="0"   cy="-21" rx="4"   ry="6.5"                                  fill="#236841" opacity="0.92"/>
-      </g>
-
-      {/* Cluster 4 – branch 4 tip (tallest, largest) */}
-      <g transform="translate(636,0) rotate(5)">
-        <path d="M0,0 L0,-26" stroke="#3a1408" strokeWidth="2" fill="none" strokeLinecap="round"/>
-        <ellipse cx="-10" cy="-9"  rx="5.5" ry="8"   transform="rotate(-45 -10 -9)"  fill="#2d6a4f" opacity="0.92"/>
-        <ellipse cx="-12" cy="-18" rx="5"   ry="7.5" transform="rotate(-30 -12 -18)" fill="#1a4a2a" opacity="0.88"/>
-        <ellipse cx="10"  cy="-9"  rx="5.5" ry="8"   transform="rotate(45 10 -9)"    fill="#3d9e6b" opacity="0.92"/>
-        <ellipse cx="12"  cy="-18" rx="5"   ry="7.5" transform="rotate(30 12 -18)"   fill="#2d6a4f" opacity="0.88"/>
-        <ellipse cx="0"   cy="-25" rx="5"   ry="7.5"                                  fill="#236841" opacity="0.95"/>
-      </g>
-
-      {/* Cluster 5 – branch 5 tip (tallest, largest) */}
-      <g transform="translate(810,0) rotate(-5)">
-        <path d="M0,0 L0,-26" stroke="#3a1408" strokeWidth="2" fill="none" strokeLinecap="round"/>
-        <ellipse cx="-10" cy="-9"  rx="5.5" ry="8"   transform="rotate(-45 -10 -9)"  fill="#3d9e6b" opacity="0.92"/>
-        <ellipse cx="-12" cy="-18" rx="5"   ry="7.5" transform="rotate(-30 -12 -18)" fill="#2d6a4f" opacity="0.88"/>
-        <ellipse cx="10"  cy="-9"  rx="5.5" ry="8"   transform="rotate(45 10 -9)"    fill="#236841" opacity="0.92"/>
-        <ellipse cx="12"  cy="-18" rx="5"   ry="7.5" transform="rotate(30 12 -18)"   fill="#1a4a2a" opacity="0.88"/>
-        <ellipse cx="0"   cy="-25" rx="5"   ry="7.5"                                  fill="#3d9e6b" opacity="0.95"/>
-      </g>
-
-      {/* Cluster 6 – branch 6 tip */}
-      <g transform="translate(1024,0) rotate(10)">
-        <path d="M0,0 L0,-22" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-        <ellipse cx="-9"  cy="-8"  rx="4.5" ry="7"   transform="rotate(-45 -9 -8)"   fill="#2d6a4f" opacity="0.90"/>
-        <ellipse cx="-10" cy="-15" rx="4"   ry="6.5" transform="rotate(-28 -10 -15)" fill="#236841" opacity="0.85"/>
-        <ellipse cx="9"   cy="-8"  rx="4.5" ry="7"   transform="rotate(45 9 -8)"     fill="#1a4a2a" opacity="0.90"/>
-        <ellipse cx="10"  cy="-15" rx="4"   ry="6.5" transform="rotate(28 10 -15)"   fill="#3d9e6b" opacity="0.85"/>
-        <ellipse cx="0"   cy="-21" rx="4"   ry="6.5"                                  fill="#2d6a4f" opacity="0.92"/>
-      </g>
-
-      {/* Cluster 7 – branch 7 tip */}
-      <g transform="translate(1176,2) rotate(-8)">
+      {/* Cluster 2 */}
+      <g transform="translate(264,3) rotate(8)" filter="url(#jg-leaf-warp)">
         <path d="M0,0 L0,-20" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-        <ellipse cx="-8"  cy="-7"  rx="4"   ry="6.5" transform="rotate(-40 -8 -7)"   fill="#236841" opacity="0.90"/>
-        <ellipse cx="-9"  cy="-14" rx="4"   ry="6"   transform="rotate(-25 -9 -14)"  fill="#2d6a4f" opacity="0.85"/>
-        <ellipse cx="8"   cy="-7"  rx="4"   ry="6.5" transform="rotate(40 8 -7)"     fill="#3d9e6b" opacity="0.90"/>
-        <ellipse cx="9"   cy="-14" rx="4"   ry="6"   transform="rotate(25 9 -14)"    fill="#236841" opacity="0.85"/>
-        <ellipse cx="0"   cy="-19" rx="4"   ry="6"                                    fill="#1a4a2a" opacity="0.90"/>
+        <path d="M0,0 C-3,-1 -5,-5 -5,-9 C-5,-13 -2.5,-15 0,-15 C2.5,-15 5,-13 5,-9 C5,-5 3,-1 0,0 Z" transform="translate(-9,-7) rotate(-45)"  fill="#3d9e6b" opacity="0.90"/>
+        <path d="M0,0 C-2,-1 -4,-4 -3.5,-9 C-3,-13 -1.5,-16 0,-16 C1.5,-16 3,-13 3.5,-9 C4,-4 2,-1 0,0 Z" transform="translate(-10,-14) rotate(-25)" fill="#2d6a4f" opacity="0.85"/>
+        <path d="M0,0 C-3,-1 -5,-5 -5,-9 C-5,-13 -2.5,-15 0,-15 C2.5,-15 5,-13 5,-9 C5,-5 3,-1 0,0 Z" transform="translate(9,-7) rotate(45)"   fill="#236841" opacity="0.90"/>
+        <path d="M0,0 C-2,-1 -4,-4 -3.5,-9 C-3,-13 -1.5,-16 0,-16 C1.5,-16 3,-13 3.5,-9 C4,-4 2,-1 0,0 Z" transform="translate(10,-14) rotate(25)"  fill="#3d9e6b" opacity="0.85"/>
+        <path d="M0,0 C-3,-1 -5,-5 -4.5,-9 C-4,-14 -1.5,-17 0,-17 C1.5,-17 4,-14 4.5,-9 C5,-5 3,-1 0,0 Z" transform="translate(0,-19)"             fill="#1a4a2a" opacity="0.92"/>
       </g>
 
-      {/* Cluster 8 – branch 8 tip */}
-      <g transform="translate(1353,10)">
+      {/* Cluster 3 */}
+      <g transform="translate(410,0) rotate(-12)" filter="url(#jg-leaf-warp)">
         <path d="M0,0 L0,-22" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-        <ellipse cx="-9"  cy="-8"  rx="4.5" ry="7"   transform="rotate(-45 -9 -8)"   fill="#3d9e6b" opacity="0.90"/>
-        <ellipse cx="-10" cy="-15" rx="4"   ry="6.5" transform="rotate(-30 -10 -15)" fill="#1a4a2a" opacity="0.85"/>
-        <ellipse cx="9"   cy="-8"  rx="4.5" ry="7"   transform="rotate(45 9 -8)"     fill="#2d6a4f" opacity="0.90"/>
-        <ellipse cx="10"  cy="-15" rx="4"   ry="6.5" transform="rotate(30 10 -15)"   fill="#236841" opacity="0.85"/>
-        <ellipse cx="0"   cy="-21" rx="4"   ry="6.5"                                  fill="#3d9e6b" opacity="0.92"/>
+        <path d="M0,0 C-4,-1 -6,-5 -5.5,-10 C-5,-14 -2.5,-16 0,-16 C2.5,-16 5,-14 5.5,-10 C6,-5 4,-1 0,0 Z" transform="translate(-10,-8) rotate(-48)" fill="#236841" opacity="0.90"/>
+        <path d="M0,0 C-2,-1 -4,-4 -3.5,-9 C-3,-13 -1.5,-16 0,-16 C1.5,-16 3,-13 3.5,-9 C4,-4 2,-1 0,0 Z" transform="translate(-11,-16) rotate(-28)" fill="#3d9e6b" opacity="0.85"/>
+        <path d="M0,0 C-4,-1 -6,-5 -5.5,-10 C-5,-14 -2.5,-16 0,-16 C2.5,-16 5,-14 5.5,-10 C6,-5 4,-1 0,0 Z" transform="translate(10,-8) rotate(48)"  fill="#2d6a4f" opacity="0.90"/>
+        <path d="M0,0 C-2,-1 -4,-4 -3.5,-9 C-3,-13 -1.5,-16 0,-16 C1.5,-16 3,-13 3.5,-9 C4,-4 2,-1 0,0 Z" transform="translate(11,-16) rotate(28)"  fill="#1a4a2a" opacity="0.85"/>
+        <path d="M0,0 C-3,-1 -5,-5 -5,-10 C-5,-15 -2,-18 0,-18 C2,-18 5,-15 5,-10 C5,-5 3,-1 0,0 Z"       transform="translate(0,-21)"               fill="#236841" opacity="0.94"/>
       </g>
 
-      {/* ── Individual leaves along the main stem ── */}
-      <path d="M0,0 C-5,-4 -11,-3 -12,2 C-13,7 -9,13 0,15 C9,13 13,7 12,2 C11,-3 5,-4 0,0 Z"
-            transform="translate(150,84) rotate(-32) scale(1.3)"  fill="#2d6a4f" opacity="0.80"/>
-      <path d="M0,0 C-5,-4 -10,-2 -11,3 C-12,8 -8,13 0,15 C8,13 12,8 11,3 C10,-2 5,-4 0,0 Z"
-            transform="translate(345,82) rotate(18) scale(1.2)"   fill="#1a4a2a" opacity="0.75"/>
-      <path d="M0,0 C-6,-5 -13,-3 -14,3 C-15,9 -10,16 0,18 C10,16 15,9 14,3 C13,-3 6,-5 0,0 Z"
-            transform="translate(525,80) rotate(-22) scale(1.4)"  fill="#3d9e6b" opacity="0.75"/>
-      <path d="M0,0 C-5,-4 -10,-2 -11,3 C-12,8 -8,13 0,15 C8,13 12,8 11,3 C10,-2 5,-4 0,0 Z"
-            transform="translate(722,81) rotate(-5) scale(1.5)"   fill="#236841" opacity="0.80"/>
-      <path d="M0,0 C-5,-4 -11,-3 -12,2 C-13,7 -9,13 0,15 C9,13 13,7 12,2 C11,-3 5,-4 0,0 Z"
-            transform="translate(926,81) rotate(28) scale(1.3)"   fill="#2d6a4f" opacity="0.78"/>
-      <path d="M0,0 C-6,-5 -13,-3 -14,3 C-15,9 -10,16 0,18 C10,16 15,9 14,3 C13,-3 6,-5 0,0 Z"
-            transform="translate(1105,83) rotate(-18) scale(1.3)" fill="#1a4a2a" opacity="0.75"/>
-      <path d="M0,0 C-5,-4 -10,-2 -11,3 C-12,8 -8,13 0,15 C8,13 12,8 11,3 C10,-2 5,-4 0,0 Z"
-            transform="translate(1285,84) rotate(22) scale(1.2)"  fill="#3d9e6b" opacity="0.78"/>
+      {/* Cluster 4 — tallest */}
+      <g transform="translate(636,0) rotate(5)" filter="url(#jg-leaf-warp)">
+        <path d="M0,0 L0,-26" stroke="#3a1408" strokeWidth="2" fill="none" strokeLinecap="round"/>
+        <path d="M0,0 C-5,-2 -8,-7 -7,-13 C-6,-18 -3,-20 0,-20 C3,-20 6,-18 7,-13 C8,-7 5,-2 0,0 Z"   transform="translate(-11,-9) rotate(-48)" fill="#2d6a4f" opacity="0.92"/>
+        <path d="M0,0 C-3,-2 -5,-6 -4.5,-11 C-4,-16 -1.5,-18 0,-18 C1.5,-18 4,-16 4.5,-11 C5,-6 3,-2 0,0 Z" transform="translate(-13,-18) rotate(-28)" fill="#1a4a2a" opacity="0.88"/>
+        <path d="M0,0 C-5,-2 -8,-7 -7,-13 C-6,-18 -3,-20 0,-20 C3,-20 6,-18 7,-13 C8,-7 5,-2 0,0 Z"   transform="translate(11,-9) rotate(48)"  fill="#3d9e6b" opacity="0.92"/>
+        <path d="M0,0 C-3,-2 -5,-6 -4.5,-11 C-4,-16 -1.5,-18 0,-18 C1.5,-18 4,-16 4.5,-11 C5,-6 3,-2 0,0 Z" transform="translate(13,-18) rotate(28)"  fill="#2d6a4f" opacity="0.88"/>
+        <path d="M0,0 C-4,-2 -6,-7 -6,-12 C-6,-18 -2,-21 0,-21 C2,-21 6,-18 6,-12 C6,-7 4,-2 0,0 Z"   transform="translate(0,-25)"               fill="#236841" opacity="0.96"/>
+      </g>
 
-      {/* ── Tendrils (thin curling grapevine-style spirals) ── */}
+      {/* Cluster 5 — tallest */}
+      <g transform="translate(810,0) rotate(-5)" filter="url(#jg-leaf-warp)">
+        <path d="M0,0 L0,-26" stroke="#3a1408" strokeWidth="2" fill="none" strokeLinecap="round"/>
+        <path d="M0,0 C-5,-2 -8,-7 -7,-13 C-6,-18 -3,-20 0,-20 C3,-20 6,-18 7,-13 C8,-7 5,-2 0,0 Z"   transform="translate(-11,-9) rotate(-48)" fill="#3d9e6b" opacity="0.92"/>
+        <path d="M0,0 C-3,-2 -5,-6 -4.5,-11 C-4,-16 -1.5,-18 0,-18 C1.5,-18 4,-16 4.5,-11 C5,-6 3,-2 0,0 Z" transform="translate(-13,-18) rotate(-28)" fill="#2d6a4f" opacity="0.88"/>
+        <path d="M0,0 C-5,-2 -8,-7 -7,-13 C-6,-18 -3,-20 0,-20 C3,-20 6,-18 7,-13 C8,-7 5,-2 0,0 Z"   transform="translate(11,-9) rotate(48)"  fill="#236841" opacity="0.92"/>
+        <path d="M0,0 C-3,-2 -5,-6 -4.5,-11 C-4,-16 -1.5,-18 0,-18 C1.5,-18 4,-16 4.5,-11 C5,-6 3,-2 0,0 Z" transform="translate(13,-18) rotate(28)"  fill="#1a4a2a" opacity="0.88"/>
+        <path d="M0,0 C-4,-2 -6,-7 -6,-12 C-6,-18 -2,-21 0,-21 C2,-21 6,-18 6,-12 C6,-7 4,-2 0,0 Z"   transform="translate(0,-25)"               fill="#3d9e6b" opacity="0.96"/>
+      </g>
+
+      {/* Cluster 6 */}
+      <g transform="translate(1024,0) rotate(10)" filter="url(#jg-leaf-warp)">
+        <path d="M0,0 L0,-22" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        <path d="M0,0 C-4,-1 -6,-5 -5.5,-10 C-5,-14 -2.5,-16 0,-16 C2.5,-16 5,-14 5.5,-10 C6,-5 4,-1 0,0 Z" transform="translate(-10,-8) rotate(-48)" fill="#2d6a4f" opacity="0.90"/>
+        <path d="M0,0 C-2,-1 -4,-4 -3.5,-9 C-3,-13 -1.5,-16 0,-16 C1.5,-16 3,-13 3.5,-9 C4,-4 2,-1 0,0 Z" transform="translate(-11,-15) rotate(-28)" fill="#236841" opacity="0.85"/>
+        <path d="M0,0 C-4,-1 -6,-5 -5.5,-10 C-5,-14 -2.5,-16 0,-16 C2.5,-16 5,-14 5.5,-10 C6,-5 4,-1 0,0 Z" transform="translate(10,-8) rotate(48)"  fill="#1a4a2a" opacity="0.90"/>
+        <path d="M0,0 C-2,-1 -4,-4 -3.5,-9 C-3,-13 -1.5,-16 0,-16 C1.5,-16 3,-13 3.5,-9 C4,-4 2,-1 0,0 Z" transform="translate(11,-15) rotate(28)"  fill="#3d9e6b" opacity="0.85"/>
+        <path d="M0,0 C-3,-1 -5,-5 -5,-10 C-5,-15 -2,-18 0,-18 C2,-18 5,-15 5,-10 C5,-5 3,-1 0,0 Z"       transform="translate(0,-21)"               fill="#2d6a4f" opacity="0.94"/>
+      </g>
+
+      {/* Cluster 7 */}
+      <g transform="translate(1176,2) rotate(-8)" filter="url(#jg-leaf-warp)">
+        <path d="M0,0 L0,-20" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        <path d="M0,0 C-3,-1 -5,-5 -5,-9 C-5,-13 -2.5,-15 0,-15 C2.5,-15 5,-13 5,-9 C5,-5 3,-1 0,0 Z" transform="translate(-9,-7) rotate(-45)"  fill="#236841" opacity="0.90"/>
+        <path d="M0,0 C-2,-1 -4,-4 -3.5,-9 C-3,-13 -1.5,-16 0,-16 C1.5,-16 3,-13 3.5,-9 C4,-4 2,-1 0,0 Z" transform="translate(-10,-14) rotate(-25)" fill="#2d6a4f" opacity="0.85"/>
+        <path d="M0,0 C-3,-1 -5,-5 -5,-9 C-5,-13 -2.5,-15 0,-15 C2.5,-15 5,-13 5,-9 C5,-5 3,-1 0,0 Z" transform="translate(9,-7) rotate(45)"   fill="#3d9e6b" opacity="0.90"/>
+        <path d="M0,0 C-2,-1 -4,-4 -3.5,-9 C-3,-13 -1.5,-16 0,-16 C1.5,-16 3,-13 3.5,-9 C4,-4 2,-1 0,0 Z" transform="translate(10,-14) rotate(25)"  fill="#236841" opacity="0.85"/>
+        <path d="M0,0 C-3,-1 -5,-5 -4.5,-9 C-4,-14 -1.5,-17 0,-17 C1.5,-17 4,-14 4.5,-9 C5,-5 3,-1 0,0 Z" transform="translate(0,-19)"             fill="#1a4a2a" opacity="0.92"/>
+      </g>
+
+      {/* Cluster 8 */}
+      <g transform="translate(1353,10)" filter="url(#jg-leaf-warp)">
+        <path d="M0,0 L0,-22" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        <path d="M0,0 C-4,-1 -6,-5 -5.5,-10 C-5,-14 -2.5,-16 0,-16 C2.5,-16 5,-14 5.5,-10 C6,-5 4,-1 0,0 Z" transform="translate(-10,-8) rotate(-48)" fill="#3d9e6b" opacity="0.90"/>
+        <path d="M0,0 C-2,-1 -4,-4 -3.5,-9 C-3,-13 -1.5,-16 0,-16 C1.5,-16 3,-13 3.5,-9 C4,-4 2,-1 0,0 Z" transform="translate(-11,-15) rotate(-30)" fill="#1a4a2a" opacity="0.85"/>
+        <path d="M0,0 C-4,-1 -6,-5 -5.5,-10 C-5,-14 -2.5,-16 0,-16 C2.5,-16 5,-14 5.5,-10 C6,-5 4,-1 0,0 Z" transform="translate(10,-8) rotate(48)"  fill="#2d6a4f" opacity="0.90"/>
+        <path d="M0,0 C-2,-1 -4,-4 -3.5,-9 C-3,-13 -1.5,-16 0,-16 C1.5,-16 3,-13 3.5,-9 C4,-4 2,-1 0,0 Z" transform="translate(11,-15) rotate(30)"  fill="#236841" opacity="0.85"/>
+        <path d="M0,0 C-3,-1 -5,-5 -5,-10 C-5,-15 -2,-18 0,-18 C2,-18 5,-15 5,-10 C5,-5 3,-1 0,0 Z"       transform="translate(0,-21)"               fill="#3d9e6b" opacity="0.94"/>
+      </g>
+
+      {/* ── Individual leaves along stem (also organically warped) ── */}
+      <g filter="url(#jg-leaf-warp)">
+        <path d="M0,0 C-5,-2 -8,-7 -7,-13 C-6,-18 -3,-20 0,-20 C3,-20 6,-18 7,-13 C8,-7 5,-2 0,0 Z"
+              transform="translate(150,84) rotate(-32) scale(1.25)" fill="#2d6a4f" opacity="0.82"/>
+        <path d="M0,0 C-5,-2 -7,-7 -6,-12 C-5,-17 -2.5,-19 0,-19 C2.5,-19 5,-17 6,-12 C7,-7 5,-2 0,0 Z"
+              transform="translate(345,82) rotate(18) scale(1.15)"  fill="#1a4a2a" opacity="0.78"/>
+        <path d="M0,0 C-6,-2 -9,-7 -8,-13 C-7,-18 -3.5,-21 0,-21 C3.5,-21 7,-18 8,-13 C9,-7 6,-2 0,0 Z"
+              transform="translate(525,80) rotate(-22) scale(1.3)"  fill="#3d9e6b" opacity="0.78"/>
+        <path d="M0,0 C-5,-2 -7,-7 -6,-12 C-5,-17 -2.5,-19 0,-19 C2.5,-19 5,-17 6,-12 C7,-7 5,-2 0,0 Z"
+              transform="translate(722,81) rotate(-5) scale(1.4)"   fill="#236841" opacity="0.82"/>
+        <path d="M0,0 C-5,-2 -8,-7 -7,-13 C-6,-18 -3,-20 0,-20 C3,-20 6,-18 7,-13 C8,-7 5,-2 0,0 Z"
+              transform="translate(926,81) rotate(28) scale(1.2)"   fill="#2d6a4f" opacity="0.80"/>
+        <path d="M0,0 C-6,-2 -9,-7 -8,-13 C-7,-18 -3.5,-21 0,-21 C3.5,-21 7,-18 8,-13 C9,-7 6,-2 0,0 Z"
+              transform="translate(1105,83) rotate(-18) scale(1.25)" fill="#1a4a2a" opacity="0.76"/>
+        <path d="M0,0 C-5,-2 -7,-7 -6,-12 C-5,-17 -2.5,-19 0,-19 C2.5,-19 5,-17 6,-12 C7,-7 5,-2 0,0 Z"
+              transform="translate(1285,84) rotate(22) scale(1.15)" fill="#3d9e6b" opacity="0.80"/>
+      </g>
+
+      {/* ── Tendrils ── */}
       <path d="M340,80 C345,74 350,68 347,62 C344,56 350,52 354,56 C358,60 354,66 348,62"
-            stroke="#6b3015" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+            stroke="#7a3a18" strokeWidth="1.3" fill="none" strokeLinecap="round"/>
       <path d="M720,78 C724,72 730,66 726,60 C722,54 728,50 732,54 C736,58 730,64 724,60"
-            stroke="#6b3015" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+            stroke="#7a3a18" strokeWidth="1.3" fill="none" strokeLinecap="round"/>
       <path d="M1098,80 C1093,74 1088,68 1092,62 C1096,56 1090,52 1086,56 C1082,60 1088,66 1094,62"
-            stroke="#6b3015" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+            stroke="#7a3a18" strokeWidth="1.3" fill="none" strokeLinecap="round"/>
     </svg>
   )
 }

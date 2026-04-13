@@ -15,7 +15,7 @@ export default async function HomePage() {
                 <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 leading-none" style={{ textShadow: '-1px -1px 0 rgba(0,0,0,0.25), 1px -1px 0 rgba(0,0,0,0.25), -1px 1px 0 rgba(0,0,0,0.25), 1px 1px 0 rgba(0,0,0,0.25)' }}>
               Welcome to JungleGym.
               <br />
-              <span className="text-jungle-400">Let&apos;s learn &amp; play.</span>
+              <span className="block mt-3 text-jungle-400">Let&apos;s learn &amp; play.</span>
             </h1>
             <p className="text-lg text-jungle-300 mb-10 max-w-xl mx-auto leading-relaxed">
               Movement classes from skilled guides.
