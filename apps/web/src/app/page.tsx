@@ -42,7 +42,7 @@ function MonkeyOnBranch() {
   return (
     <svg viewBox="0 0 400 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" className="w-full max-w-sm opacity-55">
       {/* === BRANCH === */}
-      <path d="M0 112 C50 106 100 100 150 103 C200 106 240 99 290 96 C330 93 360 94 400 98" stroke={K} strokeWidth="7" fill="none" strokeLinecap="round"/>
+      <path d="M0 112 C50 106 100 100 150 103 C200 106 240 99 290 96 C330 93 360 94 400 98" stroke={K} strokeWidth="9" fill="none" strokeLinecap="round"/>
       <path d="M10 111 C60 106 110 101 160 104" stroke={D} strokeWidth="1" fill="none" opacity="0.45"/>
       <path d="M170 103 C220 100 260 97 300 95" stroke={D} strokeWidth="1" fill="none" opacity="0.4"/>
       <path d="M10 115 C60 110 120 105 170 108" stroke={D} strokeWidth="0.7" fill="none" opacity="0.4"/>
@@ -50,9 +50,9 @@ function MonkeyOnBranch() {
       <path d="M60 108 L58 114" stroke={D} strokeWidth="0.6" opacity="0.4"/><path d="M90 106 L88 112" stroke={D} strokeWidth="0.6" opacity="0.4"/>
       <path d="M200 103 L198 109" stroke={D} strokeWidth="0.6" opacity="0.4"/><path d="M340 96 L338 102" stroke={D} strokeWidth="0.6" opacity="0.4"/>
       {/* small side branches */}
-      <path d="M110 102 C105 88 108 74 114 65" stroke={K} strokeWidth="3" fill="none" strokeLinecap="round"/>
+      <path d="M110 102 C105 88 108 74 114 65" stroke={K} strokeWidth="4" fill="none" strokeLinecap="round"/>
       <path d="M113 102 C108 89 111 76 117 67" stroke={D} strokeWidth="0.8" fill="none" opacity="0.4"/>
-      <path d="M330 95 C335 80 338 65 332 55" stroke={K} strokeWidth="2.8" fill="none" strokeLinecap="round"/>
+      <path d="M330 95 C335 80 338 65 332 55" stroke={K} strokeWidth="3.8" fill="none" strokeLinecap="round"/>
       <path d="M333 95 C338 81 341 67 335 57" stroke={D} strokeWidth="0.8" fill="none" opacity="0.4"/>
       {/* === FOLIAGE === */}
       {/* left branch leaves */}
@@ -74,7 +74,7 @@ function MonkeyOnBranch() {
       <path d="M210 100 C206 106 205 115 210 119 C216 123 224 121 226 114 C228 107 222 100 216 98" stroke={K} strokeWidth="1.4" fill={`${K}0e`}/>
       <path d="M228 98 C234 103 236 112 231 117 C226 122 218 120 216 114" stroke={K} strokeWidth="1.4" fill={`${K}0e`}/>
       {/* body */}
-      <path d="M206 78 C199 84 197 96 201 104 C206 112 218 116 230 112 C240 108 245 96 239 88 C233 80 218 74 210 76 C208 76 206 78 206 78 Z" stroke={K} strokeWidth="1.6" fill={`${K}0c`}/>
+      <path d="M206 78 C199 84 197 96 201 104 C206 112 218 116 230 112 C240 108 245 96 239 88 C233 80 218 74 210 76 C208 76 206 78 206 78 Z" stroke={K} strokeWidth="2.2" fill={`${K}0c`}/>
       <path d="M204 86 C208 84 214 82 221 82" stroke={D} strokeWidth="0.6" fill="none" opacity="0.45"/>
       <path d="M202 93 C207 91 214 89 222 89" stroke={D} strokeWidth="0.6" fill="none" opacity="0.4"/>
       <path d="M203 100 C208 98 215 96 224 96" stroke={D} strokeWidth="0.5" fill="none" opacity="0.35"/>
@@ -88,13 +88,13 @@ function MonkeyOnBranch() {
       {/* neck */}
       <path d="M212 74 C210 66 213 59 220 57 C227 55 233 59 232 67 C232 74 228 76 224 76" stroke={K} strokeWidth="1.2" fill={`${K}0a`}/>
       {/* head */}
-      <path d="M208 44 C200 38 192 42 190 52 C188 60 193 72 202 78 C210 84 226 84 234 78 C242 72 244 58 238 50 C232 42 220 40 212 42 Z" stroke={K} strokeWidth="1.6" fill={`${K}0a`}/>
+      <path d="M208 44 C200 38 192 42 190 52 C188 60 193 72 202 78 C210 84 226 84 234 78 C242 72 244 58 238 50 C232 42 220 40 212 42 Z" stroke={K} strokeWidth="2.2" fill={`${K}0a`}/>
       {/* brow */}
-      <path d="M194 54 C200 47 210 44 222 48 C230 50 236 56 234 61" stroke={K} strokeWidth="2" fill="none" strokeLinecap="round"/>
+      <path d="M194 54 C200 47 210 44 222 48 C230 50 236 56 234 61" stroke={K} strokeWidth="2.8" fill="none" strokeLinecap="round"/>
       <path d="M196 57 C202 51 212 48 222 52" stroke={D} strokeWidth="0.7" fill="none" opacity="0.4"/>
       {/* ears */}
-      <path d="M192 56 C185 52 181 59 183 67 C185 74 192 78 197 74" stroke={K} strokeWidth="1.1" fill={`${K}08`}/>
-      <path d="M236 54 C242 50 246 57 244 65 C242 72 236 76 231 72" stroke={K} strokeWidth="1.1" fill={`${K}08`}/>
+      <path d="M192 56 C185 52 181 59 183 67 C185 74 192 78 197 74" stroke={K} strokeWidth="1.6" fill={`${K}08`}/>
+      <path d="M236 54 C242 50 246 57 244 65 C242 72 236 76 231 72" stroke={K} strokeWidth="1.6" fill={`${K}08`}/>
       {/* muzzle — narrow, primate */}
       <ellipse cx="218" cy="64" rx="17" ry="14" stroke={K} strokeWidth="1.2" fill={`${K}08`}/>
       {/* eyes */}
@@ -133,7 +133,7 @@ export default async function HomePage() {
       {/* Hero */}
       <div
         className="bg-jungle-800 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/jungle-gateway.png')", backgroundAttachment: "fixed" }}
+        style={{ backgroundImage: "url('/jungle-gateway-web.jpg')", backgroundAttachment: "fixed" }}
       >
         {/* Dark overlay + blur */}
         <div className="bg-jungle-950/70 backdrop-blur-sm">
@@ -152,12 +152,12 @@ export default async function HomePage() {
             {/* Tag pills — one row, content categories */}
             <div className="flex flex-wrap justify-center gap-2 mt-2">
               {[
-                ['yoga',       '🧘', 'yoga'],
-                ['strength',   '💪', 'strength'],
-                ['mobility',   '🌀', 'mobility'],
-                ['breathwork', '🌬️', 'breathwork'],
-                ['dance',      '💃', 'dance'],
-                ['kettlebell', '🔔', 'kettlebell'],
+                ['yoga',       '🧘', 'Yoga'],
+                ['strength',   '💪', 'Strength'],
+                ['mobility',   '🌀', 'Mobility'],
+                ['breathwork', '🌬️', 'Breathwork'],
+                ['dance',      '💃', 'Dance'],
+                ['kettlebell', '🔔', 'Kettlebell'],
               ].map(([slug, emoji, label]) => (
                 <Link
                   key={slug}
@@ -176,7 +176,7 @@ export default async function HomePage() {
         <section className="pb-20 px-6">
           <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-[1fr_1.3fr_1fr] gap-4 text-center">
             {[
-              { emoji: '🔍', title: 'Find a teacher', body: 'Browse by style — yoga, kettlebell, mobility, breathwork, and more.', href: '/classes' },
+              { emoji: '🔍', title: 'Find a teacher', body: 'Browse by style — yoga, kettlebell, mobility, and more.', href: '/classes' },
               { emoji: '🎬', title: 'Watch & train', body: 'Buy videos from curated guides. 80% to the teacher, 20% to JungleGym.', href: '/classes' },
               { emoji: '🎁', title: 'Join live sessions', body: 'Real-time classes, gift-based.', href: '/sessions' },
             ].map((step) => (
@@ -254,7 +254,7 @@ export default async function HomePage() {
       {/* Philosophy blurb */}
       <section
         className="bg-jungle-900 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/jungle-gateway.png')", backgroundAttachment: "fixed" }}
+        style={{ backgroundImage: "url('/jungle-gateway-web.jpg')", backgroundAttachment: "fixed" }}
       >
       <div className="bg-jungle-950/70 backdrop-blur-sm py-20 px-6">
         <div className="max-w-5xl mx-auto">
@@ -262,11 +262,7 @@ export default async function HomePage() {
           {/* Header — centered */}
           <div className="text-center mb-12">
             <div className="flex justify-center mb-5">
-              <img
-                src={IMG_MONKEY_SECTION}
-                alt="Chimpanzee — Philip Henry Gosse, 1848 (public domain)"
-                className="w-32 h-auto invert mix-blend-screen opacity-55"
-              />
+              <MonkeyOnBranch />
             </div>
             <p className="text-jungle-400 text-sm font-semibold uppercase tracking-widest mb-3">The oldest wisdom</p>
             <h2 className="text-4xl font-black text-white">Monkey see. Monkey do.</h2>
@@ -303,10 +299,10 @@ export default async function HomePage() {
           {/* CTA */}
           <div className="text-center">
             <Link
-              href="/auth/signup"
+              href="/classes"
               className="bg-earth-400 hover:bg-earth-500 text-white font-bold px-10 py-4 rounded-xl text-lg inline-block transition-colors"
             >
-              Join free — no credit card needed
+              Start training now
             </Link>
           </div>
 
