@@ -61,48 +61,48 @@ export function SignupForm() {
 
   if (emailSent) {
     return (
-      <div className="bg-jungle-800 rounded-2xl p-8 space-y-4 border border-jungle-700 text-center">
+      <div className="bg-white rounded-2xl p-8 space-y-4 border border-stone-200 shadow-sm text-center">
         <div className="text-4xl">📬</div>
-        <h2 className="text-white font-bold text-xl">Check your email</h2>
-        <p className="text-jungle-400 text-sm leading-relaxed">
-          We sent a confirmation link to <span className="text-jungle-200 font-medium">{email}</span>.
+        <h2 className="text-stone-900 font-bold text-xl">Check your email</h2>
+        <p className="text-stone-600 text-sm leading-relaxed">
+          We sent a confirmation link to <span className="text-jungle-700 font-medium">{email}</span>.
           Click it to activate your account and get into the gym.
         </p>
-        <p className="text-jungle-600 text-xs">Didn't get it? Check your spam folder.</p>
+        <p className="text-stone-400 text-xs">Didn&apos;t get it? Check your spam folder.</p>
       </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-jungle-800 rounded-2xl p-8 space-y-4 border border-jungle-700">
+    <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 space-y-4 border border-stone-200 shadow-sm">
       {error && (
-        <div className="bg-red-900/40 text-red-300 rounded-lg px-4 py-3 text-sm">{error}</div>
+        <div className="bg-red-50 text-red-600 border border-red-200 rounded-lg px-4 py-3 text-sm">{error}</div>
       )}
 
       <button
         type="button"
         onClick={handleGoogleSignIn}
-        className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-3 rounded-lg transition-colors"
+        className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-3 rounded-lg transition-colors border border-stone-200"
       >
         <GoogleIcon />
         Continue with Google
       </button>
 
       <div className="flex items-center gap-3">
-        <div className="flex-1 h-px bg-jungle-700" />
-        <span className="text-jungle-600 text-xs font-medium">or</span>
-        <div className="flex-1 h-px bg-jungle-700" />
+        <div className="flex-1 h-px bg-stone-200" />
+        <span className="text-stone-400 text-xs font-medium">or</span>
+        <div className="flex-1 h-px bg-stone-200" />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-jungle-300 mb-1">Display name</label>
+        <label className="block text-sm font-medium text-stone-700 mb-1">Display name</label>
         <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
           required className={inputClass} placeholder="Alex Rivera" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-jungle-300 mb-1">Username</label>
+        <label className="block text-sm font-medium text-stone-700 mb-1">Username</label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-jungle-500 text-sm">@</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm">@</span>
           <input type="text" value={username}
             onChange={(e) => setUsername(e.target.value.toLowerCase())}
             required pattern="[a-z0-9_\-]{3,32}" className={`${inputClass} pl-7`}
@@ -110,12 +110,12 @@ export function SignupForm() {
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-jungle-300 mb-1">Email</label>
+        <label className="block text-sm font-medium text-stone-700 mb-1">Email</label>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
           required className={inputClass} placeholder="you@example.com" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-jungle-300 mb-1">Password</label>
+        <label className="block text-sm font-medium text-stone-700 mb-1">Password</label>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
           required minLength={8} className={inputClass} placeholder="8+ characters" />
       </div>
@@ -123,9 +123,9 @@ export function SignupForm() {
         className="w-full bg-earth-400 hover:bg-earth-500 text-white font-bold py-3 rounded-lg transition-colors disabled:opacity-50">
         {loading ? 'Creating account...' : 'Create account'}
       </button>
-      <p className="text-center text-sm text-jungle-500">
+      <p className="text-center text-sm text-stone-500">
         Already here?{' '}
-        <Link href="/auth/login" className="font-semibold text-jungle-300 hover:text-white transition-colors">Sign in</Link>
+        <Link href="/auth/login" className="font-semibold text-jungle-600 hover:text-jungle-800 transition-colors">Sign in</Link>
       </p>
     </form>
   )
@@ -142,4 +142,4 @@ function GoogleIcon() {
   )
 }
 
-const inputClass = 'w-full rounded-lg border border-jungle-700 bg-jungle-900/60 px-3 py-2.5 text-white placeholder:text-jungle-600 text-sm focus:outline-none focus:ring-2 focus:ring-earth-400'
+const inputClass = 'w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-stone-900 placeholder:text-stone-400 text-sm focus:outline-none focus:ring-2 focus:ring-earth-400'

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function WhyPage() {
   return (
-    <div className="min-h-screen bg-jungle-900 text-stone-100">
+    <div className="min-h-screen bg-stone-50 text-stone-900">
       <Navbar />
 
       {/* Hero */}
@@ -21,25 +21,25 @@ export default function WhyPage() {
           <img
             src="https://upload.wikimedia.org/wikipedia/commons/5/52/Brehms_Het_Leven_der_DIeren_Orde_1_Lar_%28Hylobates_lar%29.jpg"
             alt="White-handed gibbon (Hylobates lar) — Brehm's Life of Animals, 19th century"
-            className="w-52 h-auto opacity-70 mix-blend-luminosity"
+            className="w-52 h-auto opacity-60"
           />
-          <p className="text-xs text-jungle-400 mt-3 italic">
+          <p className="text-xs text-stone-400 mt-3 italic">
             White-handed gibbon · <em>Hylobates lar</em> · Brehm&apos;s Life of Animals, c. 1880 · public domain
           </p>
         </div>
 
-        <h1 className="text-5xl sm:text-6xl font-black leading-tight mb-6">
+        <h1 className="text-5xl sm:text-6xl font-black leading-tight mb-6 text-stone-900">
           Why the<br />
-          <span className="text-jungle-400">Jungle</span> exists.
+          <span className="text-jungle-600">Jungle</span> exists.
         </h1>
-        <p className="text-xl text-stone-400 leading-relaxed max-w-xl mx-auto">
+        <p className="text-xl text-stone-500 leading-relaxed max-w-xl mx-auto">
           Physical Education was supposed to be the place where we learned to inhabit our
           bodies with joy. It became something else.
         </p>
       </section>
 
       {/* Manifesto */}
-      <section className="max-w-2xl mx-auto px-6 pb-24 space-y-16 text-lg leading-relaxed text-stone-300">
+      <section className="max-w-2xl mx-auto px-6 pb-24 space-y-16 text-lg leading-relaxed text-stone-600">
 
         <div>
           <p>
@@ -55,10 +55,10 @@ export default function WhyPage() {
         </div>
 
         <div className="border-l-2 border-jungle-500 pl-6">
-          <p className="text-2xl font-bold text-white leading-snug">
-            "Liquidate Physical Education. Replace the standardized, joyless model with vetted
+          <p className="text-2xl font-bold text-stone-900 leading-snug">
+            &ldquo;Liquidate Physical Education. Replace the standardized, joyless model with vetted
             teachers sharing what they love, students choosing what moves them, money flowing
-            directly to the source."
+            directly to the source.&rdquo;
           </p>
         </div>
 
@@ -76,22 +76,22 @@ export default function WhyPage() {
         </div>
 
         <div>
-          <h2 className="text-2xl font-black text-white mb-4">The deal is simple.</h2>
-          <ul className="space-y-3 text-stone-300">
+          <h2 className="text-2xl font-black text-stone-900 mb-4">The deal is simple.</h2>
+          <ul className="space-y-3 text-stone-600">
             <li className="flex gap-3">
-              <span className="text-jungle-400 font-bold mt-0.5">→</span>
+              <span className="text-jungle-500 font-bold mt-0.5">→</span>
               <span>Teachers apply. We vet them. They set their own rates.</span>
             </li>
             <li className="flex gap-3">
-              <span className="text-jungle-400 font-bold mt-0.5">→</span>
+              <span className="text-jungle-500 font-bold mt-0.5">→</span>
               <span>You find something that calls to you. You pay once. You own it forever.</span>
             </li>
             <li className="flex gap-3">
-              <span className="text-jungle-400 font-bold mt-0.5">→</span>
+              <span className="text-jungle-500 font-bold mt-0.5">→</span>
               <span>80% goes directly to the teacher. No algorithms deciding who eats.</span>
             </li>
             <li className="flex gap-3">
-              <span className="text-jungle-400 font-bold mt-0.5">→</span>
+              <span className="text-jungle-500 font-bold mt-0.5">→</span>
               <span>You can share access with one person you love. That&apos;s it.</span>
             </li>
           </ul>
@@ -104,7 +104,7 @@ export default function WhyPage() {
             dollars to someone who earned it, and you walk away with something that lives
             in your body.
           </p>
-          <p className="mt-5 text-white font-semibold">
+          <p className="mt-5 text-stone-900 font-semibold">
             That&apos;s worth building. That&apos;s worth returning to.
           </p>
         </div>
@@ -112,23 +112,23 @@ export default function WhyPage() {
       </section>
 
       {/* CTA */}
-      <section className="border-t border-jungle-800 py-16 px-6 text-center">
-        <p className="text-stone-400 mb-6 text-lg">Ready to move?</p>
+      <section className="border-t border-stone-200 bg-stone-100 py-16 px-6 text-center">
+        <p className="text-stone-500 mb-6 text-lg">Ready to move?</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/explore"
-            className="bg-jungle-500 hover:bg-jungle-400 text-white font-bold px-8 py-4 rounded-xl transition-colors"
+            className="bg-jungle-700 hover:bg-jungle-600 text-white font-bold px-8 py-4 rounded-xl transition-colors"
           >
             Explore classes
           </Link>
           <Link
             href="/apply"
-            className="border border-jungle-600 hover:border-jungle-400 text-jungle-300 hover:text-jungle-100 font-bold px-8 py-4 rounded-xl transition-colors"
+            className="border border-stone-300 hover:border-jungle-400 text-stone-700 hover:text-jungle-700 font-bold px-8 py-4 rounded-xl transition-colors"
           >
             Teach here
           </Link>
         </div>
-        <p className="text-xs text-stone-600 mt-10 italic">
+        <p className="text-xs text-stone-400 mt-10 italic">
           White-handed gibbon · <em>Hylobates lar</em> · Brehm&apos;s Life of Animals, c. 1880 · public domain
         </p>
       </section>

@@ -56,18 +56,18 @@ export function SearchBar({
             name="q"
             defaultValue={query ?? ''}
             placeholder={placeholder}
-            className="flex-1 rounded-xl border border-jungle-700 bg-jungle-800/60 px-4 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-jungle-400 placeholder:text-jungle-500"
+            className="flex-1 rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-jungle-400 placeholder:text-stone-400"
           />
           <button
             type="submit"
-            className="bg-jungle-700 hover:bg-jungle-800 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors"
+            className="bg-jungle-700 hover:bg-jungle-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors"
           >
             Search
           </button>
         </div>
         {query && (
           <div className="mt-3 flex items-center gap-2">
-            <span className="text-sm text-jungle-400">
+            <span className="text-sm text-stone-500">
               Showing results for &ldquo;{query}&rdquo;
             </span>
             <Link
@@ -86,8 +86,8 @@ export function SearchBar({
             href={buildUrl({ tag: null })}
             className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
               !tag
-                ? 'bg-jungle-500 text-white'
-                : 'bg-jungle-800/60 text-jungle-300 border border-jungle-700 hover:bg-jungle-700'
+                ? 'bg-jungle-600 text-white'
+                : 'bg-white text-stone-600 border border-stone-200 hover:border-jungle-400 hover:text-jungle-700'
             }`}
           >
             All
@@ -98,8 +98,8 @@ export function SearchBar({
               href={buildUrl({ tag: t })}
               className={`px-4 py-2 rounded-full text-sm font-semibold capitalize transition-colors ${
                 tag === t
-                  ? 'bg-jungle-500 text-white'
-                  : 'bg-jungle-800/60 text-jungle-300 border border-jungle-700 hover:bg-jungle-700'
+                  ? 'bg-jungle-600 text-white'
+                  : 'bg-white text-stone-600 border border-stone-200 hover:border-jungle-400 hover:text-jungle-700'
               }`}
             >
               {t}

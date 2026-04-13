@@ -69,13 +69,13 @@ export default async function ClassesPage({
   }
 
   return (
-    <div className="min-h-screen bg-jungle-950">
+    <div className="min-h-screen bg-stone-50">
       <Navbar />
 
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-white">Classes</h1>
-          <p className="text-jungle-400 mt-2">
+          <h1 className="text-4xl font-black text-stone-900">Classes</h1>
+          <p className="text-stone-500 mt-2">
             Movement classes from skilled guides. Pay once, own forever.
           </p>
         </div>
@@ -91,14 +91,14 @@ export default async function ClassesPage({
 
         {/* Sort + heading */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-black text-white">
+          <h2 className="text-2xl font-black text-stone-900">
             {q ? `Results for "${q}"` : tag ? `#${tag}` : 'Latest videos'}
           </h2>
           <div className="flex gap-1 text-sm">
             <Link
               href={sortUrl('newest')}
               className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                sort !== 'popular' ? 'bg-jungle-700 text-white' : 'text-jungle-500 hover:text-jungle-300'
+                sort !== 'popular' ? 'bg-jungle-600 text-white' : 'text-stone-500 hover:text-stone-700'
               }`}
             >
               Newest
@@ -106,7 +106,7 @@ export default async function ClassesPage({
             <Link
               href={sortUrl('popular')}
               className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                sort === 'popular' ? 'bg-jungle-700 text-white' : 'text-jungle-500 hover:text-jungle-300'
+                sort === 'popular' ? 'bg-jungle-600 text-white' : 'text-stone-500 hover:text-stone-700'
               }`}
             >
               Popular
@@ -115,9 +115,9 @@ export default async function ClassesPage({
         </div>
 
         {videos.length === 0 ? (
-          <div className="text-center py-16 bg-jungle-800/40 rounded-2xl border border-jungle-700">
+          <div className="text-center py-16 bg-stone-100 rounded-2xl border border-stone-200">
             <div className="text-5xl mb-4">🌿</div>
-            <p className="font-medium text-jungle-300">No videos found.</p>
+            <p className="font-medium text-stone-600">No videos found.</p>
             {(tag || q) && (
               <Link href="/classes" className="mt-3 inline-block text-jungle-600 font-semibold hover:underline text-sm">
                 Clear filters →
@@ -130,8 +130,8 @@ export default async function ClassesPage({
               const creator = profileByUserId[video.creator_id] ?? null
               return (
                 <Link key={video.id} href={`/video/${video.id}`}>
-                  <div className="bg-jungle-800/60 rounded-2xl overflow-hidden border border-jungle-700 hover:border-jungle-400 hover:shadow-lg transition-all group">
-                    <div className="aspect-video bg-jungle-900 relative">
+                  <div className="bg-white rounded-2xl overflow-hidden border border-stone-200 hover:border-jungle-400 hover:shadow-md transition-all group">
+                    <div className="aspect-video bg-stone-100 relative">
                       {video.thumbnail_url ? (
                         <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" loading="lazy" />
                       ) : (
@@ -146,15 +146,15 @@ export default async function ClassesPage({
                     </div>
                     <div className="p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-6 h-6 rounded-full bg-jungle-700 overflow-hidden flex items-center justify-center text-xs flex-shrink-0">
+                        <div className="w-6 h-6 rounded-full bg-stone-100 overflow-hidden flex items-center justify-center text-xs flex-shrink-0">
                           {creator?.photo_url ? <img src={creator.photo_url} alt="" className="w-full h-full object-cover" /> : '🌿'}
                         </div>
                         <p className="text-xs text-jungle-600 font-semibold truncate">{creator?.display_name ?? creator?.username ?? 'Guide'}</p>
                         {video.view_count > 0 && (
-                          <span className="text-xs text-jungle-500 ml-auto flex-shrink-0">{video.view_count} views</span>
+                          <span className="text-xs text-stone-400 ml-auto flex-shrink-0">{video.view_count} views</span>
                         )}
                       </div>
-                      <h3 className="font-bold text-white text-sm leading-snug mb-2 group-hover:text-jungle-300 transition-colors">{video.title}</h3>
+                      <h3 className="font-bold text-stone-900 text-sm leading-snug mb-2 group-hover:text-jungle-700 transition-colors">{video.title}</h3>
                       {!video.is_free && video.price_supported && (
                         <div className="flex gap-2 flex-wrap">
                           <PricePill label="Supported" price={video.price_supported} />
@@ -178,7 +178,7 @@ export default async function ClassesPage({
 function PricePill({ label, price, dim }: { label: string; price: number; dim?: boolean }) {
   return (
     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-      dim ? 'bg-jungle-800 text-jungle-500' : 'bg-jungle-700/60 text-jungle-300'
+      dim ? 'bg-stone-100 text-stone-500' : 'bg-jungle-50 text-jungle-700'
     }`}>
       {label} {formatPrice(price)}
     </span>

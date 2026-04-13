@@ -44,9 +44,9 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-jungle-800 rounded-2xl p-8 space-y-4 border border-jungle-700">
+    <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 space-y-4 border border-stone-200 shadow-sm">
       {(error || callbackError) && (
-        <div className="bg-red-900/40 text-red-300 rounded-lg px-4 py-3 text-sm">
+        <div className="bg-red-50 text-red-600 border border-red-200 rounded-lg px-4 py-3 text-sm">
           {error ?? (callbackError === 'auth_callback_failed' ? 'Authentication failed. Please try again.' : callbackError)}
         </div>
       )}
@@ -54,25 +54,25 @@ export function LoginForm() {
       <button
         type="button"
         onClick={handleGoogleSignIn}
-        className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-3 rounded-lg transition-colors"
+        className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-3 rounded-lg transition-colors border border-stone-200"
       >
         <GoogleIcon />
         Continue with Google
       </button>
 
       <div className="flex items-center gap-3">
-        <div className="flex-1 h-px bg-jungle-700" />
-        <span className="text-jungle-600 text-xs font-medium">or</span>
-        <div className="flex-1 h-px bg-jungle-700" />
+        <div className="flex-1 h-px bg-stone-200" />
+        <span className="text-stone-400 text-xs font-medium">or</span>
+        <div className="flex-1 h-px bg-stone-200" />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-jungle-300 mb-1">Email</label>
+        <label className="block text-sm font-medium text-stone-700 mb-1">Email</label>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
           required className={inputClass} placeholder="you@example.com" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-jungle-300 mb-1">Password</label>
+        <label className="block text-sm font-medium text-stone-700 mb-1">Password</label>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
           required className={inputClass} placeholder="••••••••" />
       </div>
@@ -80,9 +80,9 @@ export function LoginForm() {
         className="w-full bg-earth-400 hover:bg-earth-500 text-white font-bold py-3 rounded-lg transition-colors disabled:opacity-50">
         {loading ? 'Signing in...' : 'Sign in'}
       </button>
-      <p className="text-center text-sm text-jungle-500">
+      <p className="text-center text-sm text-stone-500">
         No account?{' '}
-        <Link href="/auth/signup" className="font-semibold text-jungle-300 hover:text-white transition-colors">Join free</Link>
+        <Link href="/auth/signup" className="font-semibold text-jungle-600 hover:text-jungle-800 transition-colors">Join free</Link>
       </p>
     </form>
   )
@@ -99,4 +99,4 @@ function GoogleIcon() {
   )
 }
 
-const inputClass = 'w-full rounded-lg border border-jungle-700 bg-jungle-900/60 px-3 py-2.5 text-white placeholder:text-jungle-600 text-sm focus:outline-none focus:ring-2 focus:ring-earth-400'
+const inputClass = 'w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-stone-900 placeholder:text-stone-400 text-sm focus:outline-none focus:ring-2 focus:ring-earth-400'

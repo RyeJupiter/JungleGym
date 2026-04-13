@@ -43,13 +43,13 @@ export default async function GuidesPage({
   const { data: guides } = guidesQuery ? await guidesQuery : { data: [] }
 
   return (
-    <div className="min-h-screen bg-jungle-950">
+    <div className="min-h-screen bg-stone-50">
       <Navbar />
 
       <div className="max-w-5xl mx-auto px-6 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-white">Movement Guides</h1>
-          <p className="text-jungle-400 mt-2">
+          <h1 className="text-4xl font-black text-stone-900">Movement Guides</h1>
+          <p className="text-stone-500 mt-2">
             Vetted teachers. Real movement. Browse their classes and join their sessions.
           </p>
         </div>
@@ -63,9 +63,9 @@ export default async function GuidesPage({
         />
 
         {(guides ?? []).length === 0 ? (
-          <div className="text-center py-20 text-jungle-500">
+          <div className="text-center py-20 text-stone-400">
             <div className="text-5xl mb-4">🌿</div>
-            <p className="font-medium text-jungle-300">
+            <p className="font-medium text-stone-600">
               {tag || q ? 'No guides match your search.' : 'No guides yet — check back soon.'}
             </p>
             {(tag || q) && (
@@ -80,23 +80,23 @@ export default async function GuidesPage({
               <Link
                 key={g.username}
                 href={`/@${g.username}`}
-                className="bg-jungle-800/60 rounded-2xl border border-jungle-700 p-5 hover:border-jungle-400 hover:shadow-lg transition-all group flex flex-col items-center text-center gap-3"
+                className="bg-white rounded-2xl border border-stone-200 p-5 hover:border-jungle-400 hover:shadow-md transition-all group flex flex-col items-center text-center gap-3"
               >
-                <div className="w-16 h-16 rounded-full bg-jungle-700 overflow-hidden flex items-center justify-center text-2xl flex-shrink-0">
+                <div className="w-16 h-16 rounded-full bg-stone-100 overflow-hidden flex items-center justify-center text-2xl flex-shrink-0">
                   {g.photo_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={g.photo_url} alt="" className="w-full h-full object-cover" />
                   ) : '🌿'}
                 </div>
                 <div>
-                  <p className="font-black text-white group-hover:text-jungle-300 transition-colors leading-tight">
+                  <p className="font-black text-stone-900 group-hover:text-jungle-700 transition-colors leading-tight">
                     {g.display_name}
                   </p>
-                  <p className="text-xs text-jungle-500 mt-0.5">@{g.username}</p>
+                  <p className="text-xs text-stone-400 mt-0.5">@{g.username}</p>
                   {g.tags && g.tags.length > 0 && (
                     <div className="flex flex-wrap justify-center gap-1 mt-2">
                       {g.tags.slice(0, 2).map((t) => (
-                        <span key={t} className="text-xs bg-jungle-700/60 text-jungle-300 px-2 py-0.5 rounded-full capitalize">
+                        <span key={t} className="text-xs bg-jungle-50 text-jungle-700 px-2 py-0.5 rounded-full capitalize">
                           {t}
                         </span>
                       ))}

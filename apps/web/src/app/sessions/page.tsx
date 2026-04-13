@@ -59,14 +59,16 @@ export default async function SessionsPage({
   const filteredUpcoming = (upcomingSessions ?? []).filter(sessionMatchesTag)
   const hasAnything = filteredLive.length > 0 || filteredUpcoming.length > 0
 
+  void authUser
+
   return (
-    <div className="min-h-screen bg-jungle-950">
+    <div className="min-h-screen bg-stone-50">
       <Navbar />
 
       <div className="max-w-4xl mx-auto px-6 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-white">Live Sessions</h1>
-          <p className="text-jungle-400 mt-2">
+          <h1 className="text-4xl font-black text-stone-900">Live Sessions</h1>
+          <p className="text-stone-500 mt-2">
             Gift-based. No minimums. 80% of your gift goes to the creator.
           </p>
         </div>
@@ -80,12 +82,12 @@ export default async function SessionsPage({
         />
 
         {!hasAnything ? (
-          <div className="text-center py-20 text-jungle-500">
+          <div className="text-center py-20 text-stone-400">
             <div className="text-5xl mb-4">🌿</div>
-            <p className="font-medium text-jungle-300">
+            <p className="font-medium text-stone-600">
               {tag || q ? 'No sessions match your search.' : 'No sessions scheduled right now.'}
             </p>
-            <p className="text-sm mt-1 text-jungle-500">Check back soon or explore videos in the meantime.</p>
+            <p className="text-sm mt-1 text-stone-400">Check back soon or explore videos in the meantime.</p>
             {(tag || q) ? (
               <Link href="/sessions" className="mt-3 inline-block text-jungle-600 font-semibold hover:underline text-sm">
                 Clear filters →
@@ -101,7 +103,7 @@ export default async function SessionsPage({
             {/* Live now */}
             {filteredLive.length > 0 && (
               <section>
-                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
                   <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                   Happening now
                 </h2>
@@ -121,7 +123,7 @@ export default async function SessionsPage({
             {/* Upcoming */}
             {filteredUpcoming.length > 0 && (
               <section>
-                <h2 className="text-lg font-bold text-white mb-4">Upcoming</h2>
+                <h2 className="text-lg font-bold text-stone-900 mb-4">Upcoming</h2>
                 <div className="space-y-4">
                   {filteredUpcoming.map((s) => (
                     <SessionCard
@@ -156,10 +158,10 @@ function SessionCard({
   const scheduledDate = new Date(s.scheduled_at)
 
   return (
-    <Link href={`/sessions/${s.id}`} className={`block bg-jungle-800/60 rounded-2xl border p-6 ${isLive ? 'border-red-700/60' : 'border-jungle-700'} hover:border-jungle-400 hover:shadow-lg transition-all`}>
+    <Link href={`/sessions/${s.id}`} className={`block bg-white rounded-2xl border p-6 ${isLive ? 'border-red-300' : 'border-stone-200'} hover:border-jungle-400 hover:shadow-md transition-all`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-jungle-700 overflow-hidden flex items-center justify-center text-2xl flex-shrink-0">
+          <div className="w-12 h-12 rounded-full bg-stone-100 overflow-hidden flex items-center justify-center text-2xl flex-shrink-0">
             {creator?.photo_url ? (
               <img src={creator.photo_url} alt="" className="w-full h-full object-cover" />
             ) : '🌿'}
@@ -171,30 +173,30 @@ function SessionCard({
                   LIVE
                 </span>
               )}
-              <h3 className="font-bold text-white">{s.title}</h3>
+              <h3 className="font-bold text-stone-900">{s.title}</h3>
             </div>
             {creator && (
-              <span className="text-sm text-jungle-400">{creator.display_name}</span>
+              <span className="text-sm text-stone-500">{creator.display_name}</span>
             )}
           </div>
         </div>
         <div className="text-right flex-shrink-0">
-          <p className="text-sm font-semibold text-jungle-200">
+          <p className="text-sm font-semibold text-stone-700">
             {scheduledDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
           </p>
-          <p className="text-xs text-jungle-500">
+          <p className="text-xs text-stone-400">
             {scheduledDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
           </p>
-          <p className="text-xs text-jungle-500">{s.duration_minutes} min</p>
+          <p className="text-xs text-stone-400">{s.duration_minutes} min</p>
         </div>
       </div>
 
       {s.description && (
-        <p className="text-jungle-400 text-sm mt-3">{s.description}</p>
+        <p className="text-stone-500 text-sm mt-3">{s.description}</p>
       )}
 
       <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
-        <p className="text-xs text-jungle-500">Gift-based — give freely, no pressure</p>
+        <p className="text-xs text-stone-400">Gift-based — give freely, no pressure</p>
       </div>
     </Link>
   )

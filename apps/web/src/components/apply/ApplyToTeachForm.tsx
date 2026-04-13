@@ -39,33 +39,33 @@ export function ApplyToTeachForm({ userId }: { userId: string }) {
 
   if (submitted) {
     return (
-      <div className="bg-jungle-800 border border-jungle-700 rounded-2xl p-8 text-center space-y-2">
-        <h2 className="text-xl font-bold text-white">Application received</h2>
-        <p className="text-jungle-400 text-sm">
-          We review each application personally. We'll reach out to you soon.
+      <div className="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-2 shadow-sm">
+        <h2 className="text-xl font-bold text-stone-900">Application received</h2>
+        <p className="text-stone-500 text-sm">
+          We review each application personally. We&apos;ll reach out to you soon.
         </p>
       </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-jungle-800 rounded-2xl p-8 space-y-6 border border-jungle-700">
+    <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 space-y-6 border border-stone-200 shadow-sm">
       {error && (
-        <div className="bg-red-900/40 text-red-300 rounded-lg px-4 py-3 text-sm">{error}</div>
+        <div className="bg-red-50 text-red-600 border border-red-200 rounded-lg px-4 py-3 text-sm">{error}</div>
       )}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-jungle-300">
-          What do you teach, and what brought you here? <span className="text-jungle-600 font-normal">(optional)</span>
+        <label className="block text-sm font-medium text-stone-700">
+          What do you teach, and what brought you here? <span className="text-stone-400 font-normal">(optional)</span>
         </label>
         <textarea
           value={motivation}
           onChange={(e) => setMotivation(e.target.value)}
           rows={5}
           maxLength={1000}
-          className="w-full rounded-lg border border-jungle-700 bg-jungle-900/60 px-3 py-2.5 text-white placeholder:text-jungle-600 text-sm focus:outline-none focus:ring-2 focus:ring-earth-400 resize-none"
+          className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-stone-900 placeholder:text-stone-400 text-sm focus:outline-none focus:ring-2 focus:ring-earth-400 resize-none"
           placeholder="e.g. I've been teaching yoga and mobility for 8 years and want to share my practice more widely..."
         />
-        <p className="text-xs text-jungle-600 text-right">{motivation.length}/1000</p>
+        <p className="text-xs text-stone-400 text-right">{motivation.length}/1000</p>
       </div>
       <button
         type="submit"
