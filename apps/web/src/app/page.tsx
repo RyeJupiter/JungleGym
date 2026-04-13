@@ -262,10 +262,15 @@ export default async function HomePage() {
           {/* Header — centered */}
           <div className="text-center mb-12">
             <div className="flex justify-center mb-5">
-              <MonkeyOnBranch />
+              <img
+                src={IMG_MONKEY_SECTION}
+                alt="Chimpanzee — Philip Henry Gosse, 1848 (public domain)"
+                className="w-32 h-auto invert mix-blend-screen opacity-55"
+              />
             </div>
             <p className="text-jungle-400 text-sm font-semibold uppercase tracking-widest mb-3">The oldest wisdom</p>
-            <h2 className="text-4xl font-black text-white">Monkey see. Monkey do.</h2>
+            <h2 className="text-4xl font-black text-white mb-4">Monkey see. Monkey do.</h2>
+            <div className="w-20 h-px bg-earth-300/60 mx-auto" />
           </div>
 
           {/* Two columns */}
@@ -291,7 +296,6 @@ export default async function HomePage() {
               <p>Mimicry is the oldest way to learn.</p>
               <p>JungleGym is built on that idea.</p>
               <p>Watch someone move with ease, and your body starts to understand — mirror neurons activate.</p>
-              <p className="text-jungle-400 text-base">Vetted teachers who move clearly, so you can read them and grow.</p>
             </div>
 
           </div>
