@@ -283,7 +283,7 @@ export default async function HomePage() {
 
         {/* How it works — quick 3-step */}
         <section className="pb-20 px-6">
-          <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+          <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-[1fr_1.3fr_1fr] gap-4 text-center">
             {[
               { emoji: '🔍', title: 'Find a teacher', body: 'Browse by style — yoga, kettlebell, mobility, breathwork, and more.', href: '/classes' },
               { emoji: '🎬', title: 'Watch & train', body: 'Buy videos from curated guides. 80% to the teacher, 20% to JungleGym.', href: '/classes' },
