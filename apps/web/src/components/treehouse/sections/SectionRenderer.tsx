@@ -1,5 +1,6 @@
 import type { SectionConfig, HeroVariant } from '../config'
 import type { ThemeClasses } from '../themes'
+import { withBannerOverrides } from '../themes'
 import { HeroSection } from './HeroSection'
 import { LiveSessionsSection } from './LiveSessionsSection'
 import { VideoGridSection } from './VideoGridSection'
@@ -59,7 +60,7 @@ type Props = {
   section: SectionConfig
   data: TreehouseData
   theme: ThemeClasses
-  hasBanner?: boolean
+  bannerUrl?: string | null
   editing?: boolean
   onFieldChange?: (field: string, value: string) => void
   onSectionDataChange?: (sectionId: string, data: Record<string, unknown>) => void
@@ -70,7 +71,7 @@ export function SectionRenderer({
   section,
   data,
   theme,
-  hasBanner = false,
+  bannerUrl,
   editing = false,
   onFieldChange,
   onSectionDataChange,
@@ -81,7 +82,8 @@ export function SectionRenderer({
   const opacity = !section.visible && editing ? 'opacity-40' : ''
 
   switch (section.type) {
-    case 'hero':
+    case 'hero': {
+      const heroTheme = bannerUrl ? withBannerOverrides(theme) : theme
       return (
         <div className={opacity}>
           <HeroSection
@@ -90,15 +92,16 @@ export function SectionRenderer({
             hasLiveSession={data.sessions.some((s) => s.status === 'live')}
             hasPaidVideos={data.paidVideos.length > 0}
             isOwnProfile={data.isOwnProfile}
-            theme={theme}
+            theme={heroTheme}
             variant={(section.variant as HeroVariant) ?? 'default'}
-            hasBanner={hasBanner}
+            bannerUrl={bannerUrl}
             editing={editing}
             onFieldChange={onFieldChange}
             onPhotoChange={onPhotoChange}
           />
         </div>
       )
+    }
 
     case 'live_sessions':
       return (

@@ -30,7 +30,7 @@ type HeroProps = {
   isOwnProfile: boolean
   theme: ThemeClasses
   variant: HeroVariant
-  hasBanner?: boolean
+  bannerUrl?: string | null
   editing?: boolean
   onFieldChange?: (field: string, value: string) => void
   onPhotoChange?: (file: File | null, previewUrl: string | null) => void
@@ -44,7 +44,7 @@ export function HeroSection({
   isOwnProfile,
   theme,
   variant,
-  hasBanner = false,
+  bannerUrl,
   editing = false,
   onFieldChange,
   onPhotoChange,
@@ -93,8 +93,18 @@ export function HeroSection({
   if (variant === 'compact') {
     return (
       <>
-      <div className={`relative ${hasBanner ? 'bg-transparent' : theme.heroBg}`}>
-        <div className="relative max-w-5xl mx-auto px-6 py-8">
+      <div
+        className={`relative ${!bannerUrl ? theme.heroBg : ''}`}
+        style={bannerUrl ? { backgroundImage: `url(${bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center top' } : undefined}
+      >
+        {bannerUrl && <div className="absolute inset-0 bg-black/45" />}
+        {bannerUrl && (
+          <div
+            className="absolute inset-x-0 bottom-0 h-20 pointer-events-none"
+            style={{ background: `linear-gradient(to bottom, transparent, ${theme.pageBgHex})` }}
+          />
+        )}
+        <div className="relative z-10 max-w-5xl mx-auto px-6 py-8">
           <div className="flex items-center gap-4">
             {/* Avatar */}
             <div
@@ -172,9 +182,20 @@ export function HeroSection({
   if (variant === 'centered') {
     return (
       <>
-      <div className={`relative ${hasBanner ? 'bg-transparent' : theme.heroBg}`}>
-        <HeroOverlay theme={theme} />
-        <div className="relative max-w-5xl mx-auto px-6 py-12 text-center">
+      <div
+        className={`relative ${!bannerUrl ? theme.heroBg : ''} ${bannerUrl ? 'sm:min-h-[320px]' : ''}`}
+        style={bannerUrl ? { backgroundImage: `url(${bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center top' } : undefined}
+      >
+        {!bannerUrl && <HeroOverlay theme={theme} />}
+        {bannerUrl && <div className="absolute inset-0 bg-black/45" />}
+        {bannerUrl && (
+          <div
+            className="absolute inset-x-0 bottom-0 h-40 pointer-events-none"
+            style={{ background: `linear-gradient(to bottom, transparent, ${theme.pageBgHex})` }}
+          />
+        )}
+        {bannerUrl && <VineDecoration />}
+        <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 text-center">
           {/* Avatar centered */}
           <div className="flex justify-center mb-4">
             <div
@@ -261,9 +282,20 @@ export function HeroSection({
 
   // ── Default variant (current layout) ──
   return (
-    <div className={`relative ${hasBanner ? 'bg-transparent' : theme.heroBg}`}>
-      <HeroOverlay theme={theme} />
-      <div className="relative max-w-5xl mx-auto px-6 py-12">
+    <div
+      className={`relative ${!bannerUrl ? theme.heroBg : ''} ${bannerUrl ? 'sm:min-h-[320px]' : ''}`}
+      style={bannerUrl ? { backgroundImage: `url(${bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center top' } : undefined}
+    >
+      {!bannerUrl && <HeroOverlay theme={theme} />}
+      {bannerUrl && <div className="absolute inset-0 bg-black/45" />}
+      {bannerUrl && (
+        <div
+          className="absolute inset-x-0 bottom-0 h-40 pointer-events-none"
+          style={{ background: `linear-gradient(to bottom, transparent, ${theme.pageBgHex})` }}
+        />
+      )}
+      {bannerUrl && <VineDecoration />}
+      <div className="relative z-10 max-w-5xl mx-auto px-6 py-12">
         {/* Treehouse label */}
         <div className="flex items-center gap-2 mb-6">
           <span className={`${theme.accent} text-xs font-bold uppercase tracking-widest`}>Treehouse</span>
@@ -575,6 +607,150 @@ function SocialRow({
         </a>
       )}
     </div>
+  )
+}
+
+// ─── Vine decoration ────────────────────────────────────────────────────────
+// Sits at the bottom of the hero section when a banner is set.
+// Compound-leaf clusters (wisteria / ayahuasca style) along a woody main stem.
+
+function VineDecoration() {
+  return (
+    <svg
+      viewBox="0 0 1440 120"
+      preserveAspectRatio="none"
+      width="100%"
+      height="120"
+      aria-hidden="true"
+      className="absolute bottom-0 left-0 right-0 pointer-events-none"
+      style={{ zIndex: 5 }}
+    >
+      {/* ── Main horizontal woody stem (double stroke for texture) ── */}
+      <path
+        d="M-10,92 C60,86 140,95 220,89 C300,83 380,93 460,88 C540,83 620,92 700,87 C780,82 860,92 940,87 C1020,82 1100,91 1180,87 C1260,83 1340,90 1420,87 L1460,88"
+        stroke="#3d1106" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round"
+      />
+      <path
+        d="M-10,90 C60,84 140,93 220,87 C300,81 380,91 460,86 C540,81 620,90 700,85 C780,80 860,90 940,85 C1020,80 1100,89 1180,85 C1260,81 1340,88 1420,85 L1460,86"
+        stroke="#6b3015" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"
+      />
+
+      {/* ── Branch stems ── */}
+      <path d="M72,88 C68,76 62,62 65,46 C67,32 60,20 55,8"         stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      <path d="M248,86 C252,72 258,54 255,36 C253,22 260,10 264,3"  stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      <path d="M432,86 C425,70 420,52 422,32 C424,16 415,6 410,0"   stroke="#4a1c08" strokeWidth="3"   fill="none" strokeLinecap="round"/>
+      <path d="M608,84 C612,65 618,44 622,22 C625,8 632,0 636,-4"   stroke="#4a1c08" strokeWidth="3"   fill="none" strokeLinecap="round"/>
+      <path d="M832,84 C826,65 820,46 822,24 C824,10 814,2 810,-2"  stroke="#4a1c08" strokeWidth="3"   fill="none" strokeLinecap="round"/>
+      <path d="M1008,86 C1016,70 1020,52 1016,32 C1013,16 1020,6 1024,0"  stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      <path d="M1192,87 C1186,72 1183,55 1186,36 C1188,20 1180,8 1176,2"  stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      <path d="M1368,89 C1364,76 1360,62 1364,46 C1366,32 1358,20 1353,10" stroke="#4a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+
+      {/* ── Compound leaf clusters (5 elliptical leaflets each) ── */}
+
+      {/* Cluster 1 – branch 1 tip */}
+      <g transform="translate(55,8)">
+        <path d="M0,0 L0,-22" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        <ellipse cx="-9"  cy="-8"  rx="4.5" ry="7"   transform="rotate(-45 -9 -8)"  fill="#2d6a4f" opacity="0.90"/>
+        <ellipse cx="-10" cy="-15" rx="4"   ry="6.5" transform="rotate(-30 -10 -15)" fill="#1a4a2a" opacity="0.85"/>
+        <ellipse cx="9"   cy="-8"  rx="4.5" ry="7"   transform="rotate(45 9 -8)"     fill="#3d9e6b" opacity="0.90"/>
+        <ellipse cx="10"  cy="-15" rx="4"   ry="6.5" transform="rotate(30 10 -15)"   fill="#2d6a4f" opacity="0.85"/>
+        <ellipse cx="0"   cy="-21" rx="4"   ry="6.5"                                  fill="#236841" opacity="0.92"/>
+      </g>
+
+      {/* Cluster 2 – branch 2 tip */}
+      <g transform="translate(264,3) rotate(8)">
+        <path d="M0,0 L0,-20" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        <ellipse cx="-8"  cy="-7"  rx="4"   ry="6.5" transform="rotate(-40 -8 -7)"   fill="#3d9e6b" opacity="0.90"/>
+        <ellipse cx="-9"  cy="-14" rx="4"   ry="6"   transform="rotate(-25 -9 -14)"  fill="#2d6a4f" opacity="0.85"/>
+        <ellipse cx="8"   cy="-7"  rx="4"   ry="6.5" transform="rotate(40 8 -7)"     fill="#236841" opacity="0.90"/>
+        <ellipse cx="9"   cy="-14" rx="4"   ry="6"   transform="rotate(25 9 -14)"    fill="#3d9e6b" opacity="0.85"/>
+        <ellipse cx="0"   cy="-19" rx="4"   ry="6"                                    fill="#1a4a2a" opacity="0.90"/>
+      </g>
+
+      {/* Cluster 3 – branch 3 tip */}
+      <g transform="translate(410,0) rotate(-12)">
+        <path d="M0,0 L0,-22" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        <ellipse cx="-9"  cy="-8"  rx="4.5" ry="7"   transform="rotate(-45 -9 -8)"   fill="#236841" opacity="0.90"/>
+        <ellipse cx="-10" cy="-16" rx="4"   ry="6.5" transform="rotate(-28 -10 -16)" fill="#3d9e6b" opacity="0.85"/>
+        <ellipse cx="9"   cy="-8"  rx="4.5" ry="7"   transform="rotate(45 9 -8)"     fill="#2d6a4f" opacity="0.90"/>
+        <ellipse cx="10"  cy="-16" rx="4"   ry="6.5" transform="rotate(28 10 -16)"   fill="#1a4a2a" opacity="0.85"/>
+        <ellipse cx="0"   cy="-21" rx="4"   ry="6.5"                                  fill="#236841" opacity="0.92"/>
+      </g>
+
+      {/* Cluster 4 – branch 4 tip (tallest, largest) */}
+      <g transform="translate(636,0) rotate(5)">
+        <path d="M0,0 L0,-26" stroke="#3a1408" strokeWidth="2" fill="none" strokeLinecap="round"/>
+        <ellipse cx="-10" cy="-9"  rx="5.5" ry="8"   transform="rotate(-45 -10 -9)"  fill="#2d6a4f" opacity="0.92"/>
+        <ellipse cx="-12" cy="-18" rx="5"   ry="7.5" transform="rotate(-30 -12 -18)" fill="#1a4a2a" opacity="0.88"/>
+        <ellipse cx="10"  cy="-9"  rx="5.5" ry="8"   transform="rotate(45 10 -9)"    fill="#3d9e6b" opacity="0.92"/>
+        <ellipse cx="12"  cy="-18" rx="5"   ry="7.5" transform="rotate(30 12 -18)"   fill="#2d6a4f" opacity="0.88"/>
+        <ellipse cx="0"   cy="-25" rx="5"   ry="7.5"                                  fill="#236841" opacity="0.95"/>
+      </g>
+
+      {/* Cluster 5 – branch 5 tip (tallest, largest) */}
+      <g transform="translate(810,0) rotate(-5)">
+        <path d="M0,0 L0,-26" stroke="#3a1408" strokeWidth="2" fill="none" strokeLinecap="round"/>
+        <ellipse cx="-10" cy="-9"  rx="5.5" ry="8"   transform="rotate(-45 -10 -9)"  fill="#3d9e6b" opacity="0.92"/>
+        <ellipse cx="-12" cy="-18" rx="5"   ry="7.5" transform="rotate(-30 -12 -18)" fill="#2d6a4f" opacity="0.88"/>
+        <ellipse cx="10"  cy="-9"  rx="5.5" ry="8"   transform="rotate(45 10 -9)"    fill="#236841" opacity="0.92"/>
+        <ellipse cx="12"  cy="-18" rx="5"   ry="7.5" transform="rotate(30 12 -18)"   fill="#1a4a2a" opacity="0.88"/>
+        <ellipse cx="0"   cy="-25" rx="5"   ry="7.5"                                  fill="#3d9e6b" opacity="0.95"/>
+      </g>
+
+      {/* Cluster 6 – branch 6 tip */}
+      <g transform="translate(1024,0) rotate(10)">
+        <path d="M0,0 L0,-22" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        <ellipse cx="-9"  cy="-8"  rx="4.5" ry="7"   transform="rotate(-45 -9 -8)"   fill="#2d6a4f" opacity="0.90"/>
+        <ellipse cx="-10" cy="-15" rx="4"   ry="6.5" transform="rotate(-28 -10 -15)" fill="#236841" opacity="0.85"/>
+        <ellipse cx="9"   cy="-8"  rx="4.5" ry="7"   transform="rotate(45 9 -8)"     fill="#1a4a2a" opacity="0.90"/>
+        <ellipse cx="10"  cy="-15" rx="4"   ry="6.5" transform="rotate(28 10 -15)"   fill="#3d9e6b" opacity="0.85"/>
+        <ellipse cx="0"   cy="-21" rx="4"   ry="6.5"                                  fill="#2d6a4f" opacity="0.92"/>
+      </g>
+
+      {/* Cluster 7 – branch 7 tip */}
+      <g transform="translate(1176,2) rotate(-8)">
+        <path d="M0,0 L0,-20" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        <ellipse cx="-8"  cy="-7"  rx="4"   ry="6.5" transform="rotate(-40 -8 -7)"   fill="#236841" opacity="0.90"/>
+        <ellipse cx="-9"  cy="-14" rx="4"   ry="6"   transform="rotate(-25 -9 -14)"  fill="#2d6a4f" opacity="0.85"/>
+        <ellipse cx="8"   cy="-7"  rx="4"   ry="6.5" transform="rotate(40 8 -7)"     fill="#3d9e6b" opacity="0.90"/>
+        <ellipse cx="9"   cy="-14" rx="4"   ry="6"   transform="rotate(25 9 -14)"    fill="#236841" opacity="0.85"/>
+        <ellipse cx="0"   cy="-19" rx="4"   ry="6"                                    fill="#1a4a2a" opacity="0.90"/>
+      </g>
+
+      {/* Cluster 8 – branch 8 tip */}
+      <g transform="translate(1353,10)">
+        <path d="M0,0 L0,-22" stroke="#3a1408" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        <ellipse cx="-9"  cy="-8"  rx="4.5" ry="7"   transform="rotate(-45 -9 -8)"   fill="#3d9e6b" opacity="0.90"/>
+        <ellipse cx="-10" cy="-15" rx="4"   ry="6.5" transform="rotate(-30 -10 -15)" fill="#1a4a2a" opacity="0.85"/>
+        <ellipse cx="9"   cy="-8"  rx="4.5" ry="7"   transform="rotate(45 9 -8)"     fill="#2d6a4f" opacity="0.90"/>
+        <ellipse cx="10"  cy="-15" rx="4"   ry="6.5" transform="rotate(30 10 -15)"   fill="#236841" opacity="0.85"/>
+        <ellipse cx="0"   cy="-21" rx="4"   ry="6.5"                                  fill="#3d9e6b" opacity="0.92"/>
+      </g>
+
+      {/* ── Individual leaves along the main stem ── */}
+      <path d="M0,0 C-5,-4 -11,-3 -12,2 C-13,7 -9,13 0,15 C9,13 13,7 12,2 C11,-3 5,-4 0,0 Z"
+            transform="translate(150,84) rotate(-32) scale(1.3)"  fill="#2d6a4f" opacity="0.80"/>
+      <path d="M0,0 C-5,-4 -10,-2 -11,3 C-12,8 -8,13 0,15 C8,13 12,8 11,3 C10,-2 5,-4 0,0 Z"
+            transform="translate(345,82) rotate(18) scale(1.2)"   fill="#1a4a2a" opacity="0.75"/>
+      <path d="M0,0 C-6,-5 -13,-3 -14,3 C-15,9 -10,16 0,18 C10,16 15,9 14,3 C13,-3 6,-5 0,0 Z"
+            transform="translate(525,80) rotate(-22) scale(1.4)"  fill="#3d9e6b" opacity="0.75"/>
+      <path d="M0,0 C-5,-4 -10,-2 -11,3 C-12,8 -8,13 0,15 C8,13 12,8 11,3 C10,-2 5,-4 0,0 Z"
+            transform="translate(722,81) rotate(-5) scale(1.5)"   fill="#236841" opacity="0.80"/>
+      <path d="M0,0 C-5,-4 -11,-3 -12,2 C-13,7 -9,13 0,15 C9,13 13,7 12,2 C11,-3 5,-4 0,0 Z"
+            transform="translate(926,81) rotate(28) scale(1.3)"   fill="#2d6a4f" opacity="0.78"/>
+      <path d="M0,0 C-6,-5 -13,-3 -14,3 C-15,9 -10,16 0,18 C10,16 15,9 14,3 C13,-3 6,-5 0,0 Z"
+            transform="translate(1105,83) rotate(-18) scale(1.3)" fill="#1a4a2a" opacity="0.75"/>
+      <path d="M0,0 C-5,-4 -10,-2 -11,3 C-12,8 -8,13 0,15 C8,13 12,8 11,3 C10,-2 5,-4 0,0 Z"
+            transform="translate(1285,84) rotate(22) scale(1.2)"  fill="#3d9e6b" opacity="0.78"/>
+
+      {/* ── Tendrils (thin curling grapevine-style spirals) ── */}
+      <path d="M340,80 C345,74 350,68 347,62 C344,56 350,52 354,56 C358,60 354,66 348,62"
+            stroke="#6b3015" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+      <path d="M720,78 C724,72 730,66 726,60 C722,54 728,50 732,54 C736,58 730,64 724,60"
+            stroke="#6b3015" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+      <path d="M1098,80 C1093,74 1088,68 1092,62 C1096,56 1090,52 1086,56 C1082,60 1088,66 1094,62"
+            stroke="#6b3015" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+    </svg>
   )
 }
 

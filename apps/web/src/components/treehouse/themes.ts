@@ -5,6 +5,7 @@ import type { ThemeKey } from './config'
 export interface ThemeClasses {
   // Page-level
   pageBg: string
+  pageBgHex: string  // hex equivalent for gradient fades / inline styles
   // Hero
   heroBg: string
   heroOverlayDot: string // the blurred circle accents
@@ -30,6 +31,7 @@ export interface ThemeClasses {
 export const THEME_MAP: Record<ThemeKey, ThemeClasses> = {
   jungle: {
     pageBg: 'bg-jungle-900',
+    pageBgHex: '#0a1c14',
     heroBg: 'bg-gradient-to-b from-jungle-800 to-jungle-900',
     heroOverlayDot: 'bg-jungle-400',
     textPrimary: 'text-white',
@@ -47,6 +49,7 @@ export const THEME_MAP: Record<ThemeKey, ThemeClasses> = {
   },
   earth: {
     pageBg: 'bg-stone-900',
+    pageBgHex: '#1c1917',
     heroBg: 'bg-gradient-to-b from-stone-800 to-stone-900',
     heroOverlayDot: 'bg-earth-400',
     textPrimary: 'text-white',
@@ -64,6 +67,7 @@ export const THEME_MAP: Record<ThemeKey, ThemeClasses> = {
   },
   midnight: {
     pageBg: 'bg-slate-950',
+    pageBgHex: '#020617',
     heroBg: 'bg-gradient-to-b from-slate-900 to-slate-950',
     heroOverlayDot: 'bg-indigo-400',
     textPrimary: 'text-white',
@@ -81,6 +85,7 @@ export const THEME_MAP: Record<ThemeKey, ThemeClasses> = {
   },
   dawn: {
     pageBg: 'bg-stone-50',
+    pageBgHex: '#fafaf9',
     heroBg: 'bg-gradient-to-b from-white to-stone-50',
     heroOverlayDot: 'bg-jungle-200',
     textPrimary: 'text-stone-900',
@@ -98,6 +103,7 @@ export const THEME_MAP: Record<ThemeKey, ThemeClasses> = {
   },
   stone: {
     pageBg: 'bg-stone-100',
+    pageBgHex: '#f5f5f4',
     heroBg: 'bg-gradient-to-b from-stone-50 to-stone-100',
     heroOverlayDot: 'bg-stone-300',
     textPrimary: 'text-stone-900',

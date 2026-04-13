@@ -64,12 +64,12 @@ export default async function HomePage() {
       </div>
 
       {/* Pricing — fun & transparent */}
-      <section className="py-20 px-6 bg-jungle-950">
+      <section className="py-20 px-6 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-xs font-semibold text-jungle-500 uppercase tracking-widest mb-3">Radical Transparency</p>
-            <h2 className="text-4xl font-black text-white mb-3">Here&apos;s how the money flows.</h2>
-            <p className="text-jungle-300 max-w-xl mx-auto text-lg">
+            <h2 className="text-4xl font-black text-stone-900 mb-3">Here&apos;s how the money flows.</h2>
+            <p className="text-stone-600 max-w-xl mx-auto text-lg">
               Each video has three prices set by the teacher. Pick the one that fits you — 80% goes to the teacher, 20% platform fee keeps JungleGym running.
             </p>
           </div>
@@ -81,39 +81,39 @@ export default async function HomePage() {
                 tier: 'Supported',
                 tagline: 'The floor',
                 desc: 'Full access, no asterisks. Pick this when money is tight.',
-                bg: 'bg-jungle-800/50',
-                border: 'border-jungle-700',
+                bg: 'bg-stone-50',
+                border: 'border-stone-200',
               },
               {
                 emoji: '🌿',
                 tier: 'Community',
                 tagline: 'The sweet spot',
                 desc: "Sustaining someone's practice. The tier most people choose.",
-                bg: 'bg-jungle-800/70',
-                border: 'border-jungle-600',
+                bg: 'bg-jungle-50',
+                border: 'border-jungle-200',
               },
               {
                 emoji: '🌳',
                 tier: 'Abundance',
                 tagline: 'Pay it forward',
                 desc: "When you're doing well, this is how you spread it.",
-                bg: 'bg-jungle-700/60',
-                border: 'border-jungle-500',
+                bg: 'bg-jungle-100',
+                border: 'border-jungle-300',
               },
             ].map((t) => (
               <div key={t.tier} className={`${t.bg} border ${t.border} rounded-2xl p-6`}>
                 <div className="text-3xl mb-3">{t.emoji}</div>
-                <h3 className="font-black text-white text-lg mb-1">{t.tier}</h3>
-                <p className="text-jungle-400 text-xs font-semibold uppercase tracking-wide mb-2">{t.tagline}</p>
-                <p className="text-jungle-300 text-sm leading-relaxed">{t.desc}</p>
+                <h3 className="font-black text-stone-900 text-lg mb-1">{t.tier}</h3>
+                <p className="text-jungle-600 text-xs font-semibold uppercase tracking-wide mb-2">{t.tagline}</p>
+                <p className="text-stone-600 text-sm leading-relaxed">{t.desc}</p>
               </div>
             ))}
           </div>
 
           <div className="text-center mt-8 space-y-2">
-            <p className="text-white text-sm font-bold">The price you see is the price you pay. 80% goes to the teacher, 20% platform fee.</p>
-            <p className="text-jungle-500 text-sm">No hidden fees. No surprises. Just a clean, honest split.</p>
-            <p className="text-jungle-500 text-sm">You can also share any video you own with one friend — on us.</p>
+            <p className="text-stone-800 text-sm font-bold">The price you see is the price you pay. 80% goes to the teacher, 20% platform fee.</p>
+            <p className="text-stone-500 text-sm">No hidden fees. No surprises. Just a clean, honest split.</p>
+            <p className="text-stone-500 text-sm">You can also share any video you own with one friend — on us.</p>
           </div>
         </div>
       </section>
@@ -139,13 +139,13 @@ export default async function HomePage() {
       </section>
 
       {/* Live sessions */}
-      <section className="py-14 px-6 bg-jungle-950 border-t border-jungle-800">
+      <section className="py-14 px-6 bg-stone-50 border-t border-stone-200">
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
-            <h2 className="text-2xl font-black text-white mb-1">Want a workout with a little magic in it?</h2>
-            <p className="text-jungle-300 text-sm leading-relaxed">Live classes let you move alongside a real guide, ask questions mid-practice, and get the kind of personalization you just can&apos;t get from a recording. Find a class that&apos;s calling your name — and show up.</p>
+            <h2 className="text-2xl font-black text-stone-900 mb-1">Want a workout with a little magic in it?</h2>
+            <p className="text-stone-600 text-sm leading-relaxed">Live classes let you move alongside a real guide, ask questions mid-practice, and get the kind of personalization you just can&apos;t get from a recording. Find a class that&apos;s calling your name — and show up.</p>
           </div>
-          <Link href="/sessions" className="shrink-0 bg-jungle-900 hover:bg-jungle-800 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors whitespace-nowrap">
+          <Link href="/sessions" className="shrink-0 bg-jungle-800 hover:bg-jungle-700 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors whitespace-nowrap">
             Join a live class →
           </Link>
         </div>

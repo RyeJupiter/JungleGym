@@ -3,7 +3,6 @@ import type { TreehouseConfig } from './config'
 import { THEME_MAP } from './themes'
 import { SectionRenderer } from './sections/SectionRenderer'
 import type { TreehouseData } from './sections/SectionRenderer'
-import { TreehouseBanner } from './TreehouseBanner'
 
 type Props = {
   config: TreehouseConfig
@@ -15,9 +14,6 @@ export function TreehouseRenderer({ config, data }: Props) {
 
   return (
     <div className={`relative min-h-screen ${theme.pageBg}`}>
-      {/* Banner bar with vine arch decoration */}
-      <TreehouseBanner theme={config.theme} bannerUrl={config.banner} />
-
       {/* Sections in configured order */}
       <div>
         {config.sections.map((section) => (
@@ -26,7 +22,7 @@ export function TreehouseRenderer({ config, data }: Props) {
             section={section}
             data={data}
             theme={theme}
-            hasBanner={!!config.banner}
+            bannerUrl={config.banner}
           />
         ))}
 

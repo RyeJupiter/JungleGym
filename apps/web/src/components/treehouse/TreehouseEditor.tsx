@@ -21,7 +21,6 @@ import type { TreehouseConfig, SectionConfig, ThemeKey } from './config'
 import { SINGLETON_SECTIONS } from './config'
 import { THEME_MAP } from './themes'
 import { SectionRenderer } from './sections/SectionRenderer'
-import { TreehouseBanner } from './TreehouseBanner'
 import type { TreehouseData } from './sections/SectionRenderer'
 import { SortableSection } from './SortableSection'
 import { EditorToolbar } from './EditorToolbar'
@@ -233,15 +232,6 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
         saving={saving}
       />
 
-      {/* Banner bar — editable on hover */}
-      <TreehouseBanner
-        theme={config.theme}
-        bannerUrl={config.banner}
-        editing
-        onUpload={handleBannerUpload}
-        onBannerChange={handleBannerChange}
-      />
-
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
           items={config.sections.map((s) => s.id)}
@@ -268,7 +258,7 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
                   section={section}
                   data={liveData}
                   theme={theme}
-                  hasBanner={!!config.banner}
+                  bannerUrl={config.banner}
                   editing
                   onFieldChange={handleFieldChange}
                   onSectionDataChange={handleSectionDataChange}
