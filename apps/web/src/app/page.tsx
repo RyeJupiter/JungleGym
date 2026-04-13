@@ -305,10 +305,10 @@ export default async function HomePage() {
           </div>
 
           {/* Two columns */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
 
             {/* Left: purpose statement quote */}
-            <blockquote className="border-l-2 border-jungle-500 pl-6">
+            <blockquote className="bg-black/25 rounded-2xl px-6 py-5 border-l-2 border-jungle-500">
               <p className="text-xl font-bold text-white leading-snug mb-4">
                 &ldquo;Liquidate Physical Education. Replace the standardized, joyless model with vetted
                 teachers sharing what they love, students choosing what moves them, money flowing
@@ -323,7 +323,7 @@ export default async function HomePage() {
             </blockquote>
 
             {/* Right: updated text */}
-            <div className="text-jungle-200 text-lg leading-relaxed space-y-4">
+            <div className="bg-black/25 rounded-2xl px-6 py-5 text-jungle-200 text-lg leading-relaxed space-y-4">
               <p>Mimicry is the oldest way to learn.</p>
               <p>JungleGym is built on that idea.</p>
               <p>Watch someone move with ease, and your body starts to understand — mirror neurons activate.</p>
@@ -331,15 +331,16 @@ export default async function HomePage() {
 
           </div>
 
-          {/* CTA */}
-          <div className="text-center">
-            <Link
-              href="/classes"
-              className="bg-earth-400 hover:bg-earth-500 text-white font-bold px-10 py-4 rounded-xl text-lg inline-block transition-colors"
-            >
-              Start training now
-            </Link>
-          </div>
+          {/* CTA — full-width wood-texture button */}
+          <Link
+            href="/classes"
+            className="block w-full text-center font-display font-black text-white text-xl py-5 rounded-xl transition-all hover:brightness-110 shadow-lg"
+            style={{
+              background: "repeating-linear-gradient(88deg, transparent 0px, transparent 10px, rgba(0,0,0,0.07) 10px, rgba(0,0,0,0.07) 11px), linear-gradient(135deg, #c4892a 0%, #a36b1e 40%, #7a5018 75%, #c4892a 100%)"
+            }}
+          >
+            Start training now
+          </Link>
 
         </div>
         </div>{/* end overlay */}
