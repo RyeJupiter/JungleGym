@@ -6,14 +6,18 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 const WELCOME_VIDEO_ID = '6beae5fe-eb48-4caa-9e39-4e35452bf50f'
 
 // ── Public-domain natural history illustrations (Wikimedia Commons) ───────────
-// Gorilla lithograph by Jonathan Kingdon, Wellcome Collection — CC BY 4.0
-const GORILLA_URL = "https://upload.wikimedia.org/wikipedia/commons/a/a5/A_gorilla._Lithograph_by_Jonathan_Kingdon._Wellcome_L0024957.jpg"
+// Orangutan engraving, Wellcome Collection 1658 — CC BY 4.0
+// Chimpanzee head study, Joseph Schippers 1894, Rijksmuseum — CC0
+// Chimpanzee natural history, Philip Henry Gosse 1848 — public domain
+const IMG_LEFT  = "https://upload.wikimedia.org/wikipedia/commons/2/2e/Engraving_of_a_orangutan_Wellcome_L0032838.jpg"
+const IMG_RIGHT = "https://upload.wikimedia.org/wikipedia/commons/5/53/Kop_van_een_jonge_chimpansee%2C_RP-1913-2832.jpg"
+const IMG_MONKEY_SECTION = "https://upload.wikimedia.org/wikipedia/commons/e/e6/Chimpanzee_Natural_Histpry_1848.jpg"
 
 function GorillaLeft() {
   return (
     <img
-      src={GORILLA_URL}
-      alt="Gorilla — lithograph, Wellcome Collection (public domain)"
+      src={IMG_LEFT}
+      alt="Orangutan — engraving, Wellcome Collection (public domain)"
       className="w-36 xl:w-52 h-auto invert mix-blend-screen opacity-35"
     />
   )
@@ -22,9 +26,9 @@ function GorillaLeft() {
 function GorillaRight() {
   return (
     <img
-      src={GORILLA_URL}
-      alt="Gorilla — lithograph, Wellcome Collection (public domain)"
-      className="w-36 xl:w-52 h-auto invert mix-blend-screen opacity-35 scale-x-[-1]"
+      src={IMG_RIGHT}
+      alt="Chimpanzee — etching, Rijksmuseum (public domain)"
+      className="w-36 xl:w-52 h-auto invert mix-blend-screen opacity-35"
     />
   )
 }
@@ -127,7 +131,12 @@ export default async function HomePage() {
       <Navbar />
 
       {/* Hero */}
-      <div className="bg-jungle-800">
+      <div
+        className="bg-jungle-800 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/jungle-gateway.png')", backgroundAttachment: "fixed" }}
+      >
+        {/* Dark overlay so text stays readable */}
+        <div className="bg-jungle-900/55">
         <section className="pt-28 pb-24 px-6 text-center relative overflow-hidden">
 
           {/* Gorilla decorations */}
@@ -187,6 +196,7 @@ export default async function HomePage() {
             ))}
           </div>
         </section>
+        </div>{/* end overlay */}
       </div>
 
       {/* Pricing — fun & transparent */}
@@ -253,7 +263,11 @@ export default async function HomePage() {
       <section className="py-20 px-6 bg-jungle-900 text-center">
         <div className="max-w-2xl mx-auto">
           <div className="flex justify-center mb-6">
-            <MonkeyOnBranch />
+            <img
+              src={IMG_MONKEY_SECTION}
+              alt="Chimpanzee — Philip Henry Gosse, 1848 (public domain)"
+              className="w-40 h-auto invert mix-blend-screen opacity-55"
+            />
           </div>
           <p className="text-jungle-400 text-sm font-semibold uppercase tracking-widest mb-3">The oldest wisdom</p>
           <h2 className="text-4xl font-black text-white mb-4">Monkey see. Monkey do.</h2>
