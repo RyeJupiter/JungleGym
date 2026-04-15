@@ -9,21 +9,23 @@ import { createClient } from '@supabase/supabase-js'
  * Uses service role client since webhooks have no user auth context.
  */
 export async function POST(request: Request) {
-  // Verify webhook secret (simple shared-secret header check)
-  const webhookSecret = process.env.CLOUDFLARE_STREAM_WEBHOOK_SECRET
-  if (webhookSecret) {
-    const sig = request.headers.get('cf-webhook-auth') ?? request.headers.get('x-webhook-secret')
-    if (sig !== webhookSecret) {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 403 })
-    }
-  }
-
   const body = await request.json()
   const eventType = body?.data?.event_type as string | undefined
   const inputId = body?.data?.input_id as string | undefined
 
   if (!eventType || !inputId) {
     return NextResponse.json({ error: 'Missing event data' }, { status: 400 })
+  }
+
+  // Verify webhook secret — CF Stream sends it in cf-webhook-auth header.
+  // Accept if: no secret configured (dev), or header matches.
+  const webhookSecret = process.env.CLOUDFLARE_STREAM_WEBHOOK_SECRET
+  if (webhookSecret) {
+    const cfAuth = request.headers.get('cf-webhook-auth')
+    if (cfAuth !== webhookSecret) {
+      console.error(`[CF Stream Webhook] Auth failed. Header: ${cfAuth?.slice(0, 10)}...`)
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 403 })
+    }
   }
 
   // Service role client for webhook — no user context
@@ -42,7 +44,6 @@ export async function POST(request: Request) {
     .single()
 
   if (!session) {
-    // Unknown input — could be from a different service or deleted session
     return NextResponse.json({ ok: true, skipped: true })
   }
 
@@ -53,22 +54,24 @@ export async function POST(request: Request) {
       newStatus = 'live'
       break
     case 'live_input.disconnected':
-      // Only auto-complete if currently live (don't override manual status changes)
       if (session.status === 'live') {
         newStatus = 'completed'
       }
       break
     case 'live_input.errored':
-      // Log but don't change status — creator may reconnect
-      console.error(`[CF Stream] Error on input ${inputId}:`, body?.data?.live_input_errored)
+      console.error(`[CF Stream] Error on input ${inputId}:`, body?.data)
       break
   }
 
   if (newStatus && newStatus !== session.status) {
-    await supabase
+    const { error } = await supabase
       .from('live_sessions')
       .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq('id', session.id)
+
+    if (error) {
+      console.error(`[CF Stream Webhook] DB update failed:`, error)
+    }
   }
 
   return NextResponse.json({ ok: true, event: eventType, newStatus })

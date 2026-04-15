@@ -6,6 +6,7 @@ import { AddSessionToCalendarButton } from '@/components/session/AddSessionToCal
 import { StreamPlayer, StreamPlaceholder } from '@/components/session/StreamPlayer'
 import { getPlaybackUrls } from '@/lib/cloudflare-stream'
 import { LocalTime } from '@/components/LocalTime'
+import { SessionAutoRefresh } from '@/components/session/SessionAutoRefresh'
 
 export async function SessionContent({ sessionId }: { sessionId: string }) {
   const supabase = await createServerSupabaseClient()
@@ -36,6 +37,8 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
+      <SessionAutoRefresh sessionId={session.id} currentStatus={session.status} />
+
       {/* Status banner */}
       {isLive && (
         <div className="bg-red-50 border border-red-200 rounded-2xl px-6 py-4 mb-8 flex items-center gap-3">
