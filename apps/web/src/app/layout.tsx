@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, Bricolage_Grotesque } from 'next/font/google'
+import { RouteProgress } from '@/components/RouteProgress'
 import './globals.css'
 
 const jakarta = Plus_Jakarta_Sans({
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${jakarta.variable} ${bricolage.variable}`}>
       <body className="font-sans overflow-x-hidden">
+        <RouteProgress />
         {children}
       </body>
     </html>

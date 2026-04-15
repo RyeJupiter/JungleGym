@@ -9,6 +9,34 @@ export function Skeleton({ className = '' }: { className?: string }) {
   return <div className={`animate-pulse bg-stone-200 rounded ${className}`} />
 }
 
+/* ─── Navbar ───────────────────────────────────────────────── */
+
+export function NavbarSkeleton() {
+  return (
+    <header className="sticky top-0 z-40 bg-jungle-900 border-b border-jungle-800 px-6 h-16 flex items-center justify-between">
+      <span className="font-black text-xl text-white font-display">
+        jungle<span className="text-jungle-400">gym</span>
+      </span>
+      <div className="flex items-center gap-4">
+        <div className="h-3 w-12 rounded bg-jungle-800 animate-pulse" />
+        <div className="h-3 w-12 rounded bg-jungle-800 animate-pulse" />
+        <div className="h-3 w-12 rounded bg-jungle-800 animate-pulse" />
+        <div className="h-8 w-8 rounded-full bg-jungle-800 animate-pulse" />
+      </div>
+    </header>
+  )
+}
+
+/* ─── Search Bar ───────────────────────────────────────────── */
+
+export function SearchBarSkeleton() {
+  return (
+    <div className="mb-8">
+      <div className="h-11 w-full rounded-xl bg-white border border-stone-200 animate-pulse" />
+    </div>
+  )
+}
+
 /* ─── Video Card ────────────────────────────────────────────── */
 
 export function VideoCardSkeleton() {
