@@ -502,7 +502,7 @@ export function CheckoutSkeleton() {
 /* ─── Growing Pixel Tree (loading animation) ──────────────── */
 
 export function GrowingTree({ message = 'Loading...' }: { message?: string }) {
-  const PX = 6
+  const PX = 3
   const COLS = 20
   const TOTAL_ROWS = 28
 
@@ -571,7 +571,6 @@ export function GrowingTree({ message = 'Loading...' }: { message?: string }) {
         viewBox={`0 0 ${COLS * PX} ${TOTAL_ROWS * PX}`}
         width={COLS * PX * 2}
         height={TOTAL_ROWS * PX * 2}
-        style={{ imageRendering: 'pixelated' }}
       >
         {/* Ground shadow */}
         <rect x={6 * PX} y={27 * PX} width={8 * PX} height={PX} rx={2} fill="#d6d3d1" opacity="0.3" />
