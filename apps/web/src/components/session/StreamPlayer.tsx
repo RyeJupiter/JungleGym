@@ -60,7 +60,7 @@ export function StreamPlayer({
       {/* 16:9 responsive iframe (stays rendered behind overlay when paused) */}
       <div className="aspect-video">
         <iframe
-          src={iframeSrc}
+          src={`${iframeSrc}?autoplay=true&muted=true&preload=true`}
           className="w-full h-full"
           allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
           allowFullScreen
