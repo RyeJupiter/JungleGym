@@ -85,36 +85,13 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
         </div>
       </div>
 
-      {/* Creator card */}
-      {creator && (
-        <div className="bg-white rounded-2xl border border-stone-200 p-6 mb-8">
-          <p className="text-xs text-stone-400 font-semibold uppercase tracking-wider mb-3">Hosted by</p>
-          <Link href={`/@${creator.username}`} className="flex items-center gap-4 group">
-            <div className="w-14 h-14 rounded-full bg-jungle-100 overflow-hidden flex items-center justify-center text-2xl flex-shrink-0">
-              {creator.photo_url ? (
-                <img src={creator.photo_url} alt="" className="w-full h-full object-cover" />
-              ) : '🌿'}
-            </div>
-            <div>
-              <p className="font-bold text-stone-900 group-hover:text-jungle-700 transition-colors">
-                {creator.display_name}
-              </p>
-              <p className="text-sm text-stone-400">@{creator.username}</p>
-            </div>
-          </Link>
-          {creator.bio && (
-            <p className="text-stone-500 text-sm mt-3 line-clamp-3">{creator.bio}</p>
-          )}
-        </div>
-      )}
-
       {/* Stream player or placeholder */}
       {playbackUrls && isLive ? (
-        <div className="mb-8">
+        <div className="mb-6">
           <StreamPlayer iframeSrc={playbackUrls.iframe} isLive />
         </div>
       ) : playbackUrls && isPast ? (
-        <div className="mb-8">
+        <div className="mb-6">
           <StreamPlayer iframeSrc={playbackUrls.iframe} isRecording />
         </div>
       ) : (
@@ -123,6 +100,23 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
           isPast={isPast}
           scheduledDay={scheduledDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })}
         />
+      )}
+
+      {/* Creator tile */}
+      {creator && (
+        <Link href={`/@${creator.username}`} className="flex items-center gap-3 bg-white rounded-xl border border-stone-200 px-4 py-3 mb-8 hover:border-jungle-400 transition-colors group w-fit">
+          <div className="w-9 h-9 rounded-full bg-jungle-100 overflow-hidden flex items-center justify-center text-sm flex-shrink-0">
+            {creator.photo_url ? (
+              <img src={creator.photo_url} alt="" className="w-full h-full object-cover" />
+            ) : '🌿'}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-stone-900 group-hover:text-jungle-700 transition-colors leading-tight">
+              {creator.display_name}
+            </p>
+            <p className="text-xs text-stone-400">@{creator.username}</p>
+          </div>
+        </Link>
       )}
 
       {!isPast && (
