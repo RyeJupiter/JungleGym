@@ -13,5 +13,5 @@ export function LocalTime({
   options?: Intl.DateTimeFormatOptions
 }) {
   const d = new Date(iso)
-  return <time dateTime={iso}>{d.toLocaleString(undefined, options)}</time>
+  return <time dateTime={iso} suppressHydrationWarning>{d.toLocaleString(undefined, options)}</time>
 }

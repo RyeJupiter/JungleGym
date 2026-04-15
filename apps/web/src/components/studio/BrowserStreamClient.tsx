@@ -212,15 +212,15 @@ export function BrowserStreamClient({ sessionId, cfInputId, cfStreamKey, whipUrl
         }
       })
 
-      // Send offer to WHIP endpoint
-      const response = await fetch(whipUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/sdp',
-          'Authorization': `Bearer ${cfStreamKey}`,
-        },
-        body: pc.localDescription!.sdp,
-      })
+      // Send offer through our WHIP proxy (avoids CORS with CF's endpoint)
+      const response = await fetch(
+        `/api/stream/whip?inputId=${encodeURIComponent(cfInputId)}&streamKey=${encodeURIComponent(cfStreamKey)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/sdp' },
+          body: pc.localDescription!.sdp,
+        }
+      )
 
       if (!response.ok) {
         const text = await response.text().catch(() => '')
