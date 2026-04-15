@@ -1,31 +1,25 @@
-import { redirect } from 'next/navigation'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { ApplyToTeachForm } from '@/components/apply/ApplyToTeachForm'
+import { Suspense } from 'react'
 import { FooterCompact } from '@/components/FooterCompact'
+import { Skeleton } from '@/components/skeletons'
+import { ApplyContent } from './ApplyContent'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Apply to Teach' }
 
-export default async function ApplyPage() {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user: authUser } } = await supabase.auth.getUser()
+function ApplySkeleton() {
+  return (
+    <div className="bg-white border border-stone-200 rounded-2xl p-8 space-y-4 shadow-sm">
+      <Skeleton className="h-6 w-48 rounded mx-auto" />
+      <Skeleton className="h-4 w-64 rounded mx-auto" />
+      <Skeleton className="h-10 w-full rounded-lg" />
+      <Skeleton className="h-24 w-full rounded-lg" />
+      <Skeleton className="h-10 w-full rounded-lg" />
+      <Skeleton className="h-10 w-32 rounded-lg mx-auto" />
+    </div>
+  )
+}
 
-  if (!authUser) redirect('/auth/login')
-
-  const { data: user } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', authUser.id)
-    .single()
-
-  if (user?.role === 'creator') redirect('/studio')
-
-  const { data: existing } = await supabase
-    .from('teacher_applications')
-    .select('status')
-    .eq('user_id', authUser.id)
-    .single()
-
+export default function ApplyPage() {
   return (
     <main className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
       <div className="w-full max-w-lg">
@@ -39,23 +33,9 @@ export default async function ApplyPage() {
           </p>
         </div>
 
-        {existing?.status === 'pending' ? (
-          <div className="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-2 shadow-sm">
-            <h2 className="text-xl font-bold text-stone-900">Application under review</h2>
-            <p className="text-stone-500 text-sm">
-              We review each application personally. We&apos;ll be in touch soon.
-            </p>
-          </div>
-        ) : existing?.status === 'rejected' ? (
-          <div className="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-2 shadow-sm">
-            <h2 className="text-xl font-bold text-stone-700">Not accepted this time</h2>
-            <p className="text-stone-500 text-sm">
-              We weren&apos;t able to approve your application. Feel free to reach out to us directly.
-            </p>
-          </div>
-        ) : (
-          <ApplyToTeachForm userId={authUser.id} />
-        )}
+        <Suspense fallback={<ApplySkeleton />}>
+          <ApplyContent />
+        </Suspense>
       </div>
       <FooterCompact />
     </main>

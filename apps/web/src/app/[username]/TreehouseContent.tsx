@@ -1,0 +1,72 @@
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { notFound } from 'next/navigation'
+import { resolveConfig } from '@/components/treehouse/config'
+import { TreehouseShell } from './TreehouseShell'
+
+export async function TreehouseContent({ username }: { username: string }) {
+  const supabase = await createServerSupabaseClient()
+
+  // Step 1: fetch profile
+  const { data: profileRaw } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('username', username)
+    .single()
+
+  if (!profileRaw) notFound()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const profile = profileRaw as any
+
+  // Step 2: parallel queries (no FK join filters per architecture rules)
+  const [{ data: videos }, { data: sessions }, { data: { user: authUser } }] =
+    await Promise.all([
+      supabase
+        .from('videos')
+        .select('id, title, description, thumbnail_url, duration_seconds, is_free, price_supported, price_community, price_abundance, tags, view_count, created_at')
+        .eq('creator_id', profile.user_id)
+        .eq('published', true)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('live_sessions')
+        .select('id, title, description, scheduled_at, duration_minutes, status, max_participants')
+        .eq('creator_id', profile.user_id)
+        .or(`status.eq.live,and(status.eq.scheduled,scheduled_at.gte.${new Date().toISOString()})`)
+        .order('scheduled_at', { ascending: true })
+        .limit(4),
+      supabase.auth.getUser(),
+    ])
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const allVideos: any[] = videos ?? []
+  const freeVideos = allVideos.filter((v) => v.is_free)
+  const paidVideos = allVideos.filter((v) => !v.is_free)
+  const upcomingSessions = sessions ?? []
+  const isOwnProfile = authUser?.id === profile.user_id
+
+  const config = resolveConfig(profile.treehouse_config)
+
+  const data = {
+    profile: {
+      user_id: profile.user_id,
+      display_name: profile.display_name,
+      username: profile.username,
+      photo_url: profile.photo_url,
+      tagline: profile.tagline,
+      bio: profile.bio,
+      location: profile.location,
+      tags: profile.tags,
+      supported_rate: Number(profile.supported_rate),
+      community_rate: Number(profile.community_rate),
+      abundance_rate: Number(profile.abundance_rate),
+      instagram_url: profile.instagram_url ?? null,
+      website_url: profile.website_url ?? null,
+    },
+    freeVideos,
+    paidVideos,
+    allVideos,
+    sessions: upcomingSessions,
+    isOwnProfile,
+  }
+
+  return <TreehouseShell config={config} data={data} />
+}
