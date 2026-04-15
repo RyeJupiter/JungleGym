@@ -13,10 +13,12 @@ export function StreamPlayer({
   iframeSrc,
   isLive,
   isRecording,
+  isPaused,
 }: {
   iframeSrc: string
   isLive?: boolean
   isRecording?: boolean
+  isPaused?: boolean
 }) {
   if (!iframeSrc) {
     return (
@@ -32,7 +34,7 @@ export function StreamPlayer({
   return (
     <div className="relative rounded-2xl overflow-hidden bg-black">
       {/* Live indicator */}
-      {isLive && (
+      {isLive && !isPaused && (
         <div className="absolute top-3 left-3 z-10 flex items-center gap-2 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
           <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
           LIVE
@@ -44,7 +46,18 @@ export function StreamPlayer({
         </div>
       )}
 
-      {/* 16:9 responsive iframe */}
+      {/* BRB overlay when paused */}
+      {isPaused && (
+        <div className="absolute inset-0 z-20 bg-jungle-950 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-5xl mb-4 animate-pulse">🌿</p>
+            <p className="text-white text-xl font-black tracking-wide mb-2">Be right back</p>
+            <p className="text-white/50 text-sm">The session is taking a short break</p>
+          </div>
+        </div>
+      )}
+
+      {/* 16:9 responsive iframe (stays rendered behind overlay when paused) */}
       <div className="aspect-video">
         <iframe
           src={iframeSrc}

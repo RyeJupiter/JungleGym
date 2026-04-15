@@ -14,7 +14,7 @@ export async function GET(
 
   const { data: session } = await supabase
     .from('live_sessions')
-    .select('status')
+    .select('status, paused_at')
     .eq('id', id)
     .single()
 
@@ -22,5 +22,7 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  return NextResponse.json({ status: session.status })
+  const paused_at = (session as Record<string, unknown>).paused_at as string | null
+
+  return NextResponse.json({ status: session.status, paused: !!paused_at })
 }

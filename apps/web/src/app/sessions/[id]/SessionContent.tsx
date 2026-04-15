@@ -3,10 +3,11 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { GiftButton } from '@/components/session/GiftButton'
 import { AddSessionToCalendarButton } from '@/components/session/AddSessionToCalendarButton'
-import { StreamPlayer, StreamPlaceholder } from '@/components/session/StreamPlayer'
+import { StreamPlaceholder } from '@/components/session/StreamPlayer'
 import { getPlaybackUrls } from '@/lib/cloudflare-stream'
 import { LocalTime } from '@/components/LocalTime'
 import { SessionAutoRefresh } from '@/components/session/SessionAutoRefresh'
+import { LiveSessionWrapper } from '@/components/session/LiveSessionWrapper'
 
 export async function SessionContent({ sessionId }: { sessionId: string }) {
   const supabase = await createServerSupabaseClient()
@@ -33,11 +34,15 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
   const isPast = session.status === 'completed' || session.status === 'cancelled'
 
   const cfInputId = (session as Record<string, unknown>).cf_input_id as string | null
+  const pausedAt = (session as Record<string, unknown>).paused_at as string | null
   const playbackUrls = cfInputId ? getPlaybackUrls(cfInputId) : null
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
-      <SessionAutoRefresh sessionId={session.id} currentStatus={session.status} />
+      {/* Auto-refresh poller (only when no stream player — LiveSessionWrapper has its own) */}
+      {!(playbackUrls && (isLive || isPast)) && (
+        <SessionAutoRefresh sessionId={session.id} currentStatus={session.status} />
+      )}
 
       {/* Status banner */}
       {isLive && (
@@ -88,14 +93,15 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
       </div>
 
       {/* Stream player or placeholder */}
-      {playbackUrls && isLive ? (
-        <div className="mb-6">
-          <StreamPlayer iframeSrc={playbackUrls.iframe} isLive />
-        </div>
-      ) : playbackUrls && isPast ? (
-        <div className="mb-6">
-          <StreamPlayer iframeSrc={playbackUrls.iframe} isRecording />
-        </div>
+      {playbackUrls && (isLive || isPast) ? (
+        <LiveSessionWrapper
+          sessionId={session.id}
+          currentStatus={session.status}
+          iframeSrc={playbackUrls.iframe}
+          isLive={isLive}
+          isRecording={isPast}
+          initialPaused={!!pausedAt}
+        />
       ) : (
         <StreamPlaceholder
           isLive={isLive}
