@@ -5,12 +5,13 @@ import { useEffect, useRef } from 'react'
 /**
  * Full-page parallax forest background.
  *
- * The background scrolls up at 30% of the user's scroll speed — so the
- * forest "recedes" slower than the content, giving a climbing-down-a-tree
- * feeling as the content panels slide past.
+ * Uses position:absolute (not fixed) to avoid the compositor layer
+ * occlusion bug where browsers skip rendering a fixed layer when it's
+ * covered by opaque content, then "hiccup" when it becomes visible again.
  *
- * To use a real image instead of the CSS gradient, replace `background` below
- * with:  background: 'url(/jungle-bg.jpg) center top / cover no-repeat'
+ * The bg naturally scrolls with the page at 100% speed. We push it back
+ * DOWN at 70% of scroll speed, netting 30% upward scroll speed — the same
+ * climbing-down-a-tree parallax feel, without the layer pop.
  */
 export function ParallaxForest({ children }: { children: React.ReactNode }) {
   const bgRef = useRef<HTMLDivElement>(null)
@@ -20,9 +21,10 @@ export function ParallaxForest({ children }: { children: React.ReactNode }) {
     if (!bg) return
 
     const update = () => {
-      // As the user scrolls down (scrollY increases), shift the bg upward
-      // at only 30% of the scroll speed — the forest lags behind the content.
-      bg.style.transform = `translateY(${-window.scrollY * 0.3}px)`
+      // bg is position:absolute — it naturally scrolls at 100% with the page.
+      // Translating it DOWN at 70% of scrollY nets a 30% upward scroll speed:
+      // viewport sees bg content lag behind the content panels.
+      bg.style.transform = `translateY(${window.scrollY * 0.7}px)`
     }
 
     window.addEventListener('scroll', update, { passive: true })
@@ -31,16 +33,14 @@ export function ParallaxForest({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="relative">
-      {/* Parallax forest layer — fixed to viewport, but nudged by JS */}
+      {/* Parallax bg — absolute so it stays in the normal render flow */}
       <div
         ref={bgRef}
-        className="fixed left-0 right-0 top-0 pointer-events-none -z-10 will-change-transform"
+        className="absolute left-0 right-0 top-0 pointer-events-none -z-10 will-change-transform"
         style={{
-          // Extra 1200px of height so the div still covers the viewport
-          // even after being translated up at maximum scroll depth
-          // (rough math: 4000px page × 0.3 factor ≈ 1200px max shift)
-          height: 'calc(100vh + 1200px)',
-          // Use the real jungle image; gradient is a colour-matched fallback
+          // Extra 1200px keeps the bg from running out at the bottom as it
+          // lags behind — same buffer math as before
+          height: 'calc(100% + 1200px)',
           backgroundImage: "url('/jungle-gateway-web.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'center top',

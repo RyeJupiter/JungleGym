@@ -165,8 +165,8 @@ export default async function HomePage() {
 
       {/* Hero — ParallaxForest provides the bg image; overlay handles readability */}
       <div>
-        {/* Dark overlay */}
-        <div className="bg-jungle-950/70">
+        {/* Dark overlay + blur */}
+        <div className="bg-jungle-950/70 backdrop-blur-sm">
         <section className="pt-28 pb-24 px-6 text-center relative overflow-hidden">
 
           <div className="max-w-3xl mx-auto relative z-10">
@@ -283,7 +283,7 @@ export default async function HomePage() {
 
       {/* Philosophy blurb — ParallaxForest bg shows through the dark overlay */}
       <section>
-      <div className="bg-jungle-950/70 py-20 px-6">
+      <div className="bg-jungle-950/70 backdrop-blur-sm py-20 px-6">
         <div className="max-w-5xl mx-auto">
 
           {/* Header — centered */}
