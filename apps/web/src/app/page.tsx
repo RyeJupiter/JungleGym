@@ -163,8 +163,12 @@ export default async function HomePage() {
 
       <Navbar />
 
-      {/* Hero — ParallaxForest provides the bg image; overlay handles readability */}
-      <div>
+      {/* Hero — bg image lives here; ParallaxForest JS shifts its position */}
+      <div
+        data-parallax-bg
+        className="bg-cover bg-no-repeat"
+        style={{ backgroundImage: "url('/jungle-gateway-web.jpg')", backgroundAttachment: 'fixed', backgroundPosition: 'center 0px' }}
+      >
         {/* Dark overlay + blur */}
         <div className="bg-jungle-950/70 backdrop-blur-sm">
         <section className="pt-28 pb-24 px-6 text-center relative overflow-hidden">
@@ -281,8 +285,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Philosophy blurb — ParallaxForest bg shows through the dark overlay */}
-      <section>
+      {/* Philosophy blurb — same parallax bg as hero */}
+      <section
+        data-parallax-bg
+        className="bg-cover bg-no-repeat"
+        style={{ backgroundImage: "url('/jungle-gateway-web.jpg')", backgroundAttachment: 'fixed', backgroundPosition: 'center 0px' }}
+      >
       <div className="bg-jungle-950/70 backdrop-blur-sm py-20 px-6">
         <div className="max-w-5xl mx-auto">
 
