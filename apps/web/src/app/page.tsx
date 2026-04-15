@@ -167,10 +167,10 @@ export default async function HomePage() {
       <div
         data-parallax-bg
         className="bg-cover bg-no-repeat"
-        style={{ backgroundImage: "url('/jungle-gateway-web.jpg')", backgroundAttachment: 'fixed', backgroundPosition: 'center 0px' }}
+        style={{ backgroundImage: "url('/jungle-gateway-web-blur.jpg')", backgroundAttachment: 'fixed', backgroundPosition: 'center 0px' }}
       >
         {/* Dark overlay + blur */}
-        <div className="bg-jungle-950/70 backdrop-blur-sm">
+        <div className="bg-jungle-950/70">
         <section className="pt-28 pb-24 px-6 text-center relative overflow-hidden">
 
           <div className="max-w-3xl mx-auto relative z-10">
@@ -285,24 +285,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Gradient fade from white → transparent so the forest bg reveals
-           gradually — masks the backdrop-filter cold-start stutter */}
-      <div
-        data-parallax-bg
-        className="bg-cover bg-no-repeat"
-        style={{ backgroundImage: "url('/jungle-gateway-web.jpg')", backgroundAttachment: 'fixed', backgroundPosition: 'center 0px', height: '80px', marginTop: '-80px' }}
-        aria-hidden="true"
-      >
-        <div className="w-full h-full bg-gradient-to-b from-white to-transparent" />
-      </div>
-
       {/* Philosophy blurb — same parallax bg as hero */}
       <section
         data-parallax-bg
         className="bg-cover bg-no-repeat"
-        style={{ backgroundImage: "url('/jungle-gateway-web.jpg')", backgroundAttachment: 'fixed', backgroundPosition: 'center 0px' }}
+        style={{ backgroundImage: "url('/jungle-gateway-web-blur.jpg')", backgroundAttachment: 'fixed', backgroundPosition: 'center 0px' }}
       >
-      <div className="bg-jungle-950/70 backdrop-blur-sm py-20 px-6">
+      <div className="bg-jungle-950/70 py-20 px-6">
         <div className="max-w-5xl mx-auto">
 
           {/* Header — centered */}
