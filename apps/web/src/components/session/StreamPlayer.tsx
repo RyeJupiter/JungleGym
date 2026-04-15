@@ -24,6 +24,8 @@ export function StreamPlayer({
 }) {
   const [showUnmute, setShowUnmute] = useState(true)
   const [muted, setMuted] = useState(true)
+  // Unique per mount — busts browser cache when component remounts via key change
+  const [mountId] = useState(() => Date.now())
   if (!iframeSrc) {
     return (
       <div className="bg-stone-900 rounded-2xl aspect-video flex items-center justify-center">
@@ -82,7 +84,7 @@ export function StreamPlayer({
       {/* 16:9 responsive iframe (stays rendered behind overlay when paused) */}
       <div className="aspect-video">
         <iframe
-          src={`${iframeSrc}?autoplay=true&muted=${muted}&preload=true`}
+          src={`${iframeSrc}?autoplay=true&muted=${muted}&preload=true&_r=${mountId}`}
           className="w-full h-full cf-stream-iframe"
           allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
           allowFullScreen
