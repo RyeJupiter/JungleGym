@@ -29,12 +29,19 @@ export function getPlaybackUrls(inputId: string) {
   }
 }
 
+export function getWhipUrl(inputId: string): string | null {
+  const { customerCode } = getConfig()
+  if (!customerCode || !inputId) return null
+  return `https://customer-${customerCode}.cloudflarestream.com/${inputId}/webRTC/publish`
+}
+
 // ── Create a live input for a session ─────────────────────────
 
 export type ProvisionResult = {
   inputId: string
   rtmpsUrl: string
   streamKey: string
+  webRtcUrl: string | null
 }
 
 export async function provisionLiveInput(
@@ -71,6 +78,7 @@ export async function provisionLiveInput(
     inputId: data.result.uid,
     rtmpsUrl: data.result.rtmps.url,
     streamKey: data.result.rtmps.streamKey,
+    webRtcUrl: data.result.webRTC?.url ?? null,
   }
 }
 

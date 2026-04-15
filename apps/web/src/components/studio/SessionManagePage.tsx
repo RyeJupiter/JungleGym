@@ -38,6 +38,7 @@ export type GiftTransaction = {
 
 type Props = {
   session: Session
+  whipUrl: string | null
   metrics: Metrics
   transactions: GiftTransaction[]
 }
@@ -68,7 +69,7 @@ function toLocalInput(iso: string) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-export function SessionManagePage({ session: initial, metrics, transactions }: Props) {
+export function SessionManagePage({ session: initial, whipUrl, metrics, transactions }: Props) {
   const supabase = createBrowserSupabaseClient()
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('overview')
@@ -240,6 +241,7 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
           sessionId={initial.id}
           cfInputId={initial.cf_input_id}
           cfStreamKey={initial.cf_stream_key}
+          whipUrl={whipUrl}
         />
       )}
 

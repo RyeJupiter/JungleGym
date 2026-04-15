@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { SessionManagePage } from '@/components/studio/SessionManagePage'
+import { getWhipUrl } from '@/lib/cloudflare-stream'
 
 export async function SessionManageContent({ sessionId }: { sessionId: string }) {
   const supabase = await createServerSupabaseClient()
@@ -45,6 +46,9 @@ export async function SessionManageContent({ sessionId }: { sessionId: string })
   const totalGifts = transactions.reduce((sum, t) => sum + t.total, 0)
   const totalCreator = transactions.reduce((sum, t) => sum + t.creatorAmount, 0)
 
+  const cfInputId = (session as Record<string, unknown>).cf_input_id as string | null ?? null
+  const whipUrl = cfInputId ? getWhipUrl(cfInputId) : null
+
   return (
     <SessionManagePage
       session={{
@@ -56,9 +60,10 @@ export async function SessionManageContent({ sessionId }: { sessionId: string })
         duration_minutes: session.duration_minutes,
         status: session.status,
         max_participants: session.max_participants ?? null,
-        cf_input_id: (session as Record<string, unknown>).cf_input_id as string | null ?? null,
+        cf_input_id: cfInputId,
         cf_stream_key: (session as Record<string, unknown>).cf_stream_key as string | null ?? null,
       }}
+      whipUrl={whipUrl}
       metrics={{ giftCount: transactions.length, totalGifts, totalCreator }}
       transactions={transactions}
     />

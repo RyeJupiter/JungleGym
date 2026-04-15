@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { isStreamEnabled, provisionLiveInput } from '@/lib/cloudflare-stream'
+import { isStreamEnabled, provisionLiveInput, getWhipUrl } from '@/lib/cloudflare-stream'
 
 export async function POST(request: Request) {
   // 1. Auth
@@ -59,6 +59,7 @@ export async function POST(request: Request) {
       inputId,
       rtmpsUrl,
       streamKey,
+      whipUrl: getWhipUrl(inputId),
     })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to provision stream'
