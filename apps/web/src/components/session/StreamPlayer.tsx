@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useStreamSDK } from '@cloudflare/stream-react'
+import type { StreamPlayerApi } from '@cloudflare/stream-react'
 
 /**
  * Responsive Cloudflare Stream player.
@@ -9,6 +11,11 @@ import { useState, useRef, useEffect, useCallback } from 'react'
  * - Idle: "Stream hasn't started yet" placeholder
  * - Live: Embedded CF Stream iframe player
  * - Recording: Embedded playback of a saved recording
+ *
+ * Uses the CF Stream Player SDK for programmatic control (mute/unmute).
+ * The SDK is loaded BEFORE the iframe renders to prevent the iframeReady
+ * race condition (where the iframe sends its readiness signal before the
+ * SDK sets up its message listener, causing commands to queue forever).
  */
 
 export function StreamPlayer({
@@ -30,44 +37,61 @@ export function StreamPlayer({
   // Unique per mount — busts browser cache when component remounts via key change
   const [mountId] = useState(() => Date.now())
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const playerRef = useRef<any>(null)
+  const playerRef = useRef<StreamPlayerApi | undefined>(undefined)
 
-  // Load CF Stream Player SDK once
+  // Loads the CF Stream SDK script; returns the Stream constructor when ready.
+  // Returns undefined while the script is still loading.
+  const streamSdk = useStreamSDK()
+
+  // Initialize the SDK player AFTER the iframe mounts.
+  // Because we only render the iframe once streamSdk is defined (see the
+  // early return below), the SDK listener is guaranteed to be set up before
+  // the iframe's internal player sends its "iframeReady" postMessage.
   useEffect(() => {
-    if ((window as any).Stream) return
-    if (document.querySelector('script[src*="cloudflarestream.com/embed/sdk"]')) return
-    const script = document.createElement('script')
-    script.src = 'https://embed.cloudflarestream.com/embed/sdk.latest.js'
-    script.async = true
-    document.head.appendChild(script)
-  }, [])
+    if (!streamSdk || !iframeRef.current) return
 
-  // Initialize the SDK player reference after the iframe loads
-  const handleIframeLoad = useCallback(() => {
-    const init = () => {
-      if (!iframeRef.current || !(window as any).Stream) return false
-      try {
-        playerRef.current = (window as any).Stream(iframeRef.current)
-        // Restore mute state from before remount (e.g. after BRB resume)
-        if (!initialMuted) {
-          playerRef.current.muted = false
-        }
-        return true
-      } catch { return false }
-    }
+    const player = streamSdk(iframeRef.current)
+    playerRef.current = player
 
-    if (!init()) {
-      // SDK script might still be loading — poll briefly
-      const t = setInterval(() => { if (init()) clearInterval(t) }, 200)
-      setTimeout(() => clearInterval(t), 5000)
+    // If the viewer had previously unmuted (e.g. before a BRB pause),
+    // wait for playback to actually start, then restore unmuted state.
+    // We can't set muted=false in the iframe URL because browsers block
+    // autoplay with sound — so we always load muted, then unmute via SDK.
+    if (!initialMuted) {
+      const restore = () => {
+        if (playerRef.current) playerRef.current.muted = false
+      }
+      player.addEventListener('playing', restore)
+      return () => player.removeEventListener('playing', restore)
     }
-  }, [initialMuted])
+  }, [streamSdk, initialMuted])
+
+  const handleUnmute = useCallback(() => {
+    setShowUnmute(false)
+    if (playerRef.current) {
+      playerRef.current.muted = false
+    }
+    onMutedChange?.(false)
+  }, [onMutedChange])
+
   if (!iframeSrc) {
     return (
       <div className="bg-stone-900 rounded-2xl aspect-video flex items-center justify-center">
         <div className="text-center">
           <p className="text-4xl mb-3">📡</p>
           <p className="text-white/70 font-medium">Stream not available</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render the iframe until the SDK is loaded.
+  // This prevents the iframeReady race condition.
+  if (!streamSdk) {
+    return (
+      <div className="relative rounded-2xl overflow-hidden bg-black">
+        <div className="aspect-video flex items-center justify-center">
+          <div className="animate-pulse text-white/30 text-sm">Loading player…</div>
         </div>
       </div>
     )
@@ -102,13 +126,7 @@ export function StreamPlayer({
       {/* Unmute prompt — shown on top of the autoplaying (muted) stream */}
       {showUnmute && isLive && !isPaused && (
         <button
-          onClick={() => {
-            setShowUnmute(false)
-            if (playerRef.current) {
-              playerRef.current.muted = false
-            }
-            onMutedChange?.(false)
-          }}
+          onClick={handleUnmute}
           className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 backdrop-blur-[2px] cursor-pointer transition-opacity hover:bg-black/20"
         >
           <div className="bg-white/95 rounded-2xl px-6 py-4 shadow-xl flex items-center gap-3">
@@ -124,9 +142,8 @@ export function StreamPlayer({
       <div className="aspect-video">
         <iframe
           ref={iframeRef}
-          onLoad={handleIframeLoad}
           src={`${iframeSrc}?autoplay=true&muted=true&preload=true&_r=${mountId}`}
-          className="w-full h-full cf-stream-iframe"
+          className="w-full h-full"
           allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
           allowFullScreen
         />
