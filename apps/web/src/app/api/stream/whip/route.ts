@@ -6,6 +6,9 @@ import { getWhipUrl } from '@/lib/cloudflare-stream'
  * Proxies WHIP signaling to Cloudflare Stream.
  * The browser can't POST directly to CF's WHIP endpoint due to CORS,
  * so we relay the SDP offer/answer through our own origin.
+ *
+ * The stream key is fetched from the database server-side — it never
+ * needs to be sent from the client for this flow.
  */
 export async function POST(request: Request) {
   const supabase = await createServerSupabaseClient()
@@ -13,28 +16,34 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
   const url = new URL(request.url)
-  const inputId = url.searchParams.get('inputId')
-  const streamKey = url.searchParams.get('streamKey')
+  const sessionId = url.searchParams.get('sessionId')
 
-  if (!inputId || !streamKey) {
-    return NextResponse.json({ error: 'inputId and streamKey are required' }, { status: 400 })
+  if (!sessionId) {
+    return NextResponse.json({ error: 'sessionId is required' }, { status: 400 })
   }
 
-  const whipUrl = getWhipUrl(inputId)
-  if (!whipUrl) {
-    return NextResponse.json({ error: 'Streaming not configured' }, { status: 503 })
-  }
-
-  // Verify the user owns this session
+  // Fetch session — verifies ownership and gets stream credentials
   const { data: session } = await supabase
     .from('live_sessions')
-    .select('id')
-    .eq('cf_input_id', inputId)
+    .select('id, cf_input_id, cf_stream_key')
+    .eq('id', sessionId)
     .eq('creator_id', user.id)
     .single()
 
   if (!session) {
     return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+  }
+
+  const cfInputId = (session as Record<string, unknown>).cf_input_id as string | null
+  const cfStreamKey = (session as Record<string, unknown>).cf_stream_key as string | null
+
+  if (!cfInputId || !cfStreamKey) {
+    return NextResponse.json({ error: 'Stream not provisioned for this session' }, { status: 400 })
+  }
+
+  const whipUrl = getWhipUrl(cfInputId)
+  if (!whipUrl) {
+    return NextResponse.json({ error: 'Streaming not configured' }, { status: 503 })
   }
 
   // Forward the SDP offer to Cloudflare's WHIP endpoint
@@ -44,7 +53,7 @@ export async function POST(request: Request) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/sdp',
-      'Authorization': `Bearer ${streamKey}`,
+      'Authorization': `Bearer ${cfStreamKey}`,
     },
     body: sdpOffer,
   })

@@ -213,8 +213,9 @@ export function BrowserStreamClient({ sessionId, cfInputId, cfStreamKey, whipUrl
       })
 
       // Send offer through our WHIP proxy (avoids CORS with CF's endpoint)
+      // Stream key is fetched server-side from DB — not sent from client
       const response = await fetch(
-        `/api/stream/whip?inputId=${encodeURIComponent(cfInputId)}&streamKey=${encodeURIComponent(cfStreamKey)}`,
+        `/api/stream/whip?sessionId=${encodeURIComponent(sessionId)}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/sdp' },
