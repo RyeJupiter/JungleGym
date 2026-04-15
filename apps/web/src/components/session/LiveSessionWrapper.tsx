@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { StreamPlayer } from './StreamPlayer'
 import { SessionAutoRefresh } from './SessionAutoRefresh'
 
@@ -29,15 +29,32 @@ export function LiveSessionWrapper({
   const [paused, setPaused] = useState(initialPaused)
   const [playerKey, setPlayerKey] = useState(0)
   const wasPausedRef = useRef(initialPaused)
+  const reconnectingRef = useRef(false)
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current)
+    }
+  }, [])
 
   const handlePausedChange = useCallback((p: boolean) => {
-    // When transitioning from paused → unpaused, bump the key to force
-    // the iframe to reload so viewers get the live stream back
     if (wasPausedRef.current && !p) {
+      // Stream resumed — force iframe reload behind the BRB overlay.
+      // Keep BRB visible for a few seconds so CF's CDN has time to
+      // propagate the resumed stream before the viewer sees the player.
       setPlayerKey(k => k + 1)
+      reconnectingRef.current = true
+      reconnectTimerRef.current = setTimeout(() => {
+        reconnectingRef.current = false
+        reconnectTimerRef.current = null
+        setPaused(false)
+      }, 4000)
+    } else if (!reconnectingRef.current) {
+      setPaused(p)
     }
     wasPausedRef.current = p
-    setPaused(p)
   }, [])
 
   return (

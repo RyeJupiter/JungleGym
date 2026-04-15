@@ -23,6 +23,7 @@ export function StreamPlayer({
   isPaused?: boolean
 }) {
   const [showUnmute, setShowUnmute] = useState(true)
+  const [muted, setMuted] = useState(true)
   if (!iframeSrc) {
     return (
       <div className="bg-stone-900 rounded-2xl aspect-video flex items-center justify-center">
@@ -65,11 +66,7 @@ export function StreamPlayer({
         <button
           onClick={() => {
             setShowUnmute(false)
-            // Post message to CF player iframe to unmute
-            const iframe = document.querySelector<HTMLIFrameElement>('.cf-stream-iframe')
-            if (iframe?.contentWindow) {
-              iframe.contentWindow.postMessage({ type: 'mute', muted: false }, '*')
-            }
+            setMuted(false)
           }}
           className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 backdrop-blur-[2px] cursor-pointer transition-opacity hover:bg-black/20"
         >
@@ -85,7 +82,7 @@ export function StreamPlayer({
       {/* 16:9 responsive iframe (stays rendered behind overlay when paused) */}
       <div className="aspect-video">
         <iframe
-          src={`${iframeSrc}?autoplay=true&muted=true&preload=true`}
+          src={`${iframeSrc}?autoplay=true&muted=${muted}&preload=true`}
           className="w-full h-full cf-stream-iframe"
           allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
           allowFullScreen
