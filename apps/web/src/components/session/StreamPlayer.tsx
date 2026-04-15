@@ -72,6 +72,7 @@ export function StreamPlaceholder({
   const scheduled = new Date(scheduledAt)
   const msUntilStart = scheduled.getTime() - Date.now()
   const withinHour = msUntilStart > 0 && msUntilStart <= 60 * 60 * 1000
+  const pastStart = msUntilStart <= 0
 
   const dayStr = scheduled.toLocaleDateString(undefined, { weekday: 'long' })
   const timeStr = scheduled.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
@@ -84,6 +85,8 @@ export function StreamPlaceholder({
           ? 'The session is happening now!'
           : isPast
           ? 'This session has ended.'
+          : pastStart
+          ? "We're running a little behind!"
           : withinHour
           ? 'Session starts soon'
           : 'Live session scheduled'}
@@ -94,7 +97,7 @@ export function StreamPlaceholder({
       {isPast && (
         <p className="text-jungle-600 text-sm">Thanks for attending! Check out more sessions below.</p>
       )}
-      {!isLive && !isPast && !withinHour && (
+      {!isLive && !isPast && !pastStart && !withinHour && (
         <p className="text-jungle-600 text-sm">Come back {dayStr} at {timeStr} to join.</p>
       )}
     </div>

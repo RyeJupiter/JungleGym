@@ -13,11 +13,11 @@ export async function SessionsContent({ q, tag }: { q?: string; tag?: string }) 
     .eq('status', 'live')
     .order('scheduled_at', { ascending: true })
 
+  // Show scheduled sessions that haven't ended yet (start time + duration)
   let upcomingQuery = supabase
     .from('live_sessions')
     .select('*')
     .eq('status', 'scheduled')
-    .gte('scheduled_at', new Date().toISOString())
     .order('scheduled_at', { ascending: true })
 
   if (q) {
@@ -30,8 +30,15 @@ export async function SessionsContent({ q, tag }: { q?: string; tag?: string }) 
     upcomingQuery,
   ])
 
+  // Filter out scheduled sessions whose window (start + duration) has fully passed
+  const now = Date.now()
+  const activeUpcoming = (upcomingSessions ?? []).filter((s) => {
+    const endTime = new Date(s.scheduled_at).getTime() + s.duration_minutes * 60 * 1000
+    return endTime > now
+  })
+
   // Two-step join: get creator profiles
-  const allSessions = [...(liveSessions ?? []), ...(upcomingSessions ?? [])]
+  const allSessions = [...(liveSessions ?? []), ...activeUpcoming]
   const creatorIds = [...new Set(allSessions.map((s) => s.creator_id))]
   const { data: creatorProfiles } = creatorIds.length
     ? await supabase.from('profiles').select('user_id, display_name, username, photo_url, tags').in('user_id', creatorIds)
@@ -45,7 +52,7 @@ export async function SessionsContent({ q, tag }: { q?: string; tag?: string }) 
   }
 
   const filteredLive = (liveSessions ?? []).filter(sessionMatchesTag)
-  const filteredUpcoming = (upcomingSessions ?? []).filter(sessionMatchesTag)
+  const filteredUpcoming = activeUpcoming.filter(sessionMatchesTag)
   const hasAnything = filteredLive.length > 0 || filteredUpcoming.length > 0
 
   if (!hasAnything) {

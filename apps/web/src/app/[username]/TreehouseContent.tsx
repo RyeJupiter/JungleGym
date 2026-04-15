@@ -30,9 +30,9 @@ export async function TreehouseContent({ username }: { username: string }) {
         .from('live_sessions')
         .select('id, title, description, scheduled_at, duration_minutes, status, max_participants')
         .eq('creator_id', profile.user_id)
-        .or(`status.eq.live,and(status.eq.scheduled,scheduled_at.gte.${new Date().toISOString()})`)
+        .in('status', ['live', 'scheduled'])
         .order('scheduled_at', { ascending: true })
-        .limit(4),
+        .limit(10),
       supabase.auth.getUser(),
     ])
 
@@ -40,7 +40,12 @@ export async function TreehouseContent({ username }: { username: string }) {
   const allVideos: any[] = videos ?? []
   const freeVideos = allVideos.filter((v) => v.is_free)
   const paidVideos = allVideos.filter((v) => !v.is_free)
-  const upcomingSessions = sessions ?? []
+  const now = Date.now()
+  const upcomingSessions = (sessions ?? []).filter((s: any) => {
+    if (s.status === 'live') return true
+    const endTime = new Date(s.scheduled_at).getTime() + s.duration_minutes * 60 * 1000
+    return endTime > now
+  }).slice(0, 4)
   const isOwnProfile = authUser?.id === profile.user_id
 
   const config = resolveConfig(profile.treehouse_config)

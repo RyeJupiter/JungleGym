@@ -155,9 +155,9 @@ export async function ExploreSessions({ q, tag }: { q?: string; tag?: string }) 
   let sessionQuery = supabase
     .from('live_sessions')
     .select('id, title, description, scheduled_at, duration_minutes, status, creator_id')
-    .or(`status.eq.live,and(status.eq.scheduled,scheduled_at.gte.${new Date().toISOString()})`)
+    .in('status', ['live', 'scheduled'])
     .order('scheduled_at', { ascending: true })
-    .limit(4)
+    .limit(20)
 
   if (q) {
     const sessionCreatorFilter = matchingCreatorIds.length
@@ -166,7 +166,14 @@ export async function ExploreSessions({ q, tag }: { q?: string; tag?: string }) 
     sessionQuery = sessionQuery.or(`title.ilike.%${q}%,description.ilike.%${q}%${sessionCreatorFilter}`)
   }
 
-  const { data: sessions } = await sessionQuery
+  const { data: rawSessions } = await sessionQuery
+  // Keep sessions whose window (start + duration) hasn't passed, or that are live
+  const now = Date.now()
+  const sessions = (rawSessions ?? []).filter((s) => {
+    if (s.status === 'live') return true
+    const endTime = new Date(s.scheduled_at).getTime() + s.duration_minutes * 60 * 1000
+    return endTime > now
+  }).slice(0, 4)
 
   const sessionCreatorIds = [...new Set((sessions ?? []).map((s) => s.creator_id))]
   const { data: profiles } = sessionCreatorIds.length

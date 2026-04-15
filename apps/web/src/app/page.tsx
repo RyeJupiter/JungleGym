@@ -142,12 +142,19 @@ export default async function HomePage() {
           .from('live_sessions')
           .select('id, title, scheduled_at, duration_minutes, creator_id, status')
           .in('status', ['scheduled', 'live'])
-          .gte('scheduled_at', new Date().toISOString())
           .order('scheduled_at', { ascending: true })
-          .limit(3),
+          .limit(10),
   ])
 
-  const sessionCreatorIds = [...new Set((rawSessions ?? []).map((s) => s.creator_id))]
+  // Filter out sessions whose window (start + duration) has fully passed
+  const now = Date.now()
+  const activeSessions = (rawSessions ?? []).filter((s: any) => {
+    if (s.status === 'live') return true
+    const endTime = new Date(s.scheduled_at).getTime() + s.duration_minutes * 60 * 1000
+    return endTime > now
+  }).slice(0, 3)
+
+  const sessionCreatorIds = [...new Set(activeSessions.map((s: any) => s.creator_id))]
   const { data: sessionProfiles } = sessionCreatorIds.length
     ? await supabase
         .from('profiles')
@@ -156,7 +163,7 @@ export default async function HomePage() {
     : { data: [] }
   const profileById = Object.fromEntries((sessionProfiles ?? []).map((p) => [p.user_id, p]))
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const upcomingSessions = ((rawSessions ?? []) as any[]).map((s) => ({ ...s, creator: profileById[s.creator_id] ?? null }))
+  const upcomingSessions = (activeSessions as any[]).map((s) => ({ ...s, creator: profileById[s.creator_id] ?? null }))
 
   return (
     <ParallaxForest>
