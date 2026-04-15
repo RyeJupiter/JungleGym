@@ -18,36 +18,29 @@ export default function WelcomePage() {
         </Link>
       </header>
 
-      {/* Hero — warm stone gradient with blurred dot overlays */}
-      <section className="relative bg-gradient-to-b from-white to-stone-100 overflow-hidden">
-        {/* Treehouse-style dot overlays */}
-        <div className="absolute inset-0 opacity-[0.07] pointer-events-none" aria-hidden="true">
-          <div className="absolute -top-10 -left-10 w-72 h-72 rounded-full bg-jungle-400 blur-3xl" />
-          <div className="absolute top-0 right-1/3 w-56 h-56 rounded-full bg-amber-300 blur-3xl" />
-          <div className="absolute -bottom-10 right-0 w-80 h-80 rounded-full bg-jungle-300 blur-3xl" />
-        </div>
-
+      {/* Hero — jungle green */}
+      <section className="relative bg-jungle-800 overflow-hidden">
         <div className="relative max-w-3xl mx-auto px-6 pt-16 pb-20 text-center">
           <div className="flex flex-col items-center mb-10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Saguinus_imperator_-_Houston_Zoo.jpg/440px-Saguinus_imperator_-_Houston_Zoo.jpg"
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/CagedTamarin.jpg/400px-CagedTamarin.jpg"
               alt="Emperor tamarin — Saguinus imperator"
-              className="w-40 h-auto rounded-full mix-blend-multiply opacity-80 shadow-md"
+              className="w-40 h-40 rounded-full object-cover shadow-md border-4 border-jungle-600"
             />
-            <p className="text-xs text-stone-400 mt-3 italic">
+            <p className="text-xs text-jungle-400 mt-3 italic">
               Emperor tamarin · <em>Saguinus imperator</em> · public domain
             </p>
           </div>
 
-          <p className="text-jungle-600 font-semibold tracking-widest text-xs uppercase mb-4">
+          <p className="text-jungle-400 font-semibold tracking-widest text-xs uppercase mb-4">
             Personal invitation
           </p>
-          <h1 className="text-5xl sm:text-6xl font-black leading-tight text-stone-900 mb-6">
+          <h1 className="text-5xl sm:text-6xl font-black leading-tight text-white mb-6">
             You have been invited<br />
-            to the <span className="text-jungle-600">JungleGym</span>.
+            to the <span className="text-jungle-400">JungleGym</span>.
           </h1>
-          <p className="text-lg text-stone-500 leading-relaxed max-w-lg mx-auto">
+          <p className="text-lg text-jungle-300 leading-relaxed max-w-lg mx-auto">
             Someone who knows your work sent you here. That means something.
           </p>
         </div>
