@@ -62,12 +62,12 @@ export async function POST(request: Request) {
     })
   }
 
-  // WHIP succeeded — set session to "live" immediately (don't rely on CF webhook)
+  // WHIP succeeded — set session to "live" and clear any pause state
   await supabase
     .from('live_sessions')
-    .update({ status: 'live', updated_at: new Date().toISOString() })
+    .update({ status: 'live', paused_at: null, updated_at: new Date().toISOString() })
     .eq('id', sessionId)
-    .eq('status', 'scheduled')
+    .in('status', ['scheduled', 'live'])
 
   // Return the SDP answer
   const sdpAnswer = await cfResponse.text()

@@ -107,6 +107,24 @@ export function BrowserStreamClient({ sessionId, cfInputId, cfStreamKey, whipUrl
     return () => clearInterval(tick)
   }, [status])
 
+  // ── Beforeunload: pause on tab close so server cleanup kicks in ─
+  useEffect(() => {
+    function handleBeforeUnload() {
+      if (status === 'live' || status === 'connecting') {
+        // Use sendBeacon for reliability — fetch may be cancelled during unload
+        navigator.sendBeacon(
+          '/api/stream/status',
+          new Blob(
+            [JSON.stringify({ sessionId, action: 'pause' })],
+            { type: 'application/json' }
+          )
+        )
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [sessionId, status])
+
   // ── Device switching ──────────────────────────────────────────
   async function handleDeviceChange(type: 'camera' | 'mic', deviceId: string) {
     if (type === 'camera') {
@@ -190,8 +208,11 @@ export function BrowserStreamClient({ sessionId, cfInputId, cfStreamKey, whipUrl
           case 'connected': setStatus('live'); break
           case 'disconnected':
           case 'failed':
+            // Auto-pause on unexpected disconnect (network drop, etc.)
+            // This sets paused_at in DB so the server-side cleanup timer starts
             setStatus('disconnected')
-            setError('Connection lost. Try going live again.')
+            setError('Connection lost. Click "Go Live" to reconnect.')
+            updateStreamStatus('pause')
             break
           case 'closed': break // Don't override status on intentional close
         }
