@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { StreamPlayer } from './StreamPlayer'
 import { SessionAutoRefresh } from './SessionAutoRefresh'
 
@@ -9,7 +9,9 @@ import { SessionAutoRefresh } from './SessionAutoRefresh'
  * enabling the BRB overlay when the session is paused.
  *
  * When unpausing, increments a key to force the iframe to remount and
- * reload — the CF player doesn't auto-recover after the stream reconnects.
+ * reload (with cache-bust) — the CF player doesn't auto-recover after
+ * the stream reconnects. Mute state is tracked here so it survives
+ * across remounts (viewer doesn't have to re-unmute after BRB).
  */
 export function LiveSessionWrapper({
   sessionId,
@@ -28,33 +30,16 @@ export function LiveSessionWrapper({
 }) {
   const [paused, setPaused] = useState(initialPaused)
   const [playerKey, setPlayerKey] = useState(0)
+  const [muted, setMuted] = useState(true)
   const wasPausedRef = useRef(initialPaused)
-  const reconnectingRef = useRef(false)
-  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current)
-    }
-  }, [])
 
   const handlePausedChange = useCallback((p: boolean) => {
     if (wasPausedRef.current && !p) {
-      // Stream resumed — force iframe reload behind the BRB overlay.
-      // Keep BRB visible for a few seconds so CF's CDN has time to
-      // propagate the resumed stream before the viewer sees the player.
+      // Stream resumed — bump key to force iframe reload with cache-bust
       setPlayerKey(k => k + 1)
-      reconnectingRef.current = true
-      reconnectTimerRef.current = setTimeout(() => {
-        reconnectingRef.current = false
-        reconnectTimerRef.current = null
-        setPaused(false)
-      }, 4000)
-    } else if (!reconnectingRef.current) {
-      setPaused(p)
     }
     wasPausedRef.current = p
+    setPaused(p)
   }, [])
 
   return (
@@ -71,6 +56,8 @@ export function LiveSessionWrapper({
           isLive={isLive}
           isRecording={isRecording}
           isPaused={paused}
+          initialMuted={muted}
+          onMutedChange={setMuted}
         />
       </div>
     </>

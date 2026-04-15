@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 /**
  * Responsive Cloudflare Stream player.
@@ -16,16 +16,52 @@ export function StreamPlayer({
   isLive,
   isRecording,
   isPaused,
+  initialMuted = true,
+  onMutedChange,
 }: {
   iframeSrc: string
   isLive?: boolean
   isRecording?: boolean
   isPaused?: boolean
+  initialMuted?: boolean
+  onMutedChange?: (muted: boolean) => void
 }) {
-  const [showUnmute, setShowUnmute] = useState(true)
-  const [muted, setMuted] = useState(true)
+  const [showUnmute, setShowUnmute] = useState(initialMuted)
   // Unique per mount — busts browser cache when component remounts via key change
   const [mountId] = useState(() => Date.now())
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const playerRef = useRef<any>(null)
+
+  // Load CF Stream Player SDK once
+  useEffect(() => {
+    if ((window as any).Stream) return
+    if (document.querySelector('script[src*="cloudflarestream.com/embed/sdk"]')) return
+    const script = document.createElement('script')
+    script.src = 'https://embed.cloudflarestream.com/embed/sdk.latest.js'
+    script.async = true
+    document.head.appendChild(script)
+  }, [])
+
+  // Initialize the SDK player reference after the iframe loads
+  const handleIframeLoad = useCallback(() => {
+    const init = () => {
+      if (!iframeRef.current || !(window as any).Stream) return false
+      try {
+        playerRef.current = (window as any).Stream(iframeRef.current)
+        // Restore mute state from before remount (e.g. after BRB resume)
+        if (!initialMuted) {
+          playerRef.current.muted = false
+        }
+        return true
+      } catch { return false }
+    }
+
+    if (!init()) {
+      // SDK script might still be loading — poll briefly
+      const t = setInterval(() => { if (init()) clearInterval(t) }, 200)
+      setTimeout(() => clearInterval(t), 5000)
+    }
+  }, [initialMuted])
   if (!iframeSrc) {
     return (
       <div className="bg-stone-900 rounded-2xl aspect-video flex items-center justify-center">
@@ -68,7 +104,10 @@ export function StreamPlayer({
         <button
           onClick={() => {
             setShowUnmute(false)
-            setMuted(false)
+            if (playerRef.current) {
+              playerRef.current.muted = false
+            }
+            onMutedChange?.(false)
           }}
           className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 backdrop-blur-[2px] cursor-pointer transition-opacity hover:bg-black/20"
         >
@@ -84,7 +123,9 @@ export function StreamPlayer({
       {/* 16:9 responsive iframe (stays rendered behind overlay when paused) */}
       <div className="aspect-video">
         <iframe
-          src={`${iframeSrc}?autoplay=true&muted=${muted}&preload=true&_r=${mountId}`}
+          ref={iframeRef}
+          onLoad={handleIframeLoad}
+          src={`${iframeSrc}?autoplay=true&muted=true&preload=true&_r=${mountId}`}
           className="w-full h-full cf-stream-iframe"
           allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
           allowFullScreen
