@@ -51,13 +51,6 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: 'Cancelled',
 }
 
-const STATUS_ACTIVE_STYLES: Record<string, string> = {
-  scheduled: 'bg-blue-600 border-blue-600 text-white',
-  live: 'bg-red-500 border-red-500 text-white',
-  completed: 'bg-stone-500 border-stone-500 text-white',
-  cancelled: 'bg-stone-300 border-stone-300 text-stone-700',
-}
-
 function fmt(n: number) {
   return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
@@ -91,17 +84,6 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
   const [cancelModalOpen, setCancelModalOpen] = useState(false)
   const [cancelling, setCancelling] = useState(false)
 
-  async function saveStatus(next: string) {
-    setStatus(next)
-    setSaveMsg(null)
-    const { error } = await supabase
-      .from('live_sessions')
-      .update({ status: next, updated_at: new Date().toISOString() })
-      .eq('id', initial.id)
-    if (error) setSaveMsg({ ok: false, text: error.message })
-    else router.refresh()
-  }
-
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
@@ -115,7 +97,6 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
           scheduled_at: new Date(scheduledAt).toISOString(),
           duration_minutes: parseInt(duration),
           max_participants: maxParticipants ? parseInt(maxParticipants) : null,
-          status,
           updated_at: new Date().toISOString(),
         })
         .eq('id', initial.id)
@@ -178,30 +159,6 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
             </button>
           )}
         </div>
-      </div>
-
-      {/* Status bar — always visible */}
-      <div className="bg-white rounded-2xl border border-stone-200 p-4 mb-6">
-        <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">Status</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {(['scheduled', 'live', 'completed', 'cancelled'] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => saveStatus(s)}
-              className={`py-2 rounded-lg text-sm font-semibold border transition-colors ${
-                status === s
-                  ? (STATUS_ACTIVE_STYLES[s] ?? 'bg-jungle-700 border-jungle-700 text-white')
-                  : 'bg-white border-stone-200 text-stone-500 hover:border-stone-300'
-              }`}
-            >
-              {STATUS_LABELS[s]}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-stone-400 mt-2">
-          <strong>Live</strong> shows it as happening now on your Treehouse and the sessions page. <strong>Cancelled</strong> hides it.
-        </p>
       </div>
 
       {/* Tabs */}
@@ -376,7 +333,6 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
             <p className="text-sm text-stone-500 mb-6">
               <strong className="text-stone-700">{title}</strong> on {formatDateTime(initial.scheduled_at)} will be
               marked as cancelled and hidden from the sessions page and your Treehouse.
-              You can reschedule it later from the status bar.
             </p>
             <div className="flex gap-3 justify-end">
               <button
