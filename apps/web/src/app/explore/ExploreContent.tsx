@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { formatPrice, formatDuration } from '@junglegym/shared'
 import { buildVideoSearchFilter, sortByRelevance } from '@/lib/search'
@@ -97,13 +97,16 @@ export async function ExploreVideos({ q, tag }: { q?: string; tag?: string }) {
 /* ─── Guides Section ────────────────────────────────────────── */
 
 export async function ExploreGuides({ q, tag }: { q?: string; tag?: string }) {
-  const supabase = await createServerSupabaseClient()
+  const svc = createServiceSupabaseClient()
 
-  const { data: creatorUsers } = await supabase.from('users').select('id').eq('role', 'creator').limit(8)
-  const guideIds = creatorUsers?.map((u) => u.id) ?? []
+  // Service client bypasses RLS — users table is own-record-only
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: creatorUsers } = await (svc as any).from('users').select('id').eq('role', 'creator').limit(8)
+  const guideIds: string[] = ((creatorUsers ?? []) as { id: string }[]).map((u) => u.id)
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let guidesQuery = guideIds.length
-    ? supabase.from('profiles').select('*').in('user_id', guideIds).limit(8).order('created_at', { ascending: false })
+    ? (svc as any).from('profiles').select('*').in('user_id', guideIds).limit(8).order('created_at', { ascending: false })
     : null
   if (guidesQuery && q) {
     guidesQuery = guidesQuery.or(`display_name.ilike.%${q}%,username.ilike.%${q}%`)
