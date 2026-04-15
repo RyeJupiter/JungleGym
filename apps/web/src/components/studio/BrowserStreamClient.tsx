@@ -272,7 +272,9 @@ export function BrowserStreamClient({ sessionId, cfInputId, cfStreamKey, whipUrl
   async function resumeStream() {
     if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null }
     pauseStartRef.current = null
-    updateStreamStatus('resume')
+    // Don't clear paused_at here — the WHIP proxy clears it when the
+    // connection actually succeeds. This keeps the BRB overlay visible
+    // for viewers during the reconnection window.
     await goLive()
   }
 
