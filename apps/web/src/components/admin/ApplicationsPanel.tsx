@@ -101,7 +101,7 @@ export function ApplicationsPanel({ applications }: { applications: Application[
               ) : (
                 <p className="text-sm text-stone-400 italic">No motivation provided</p>
               )}
-              <p className="text-xs text-stone-400 mt-2">
+              <p className="text-xs text-stone-400 mt-2" suppressHydrationWarning>
                 Applied {new Date(app.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
               </p>
             </div>

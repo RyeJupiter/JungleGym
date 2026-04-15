@@ -174,7 +174,7 @@ export function VideoManagePage({ video, videoPublicUrl, metrics, transactions }
                           <p className="text-xs text-stone-400 truncate hidden sm:block">@{t.buyerUsername}</p>
                         )}
                       </div>
-                      <p className="text-xs text-stone-400">
+                      <p className="text-xs text-stone-400" suppressHydrationWarning>
                         {new Date(t.createdAt).toLocaleDateString(undefined, {
                           month: 'short', day: 'numeric', year: 'numeric',
                         })}

@@ -164,7 +164,7 @@ function AdminRow({ admin, onRemove, isPending }: { admin: SiteAdmin; onRemove: 
       <div className="min-w-0">
         <p className="text-stone-900 text-sm font-medium">{admin.email}</p>
         {admin.added_by && (
-          <p className="text-xs text-stone-400 mt-0.5">
+          <p className="text-xs text-stone-400 mt-0.5" suppressHydrationWarning>
             Added by {admin.added_by} · {new Date(admin.added_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
           </p>
         )}

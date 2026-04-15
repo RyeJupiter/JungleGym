@@ -146,7 +146,7 @@ export function SessionManagePage({ session: initial, whipUrl, metrics, transact
           <div>
             <h1 className="text-3xl font-black text-stone-900">{title}</h1>
             <div className="flex items-center gap-2 mt-1 text-sm text-stone-400">
-              <span>{formatDateTime(initial.scheduled_at)}</span>
+              <span suppressHydrationWarning>{formatDateTime(initial.scheduled_at)}</span>
               <span>· {initial.duration_minutes} min</span>
             </div>
           </div>
@@ -219,7 +219,7 @@ export function SessionManagePage({ session: initial, whipUrl, metrics, transact
                             ? <span className="italic text-xs">"{t.message}"</span>
                             : <span className="text-stone-300 text-xs">—</span>}
                         </td>
-                        <td className="px-5 py-3.5 text-stone-400 text-xs whitespace-nowrap">
+                        <td className="px-5 py-3.5 text-stone-400 text-xs whitespace-nowrap" suppressHydrationWarning>
                           {new Date(t.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                         </td>
                         <td className="px-5 py-3.5 text-right font-semibold text-green-700">{fmt(t.creatorAmount)}</td>
@@ -333,7 +333,7 @@ export function SessionManagePage({ session: initial, whipUrl, metrics, transact
           <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
             <h2 className="text-xl font-black text-stone-900 mb-2">Cancel this session?</h2>
             <p className="text-sm text-stone-500 mb-6">
-              <strong className="text-stone-700">{title}</strong> on {formatDateTime(initial.scheduled_at)} will be
+              <strong className="text-stone-700">{title}</strong> on <span suppressHydrationWarning>{formatDateTime(initial.scheduled_at)}</span> will be
               marked as cancelled and hidden from the sessions page and your Treehouse.
             </p>
             <div className="flex gap-3 justify-end">

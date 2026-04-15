@@ -41,7 +41,7 @@ export function PastSessionsDropdown({ sessions }: { sessions: Session[] }) {
             >
               <Link href={`/sessions/${s.id}`} className="flex-1 min-w-0 hover:opacity-80 transition-opacity">
                 <p className="font-semibold text-stone-600 text-sm">{s.title}</p>
-                <p className="text-xs text-stone-400 mt-0.5">
+                <p className="text-xs text-stone-400 mt-0.5" suppressHydrationWarning>
                   {new Date(s.scheduled_at).toLocaleDateString(undefined, {
                     weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
                   })} · {s.duration_minutes} min

@@ -106,7 +106,7 @@ export function AllTransactionsSection({ transactions }: { transactions: Unified
                     {t.type === 'purchase' ? t.videoTitle : t.sessionTitle}
                   </p>
                 </div>
-                <p className="text-xs text-stone-400">
+                <p className="text-xs text-stone-400" suppressHydrationWarning>
                   {t.type === 'purchase' ? t.buyerName : t.giverName} &rarr; {t.creatorName}
                   {t.type === 'purchase' && t.tier && (
                     <> · <span className="capitalize">{t.tier}</span></>

@@ -38,7 +38,7 @@ export function SessionRow({ session: s, index, isGoLive }: { session: Session; 
     <div className={`flex items-center justify-between px-5 py-4 ${index > 0 ? 'border-t border-stone-100' : ''}`}>
       <div>
         <p className="font-semibold text-stone-900 text-sm">{s.title}</p>
-        <p className="text-xs text-stone-400 mt-0.5">
+        <p className="text-xs text-stone-400 mt-0.5" suppressHydrationWarning>
           {new Date(s.scheduled_at).toLocaleDateString(undefined, {
             weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
           })} · {s.duration_minutes} min
