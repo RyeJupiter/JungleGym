@@ -88,6 +88,8 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
   const [status, setStatus] = useState(initial.status)
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [cancelModalOpen, setCancelModalOpen] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
 
   async function saveStatus(next: string) {
     setStatus(next)
@@ -127,6 +129,19 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
     }
   }
 
+  async function handleCancel() {
+    setCancelling(true)
+    const { error } = await supabase
+      .from('live_sessions')
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+      .eq('id', initial.id)
+    setCancelling(false)
+    if (error) { alert(error.message); return }
+    setStatus('cancelled')
+    setCancelModalOpen(false)
+    router.refresh()
+  }
+
   async function handleDelete() {
     if (!confirm('Delete this session permanently? This cannot be undone.')) return
     const { error } = await supabase.from('live_sessions').delete().eq('id', initial.id)
@@ -145,10 +160,23 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
         <Link href="/studio" className="text-xs text-stone-400 hover:text-stone-600 transition-colors mb-2 inline-block">
           ← Studio
         </Link>
-        <h1 className="text-3xl font-black text-stone-900">{title}</h1>
-        <div className="flex items-center gap-2 mt-1 text-sm text-stone-400">
-          <span>{formatDateTime(initial.scheduled_at)}</span>
-          <span>· {initial.duration_minutes} min</span>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-stone-900">{title}</h1>
+            <div className="flex items-center gap-2 mt-1 text-sm text-stone-400">
+              <span>{formatDateTime(initial.scheduled_at)}</span>
+              <span>· {initial.duration_minutes} min</span>
+            </div>
+          </div>
+          {(status === 'scheduled' || status === 'live') && (
+            <button
+              type="button"
+              onClick={() => setCancelModalOpen(true)}
+              className="bg-red-50 hover:bg-red-100 text-red-600 font-semibold px-5 py-2.5 rounded-lg text-sm border border-red-200 transition-colors flex-shrink-0"
+            >
+              Cancel Session
+            </button>
+          )}
         </div>
       </div>
 
@@ -337,6 +365,39 @@ export function SessionManagePage({ session: initial, metrics, transactions }: P
             </button>
           </div>
         </form>
+      )}
+
+      {/* ── Cancel Confirmation Modal ────────────────────────────────── */}
+      {cancelModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => !cancelling && setCancelModalOpen(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <h2 className="text-xl font-black text-stone-900 mb-2">Cancel this session?</h2>
+            <p className="text-sm text-stone-500 mb-6">
+              <strong className="text-stone-700">{title}</strong> on {formatDateTime(initial.scheduled_at)} will be
+              marked as cancelled and hidden from the sessions page and your Treehouse.
+              You can reschedule it later from the status bar.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setCancelModalOpen(false)}
+                disabled={cancelling}
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-stone-600 hover:bg-stone-100 transition-colors disabled:opacity-50"
+              >
+                Keep Session
+              </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50"
+              >
+                {cancelling ? 'Cancelling...' : 'Yes, Cancel Session'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
