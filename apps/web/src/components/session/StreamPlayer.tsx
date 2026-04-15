@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 /**
  * Responsive Cloudflare Stream player.
  *
@@ -20,6 +22,7 @@ export function StreamPlayer({
   isRecording?: boolean
   isPaused?: boolean
 }) {
+  const [showUnmute, setShowUnmute] = useState(true)
   if (!iframeSrc) {
     return (
       <div className="bg-stone-900 rounded-2xl aspect-video flex items-center justify-center">
@@ -57,11 +60,33 @@ export function StreamPlayer({
         </div>
       )}
 
+      {/* Unmute prompt — shown on top of the autoplaying (muted) stream */}
+      {showUnmute && isLive && !isPaused && (
+        <button
+          onClick={() => {
+            setShowUnmute(false)
+            // Post message to CF player iframe to unmute
+            const iframe = document.querySelector<HTMLIFrameElement>('.cf-stream-iframe')
+            if (iframe?.contentWindow) {
+              iframe.contentWindow.postMessage({ type: 'mute', muted: false }, '*')
+            }
+          }}
+          className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 backdrop-blur-[2px] cursor-pointer transition-opacity hover:bg-black/20"
+        >
+          <div className="bg-white/95 rounded-2xl px-6 py-4 shadow-xl flex items-center gap-3">
+            <svg className="w-6 h-6 text-jungle-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+            </svg>
+            <span className="text-jungle-800 font-bold text-sm">Tap to unmute</span>
+          </div>
+        </button>
+      )}
+
       {/* 16:9 responsive iframe (stays rendered behind overlay when paused) */}
       <div className="aspect-video">
         <iframe
           src={`${iframeSrc}?autoplay=true&muted=true&preload=true`}
-          className="w-full h-full"
+          className="w-full h-full cf-stream-iframe"
           allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
           allowFullScreen
         />
