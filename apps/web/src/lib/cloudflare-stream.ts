@@ -29,10 +29,34 @@ export function getPlaybackUrls(inputId: string) {
   }
 }
 
+/**
+ * Derives a basic WHIP URL from the input ID. This is NOT a signed URL
+ * and won't work for auth — use getSignedWhipUrl() for actual WHIP calls.
+ * Kept for display/reference purposes only.
+ */
 export function getWhipUrl(inputId: string): string | null {
   const { customerCode } = getConfig()
   if (!customerCode || !inputId) return null
   return `https://customer-${customerCode}.cloudflarestream.com/${inputId}/webRTC/publish`
+}
+
+/**
+ * Fetches the signed WHIP URL from CF's API. The signed URL contains
+ * the auth token in the path — no separate Bearer header needed.
+ */
+export async function getSignedWhipUrl(inputId: string): Promise<string | null> {
+  const { token, accountId } = getConfig()
+  if (!token || !accountId) return null
+
+  const res = await fetch(
+    `${CF_API_BASE}/accounts/${accountId}/stream/live_inputs/${inputId}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  )
+
+  const data = await res.json()
+  if (!data.success) return null
+
+  return data.result?.webRTC?.url ?? null
 }
 
 // ── Create a live input for a session ─────────────────────────
