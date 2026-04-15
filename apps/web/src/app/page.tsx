@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { ParallaxForest } from '@/components/ParallaxForest'
 
 const WELCOME_VIDEO_ID = '6beae5fe-eb48-4caa-9e39-4e35452bf50f'
 
@@ -157,15 +158,13 @@ export default async function HomePage() {
   const upcomingSessions = ((rawSessions ?? []) as any[]).map((s) => ({ ...s, creator: profileById[s.creator_id] ?? null }))
 
   return (
+    <ParallaxForest>
     <div className="min-h-screen">
 
       <Navbar />
 
-      {/* Hero */}
-      <div
-        className="bg-jungle-800 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/jungle-gateway-web.jpg')", backgroundAttachment: "fixed" }}
-      >
+      {/* Hero — ParallaxForest provides the bg image; overlay handles readability */}
+      <div>
         {/* Dark overlay + blur */}
         <div className="bg-jungle-950/70 backdrop-blur-sm">
         <section className="pt-28 pb-24 px-6 text-center relative overflow-hidden">
@@ -282,11 +281,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Philosophy blurb */}
-      <section
-        className="bg-jungle-900 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/jungle-gateway-web.jpg')", backgroundAttachment: "fixed" }}
-      >
+      {/* Philosophy blurb — ParallaxForest bg shows through the dark overlay */}
+      <section>
       <div className="bg-jungle-950/70 backdrop-blur-sm py-20 px-6">
         <div className="max-w-5xl mx-auto">
 
@@ -411,5 +407,6 @@ export default async function HomePage() {
 
       <Footer />
     </div>
+    </ParallaxForest>
   )
 }
