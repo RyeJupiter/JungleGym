@@ -1,4 +1,4 @@
-import { NavbarSkeleton, SearchBarSkeleton, LibraryGridSkeleton } from '@/components/skeletons'
+import { NavbarSkeleton, GrowingTree } from '@/components/skeletons'
 
 export default function Loading() {
   return (
@@ -9,8 +9,7 @@ export default function Loading() {
           <h1 className="text-4xl font-black text-stone-900">My Library</h1>
           <p className="text-stone-500 mt-2">Classes you&apos;ve unlocked. Yours forever.</p>
         </div>
-        <SearchBarSkeleton />
-        <LibraryGridSkeleton count={6} />
+        <GrowingTree message="Growing your library..." />
       </div>
     </div>
   )

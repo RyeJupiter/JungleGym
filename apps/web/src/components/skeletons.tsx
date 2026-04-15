@@ -499,6 +499,94 @@ export function CheckoutSkeleton() {
   )
 }
 
+/* ─── Growing Tree (loading animation) ─────────────────────── */
+
+export function GrowingTree({ message = 'Loading...' }: { message?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-24">
+      <style>{`
+        @keyframes jg-grow-trunk {
+          0% { stroke-dashoffset: 160; }
+          50% { stroke-dashoffset: 0; }
+          100% { stroke-dashoffset: 0; }
+        }
+        @keyframes jg-grow-branch {
+          0%, 25% { stroke-dashoffset: 55; opacity: 0; }
+          30% { opacity: 1; }
+          60% { stroke-dashoffset: 0; }
+          100% { stroke-dashoffset: 0; }
+        }
+        @keyframes jg-grow-leaf {
+          0%, 35% { transform: scale(0); opacity: 0; }
+          65% { transform: scale(1.15); opacity: 1; }
+          80% { transform: scale(0.95); }
+          90%, 100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes jg-sway {
+          0%, 100% { transform: rotate(-0.8deg); }
+          50% { transform: rotate(0.8deg); }
+        }
+        .jg-trunk {
+          stroke-dasharray: 160;
+          animation: jg-grow-trunk 2.5s ease-out forwards;
+        }
+        .jg-branch {
+          stroke-dasharray: 55;
+          animation: jg-grow-branch 2.5s ease-out forwards;
+        }
+        .jg-leaf {
+          transform-box: fill-box;
+          transform-origin: center;
+          animation: jg-grow-leaf 2.5s ease-out forwards;
+        }
+        .jg-tree-wrap {
+          transform-origin: 100px 262px;
+          animation: jg-sway 4s ease-in-out 2.5s infinite;
+        }
+      `}</style>
+      <svg viewBox="0 0 200 280" width="140" height="196" className="jg-tree-wrap">
+        {/* Ground shadow */}
+        <ellipse cx="100" cy="262" rx="30" ry="4" fill="#d6d3d1" opacity="0.4" />
+
+        {/* Trunk */}
+        <path d="M100 260 L100 100" className="jg-trunk" stroke="#1b4332" strokeWidth="5" strokeLinecap="round" fill="none" />
+
+        {/* Branches — left */}
+        <path d="M100 200 L65 178" className="jg-branch" style={{ animationDelay: '0.3s' }} stroke="#1c5c3c" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        <path d="M100 165 L55 138" className="jg-branch" style={{ animationDelay: '0.6s' }} stroke="#1c5c3c" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        <path d="M100 135 L70 108" className="jg-branch" style={{ animationDelay: '0.9s' }} stroke="#1c5c3c" strokeWidth="2" strokeLinecap="round" fill="none" />
+
+        {/* Branches — right */}
+        <path d="M100 200 L135 178" className="jg-branch" style={{ animationDelay: '0.4s' }} stroke="#1c5c3c" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        <path d="M100 165 L145 138" className="jg-branch" style={{ animationDelay: '0.7s' }} stroke="#1c5c3c" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        <path d="M100 135 L130 108" className="jg-branch" style={{ animationDelay: '1.0s' }} stroke="#1c5c3c" strokeWidth="2" strokeLinecap="round" fill="none" />
+
+        {/* Leaves — bottom pair */}
+        <circle cx="60" cy="173" r="13" className="jg-leaf" style={{ animationDelay: '0.6s' }} fill="#237a51" />
+        <circle cx="140" cy="173" r="13" className="jg-leaf" style={{ animationDelay: '0.7s' }} fill="#237a51" />
+
+        {/* Leaves — middle pair */}
+        <circle cx="50" cy="133" r="15" className="jg-leaf" style={{ animationDelay: '0.9s' }} fill="#3d9e6b" />
+        <circle cx="150" cy="133" r="15" className="jg-leaf" style={{ animationDelay: '1.0s' }} fill="#3d9e6b" />
+
+        {/* Small accent leaves */}
+        <circle cx="42" cy="152" r="8" className="jg-leaf" style={{ animationDelay: '1.1s' }} fill="#3d9e6b" opacity="0.7" />
+        <circle cx="158" cy="152" r="8" className="jg-leaf" style={{ animationDelay: '1.15s' }} fill="#3d9e6b" opacity="0.7" />
+
+        {/* Leaves — top pair */}
+        <circle cx="66" cy="103" r="12" className="jg-leaf" style={{ animationDelay: '1.2s' }} fill="#237a51" />
+        <circle cx="134" cy="103" r="12" className="jg-leaf" style={{ animationDelay: '1.3s' }} fill="#237a51" />
+
+        {/* Crown */}
+        <circle cx="100" cy="85" r="18" className="jg-leaf" style={{ animationDelay: '1.4s' }} fill="#3d9e6b" />
+        <circle cx="84" cy="78" r="10" className="jg-leaf" style={{ animationDelay: '1.5s' }} fill="#237a51" opacity="0.8" />
+        <circle cx="116" cy="78" r="10" className="jg-leaf" style={{ animationDelay: '1.5s' }} fill="#237a51" opacity="0.8" />
+      </svg>
+      <p className="text-stone-400 text-sm mt-4 animate-pulse">{message}</p>
+    </div>
+  )
+}
+
 /* ─── Session Manage (studio) ───────────────────────────────── */
 
 export function SessionManageSkeleton() {
