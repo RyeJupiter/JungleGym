@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import { LocalTime } from '@/components/LocalTime'
 
 type Creator = { display_name: string; username: string; photo_url: string | null } | null
 
@@ -144,10 +145,10 @@ function SessionCard({
         </div>
         <div className="text-right flex-shrink-0">
           <p className="text-sm font-semibold text-stone-700">
-            {scheduledDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+            <LocalTime iso={s.scheduled_at} options={{ weekday: 'short', month: 'short', day: 'numeric' }} />
           </p>
           <p className="text-xs text-stone-400">
-            {scheduledDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+            <LocalTime iso={s.scheduled_at} options={{ hour: 'numeric', minute: '2-digit' }} />
           </p>
           <p className="text-xs text-stone-400">{s.duration_minutes} min</p>
         </div>

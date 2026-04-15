@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { VideoRow } from '@/components/studio/VideoRow'
 import { PastSessionsDropdown } from '@/components/studio/PastSessionsDropdown'
+import { LocalTime } from '@/components/LocalTime'
 
 export async function StudioSessions({ userId }: { userId: string }) {
   const supabase = await createServerSupabaseClient()
@@ -85,9 +86,7 @@ function SessionRow({ session: s, index }: { session: { id: string; title: strin
       <Link href={`/sessions/${s.id}`} className="flex-1 min-w-0 hover:opacity-80 transition-opacity">
         <p className="font-semibold text-stone-900 text-sm">{s.title}</p>
         <p className="text-xs text-stone-400 mt-0.5">
-          {new Date(s.scheduled_at).toLocaleDateString(undefined, {
-            weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
-          })} · {s.duration_minutes} min
+          <LocalTime iso={s.scheduled_at} options={{ weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }} /> · {s.duration_minutes} min
         </p>
       </Link>
       <div className="flex items-center gap-3 flex-shrink-0">

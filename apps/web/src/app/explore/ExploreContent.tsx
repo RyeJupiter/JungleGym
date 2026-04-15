@@ -2,6 +2,7 @@ import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/s
 import Link from 'next/link'
 import { formatPrice, formatDuration } from '@junglegym/shared'
 import { buildVideoSearchFilter, sortByRelevance } from '@/lib/search'
+import { LocalTime } from '@/components/LocalTime'
 
 /* ─── Videos Section ────────────────────────────────────────── */
 
@@ -218,11 +219,7 @@ export async function ExploreSessions({ q, tag }: { q?: string; tag?: string }) 
                     <span className="font-medium text-stone-600">{creator.display_name}</span>
                   </div>
                 )}
-                <span>
-                  {new Date(s.scheduled_at).toLocaleDateString(undefined, {
-                    weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
-                  })}
-                </span>
+                <LocalTime iso={s.scheduled_at} options={{ weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }} />
                 <span>{s.duration_minutes} min</span>
               </div>
             </div>

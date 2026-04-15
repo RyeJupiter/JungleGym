@@ -3,6 +3,7 @@ import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { ParallaxForest } from '@/components/ParallaxForest'
+import { LocalTime } from '@/components/LocalTime'
 
 const WELCOME_VIDEO_ID = '6beae5fe-eb48-4caa-9e39-4e35452bf50f'
 
@@ -398,10 +399,10 @@ export default async function HomePage() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-xs font-semibold text-stone-700">
-                        {d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                        <LocalTime iso={s.scheduled_at} options={{ weekday: 'short', month: 'short', day: 'numeric' }} />
                       </p>
                       <p className="text-xs text-stone-400">
-                        {d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                        <LocalTime iso={s.scheduled_at} options={{ hour: 'numeric', minute: '2-digit' }} />
                       </p>
                     </div>
                   </Link>

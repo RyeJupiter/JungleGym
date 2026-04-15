@@ -5,6 +5,7 @@ import { GiftButton } from '@/components/session/GiftButton'
 import { AddSessionToCalendarButton } from '@/components/session/AddSessionToCalendarButton'
 import { StreamPlayer, StreamPlaceholder } from '@/components/session/StreamPlayer'
 import { getPlaybackUrls } from '@/lib/cloudflare-stream'
+import { LocalTime } from '@/components/LocalTime'
 
 export async function SessionContent({ sessionId }: { sessionId: string }) {
   const supabase = await createServerSupabaseClient()
@@ -58,15 +59,9 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
         <h1 className="text-3xl font-black text-stone-900 mb-3">{session.title}</h1>
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-stone-500 mb-4">
-          <span>
-            {scheduledDate.toLocaleDateString(undefined, {
-              weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
-            })}
-          </span>
+          <LocalTime iso={session.scheduled_at} options={{ weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }} />
           <span>·</span>
-          <span>
-            {scheduledDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
-          </span>
+          <LocalTime iso={session.scheduled_at} options={{ hour: 'numeric', minute: '2-digit' }} />
           <span>·</span>
           <span>{session.duration_minutes} min</span>
           {session.max_participants && (
@@ -126,7 +121,7 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
         <StreamPlaceholder
           isLive={isLive}
           isPast={isPast}
-          scheduledDay={scheduledDate.toLocaleDateString(undefined, { weekday: 'long' })}
+          scheduledDay={scheduledDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })}
         />
       )}
 
