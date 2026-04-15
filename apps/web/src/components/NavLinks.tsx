@@ -50,6 +50,7 @@ export function NavLinks({ isLoggedIn, isCreator, isAdmin, photoUrl, username }:
     <>
       {/* Desktop nav */}
       <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+        <Link href="/explore" className={cls('/explore')}>Explore</Link>
         <Link href="/classes" className={cls('/classes')}>Classes</Link>
         <Link href="/guides" className={cls('/guides')}>Guides</Link>
         <Link href="/sessions" className={cls('/sessions')}>Live</Link>
@@ -153,6 +154,7 @@ export function NavLinks({ isLoggedIn, isCreator, isAdmin, photoUrl, username }:
       {/* Mobile menu panel */}
       {menuOpen && (
         <div className="md:hidden absolute top-16 left-0 right-0 w-screen bg-jungle-900 border-b border-jungle-800 z-50 px-4 py-4 space-y-1 shadow-xl">
+          <Link href="/explore" className={mobileClsBlock('/explore')}>Explore</Link>
           <Link href="/classes" className={mobileClsBlock('/classes')}>Classes</Link>
           <Link href="/guides" className={mobileClsBlock('/guides')}>Guides</Link>
           <Link href="/sessions" className={mobileClsBlock('/sessions')}>Live</Link>
