@@ -166,10 +166,10 @@ export default async function HomePage() {
       {/* Hero — bg image lives here; ParallaxForest JS shifts its position */}
       <div
         data-parallax-bg
-        className="bg-cover bg-no-repeat bg-jungle-900"
-        style={{ backgroundImage: "url('/jungle-gateway-web-blur.jpg')", backgroundAttachment: 'fixed', backgroundPosition: 'center 0px' }}
+        className="bg-no-repeat bg-jungle-900"
+        style={{ backgroundImage: "url('/jungle-gateway-web-blur.jpg')", backgroundAttachment: 'fixed', backgroundPosition: 'center 0px', backgroundSize: 'auto 200%' }}
       >
-        {/* Dark overlay + blur */}
+        {/* Dark overlay */}
         <div className="bg-jungle-950/70">
         <section className="pt-28 pb-24 px-6 text-center relative overflow-hidden">
 
@@ -288,8 +288,8 @@ export default async function HomePage() {
       {/* Philosophy blurb — same parallax bg as hero */}
       <section
         data-parallax-bg
-        className="bg-cover bg-no-repeat bg-jungle-900"
-        style={{ backgroundImage: "url('/jungle-gateway-web-blur.jpg')", backgroundAttachment: 'fixed', backgroundPosition: 'center 0px' }}
+        className="bg-no-repeat bg-jungle-900"
+        style={{ backgroundImage: "url('/jungle-gateway-web-blur.jpg')", backgroundAttachment: 'fixed', backgroundPosition: 'center 0px', backgroundSize: 'auto 200%' }}
       >
       <div className="bg-jungle-950/70 py-20 px-6">
         <div className="max-w-5xl mx-auto">
