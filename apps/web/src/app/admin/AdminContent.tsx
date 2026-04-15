@@ -293,7 +293,37 @@ export async function AdminContent({
       </div>
 
       {tab === 'creators' && (
-        <CreatorsPanel initialCreators={creators} initialApplications={applications} />
+        <>
+          {/* Quick links */}
+          <section className="mb-10">
+            <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider bg-jungle-100 text-jungle-700 px-2 py-0.5 rounded">Admin</span>
+              Quick links
+            </h2>
+            <div className="bg-white rounded-2xl border border-jungle-200 p-6 space-y-4">
+              <div>
+                <p className="text-xs text-stone-400 font-semibold uppercase tracking-wider mb-1">Creator invite page</p>
+                <div className="flex items-center gap-3">
+                  <code className="text-sm text-jungle-700 bg-jungle-50 px-3 py-1.5 rounded-lg flex-1">
+                    junglegym.academy/welcome
+                  </code>
+                  <Link
+                    href="/welcome"
+                    target="_blank"
+                    className="text-sm font-semibold text-jungle-600 hover:text-jungle-500 transition-colors whitespace-nowrap"
+                  >
+                    Preview →
+                  </Link>
+                </div>
+                <p className="text-xs text-stone-400 mt-1.5">
+                  Share this link in personal invites. Not indexed by search engines.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <CreatorsPanel initialCreators={creators} initialApplications={applications} />
+        </>
       )}
 
       {tab === 'metrics' && metricsData && (

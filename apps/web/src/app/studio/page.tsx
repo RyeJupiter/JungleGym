@@ -6,7 +6,7 @@ import { PurchaseToast } from '@/components/studio/PurchaseToast'
 import { Navbar } from '@/components/Navbar'
 import { FooterCompact } from '@/components/FooterCompact'
 import { StudioSessionsSkeleton, StudioVideosSkeleton } from '@/components/skeletons'
-import { StudioSessions, StudioVideos, StudioAdminPanel } from './StudioContent'
+import { StudioSessions, StudioVideos } from './StudioContent'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Studio' }
@@ -63,11 +63,6 @@ export default async function StudioPage() {
             <StudioSessions userId={authUser.id} />
           </Suspense>
         </section>
-
-        {/* Admin panel */}
-        <Suspense fallback={null}>
-          <StudioAdminPanel email={authUser.email ?? ''} />
-        </Suspense>
 
         {/* Videos */}
         <section className="mb-12">
