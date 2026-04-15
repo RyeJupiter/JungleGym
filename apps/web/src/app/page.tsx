@@ -285,6 +285,17 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Gradient fade from white → transparent so the forest bg reveals
+           gradually — masks the backdrop-filter cold-start stutter */}
+      <div
+        data-parallax-bg
+        className="bg-cover bg-no-repeat"
+        style={{ backgroundImage: "url('/jungle-gateway-web.jpg')", backgroundAttachment: 'fixed', backgroundPosition: 'center 0px', height: '80px', marginTop: '-80px' }}
+        aria-hidden="true"
+      >
+        <div className="w-full h-full bg-gradient-to-b from-white to-transparent" />
+      </div>
+
       {/* Philosophy blurb — same parallax bg as hero */}
       <section
         data-parallax-bg
