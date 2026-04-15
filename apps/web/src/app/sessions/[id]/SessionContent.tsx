@@ -28,7 +28,6 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
     .limit(1)
   const creator = profileRows?.[0] ?? null
 
-  const scheduledDate = new Date(session.scheduled_at)
   const isLive = session.status === 'live'
   const isPast = session.status === 'completed' || session.status === 'cancelled'
 
@@ -98,7 +97,7 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
         <StreamPlaceholder
           isLive={isLive}
           isPast={isPast}
-          scheduledDay={scheduledDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })}
+          scheduledAt={session.scheduled_at}
         />
       )}
 

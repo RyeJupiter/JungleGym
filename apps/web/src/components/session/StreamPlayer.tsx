@@ -63,29 +63,40 @@ export function StreamPlayer({
 export function StreamPlaceholder({
   isLive,
   isPast,
-  scheduledDay,
+  scheduledAt,
 }: {
   isLive: boolean
   isPast: boolean
-  scheduledDay: string
+  scheduledAt: string
 }) {
+  const scheduled = new Date(scheduledAt)
+  const msUntilStart = scheduled.getTime() - Date.now()
+  const withinHour = msUntilStart > 0 && msUntilStart <= 60 * 60 * 1000
+
+  const dayStr = scheduled.toLocaleDateString(undefined, { weekday: 'long' })
+  const timeStr = scheduled.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+
   return (
-    <div className="bg-jungle-50 border border-jungle-200 rounded-2xl p-8 text-center">
+    <div className="bg-jungle-50 border border-jungle-200 rounded-2xl p-8 text-center mb-6">
       <p className="text-4xl mb-3">🌿</p>
       <p className="font-bold text-jungle-800 mb-1">
         {isLive
           ? 'The session is happening now!'
           : isPast
           ? 'This session has ended.'
-          : 'Session starts soon'}
+          : withinHour
+          ? 'Session starts soon'
+          : 'Live session scheduled'}
       </p>
-      <p className="text-jungle-600 text-sm">
-        {isLive
-          ? 'Live streaming is coming soon. For now, connect with the teacher directly.'
-          : isPast
-          ? 'Thanks for attending! Check out more sessions below.'
-          : `Come back ${scheduledDay} to join.`}
-      </p>
+      {isLive && (
+        <p className="text-jungle-600 text-sm">Live streaming is coming soon. For now, connect with the teacher directly.</p>
+      )}
+      {isPast && (
+        <p className="text-jungle-600 text-sm">Thanks for attending! Check out more sessions below.</p>
+      )}
+      {!isLive && !isPast && !withinHour && (
+        <p className="text-jungle-600 text-sm">Come back {dayStr} at {timeStr} to join.</p>
+      )}
     </div>
   )
 }
