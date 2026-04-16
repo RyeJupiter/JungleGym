@@ -37,6 +37,28 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
   const pausedAt = (session as Record<string, unknown>).paused_at as string | null
   const playbackUrls = cfInputId ? getPlaybackUrls(cfInputId) : null
 
+  // Diagnostic: check CF live input settings (logged server-side)
+  if (cfInputId && isLive) {
+    const cfToken = process.env.CLOUDFLARE_STREAM_API_TOKEN
+    const cfAccountId = process.env.CLOUDFLARE_ACCOUNT_ID
+    if (cfToken && cfAccountId) {
+      fetch(`https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/stream/live_inputs/${cfInputId}`, {
+        headers: { Authorization: `Bearer ${cfToken}` },
+      })
+        .then(r => r.json())
+        .then(data => {
+          console.log('[CF Diagnostic] live input config:', JSON.stringify({
+            uid: data.result?.uid,
+            requireSignedURLs: data.result?.recording?.requireSignedURLs,
+            mode: data.result?.recording?.mode,
+            allowedOrigins: data.result?.recording?.allowedOrigins,
+            status: data.result?.status,
+          }))
+        })
+        .catch(err => console.error('[CF Diagnostic] failed:', err.message))
+    }
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
       {/* Auto-refresh poller (only when no stream player — LiveSessionWrapper has its own) */}

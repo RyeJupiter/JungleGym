@@ -42,6 +42,23 @@ export function StreamPlayer({
 
     video.muted = initialMuted
 
+    // Diagnostic: fetch the manifest directly to see what CF returns
+    fetch(hlsSrc)
+      .then(async (res) => {
+        const text = await res.text()
+        const isHls = text.trimStart().startsWith('#EXTM3U')
+        console.log('[StreamPlayer] manifest diagnostic:', {
+          url: hlsSrc,
+          status: res.status,
+          contentType: res.headers.get('content-type'),
+          isValidHls: isHls,
+          bodyPreview: text.substring(0, 300),
+        })
+      })
+      .catch((err) => {
+        console.error('[StreamPlayer] manifest fetch failed:', err.message)
+      })
+
     if (Hls.isSupported()) {
       const hls = new Hls({
         liveSyncDurationCount: 3,
