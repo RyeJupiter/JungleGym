@@ -32,8 +32,6 @@ export function StreamPlayer({
   onMutedChange?: (muted: boolean) => void
 }) {
   const [showUnmute, setShowUnmute] = useState(initialMuted)
-  // Cache-bust on each mount so the CDN serves a fresh manifest after BRB resume
-  const [mountId] = useState(() => Date.now())
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<Hls | null>(null)
 
@@ -44,26 +42,26 @@ export function StreamPlayer({
 
     video.muted = initialMuted
 
-    const src = `${hlsSrc}?_r=${mountId}`
-
     if (Hls.isSupported()) {
       const hls = new Hls({
         liveSyncDurationCount: 3,
         liveMaxLatencyDurationCount: 6,
+        enableWorker: true,
       })
       hlsRef.current = hls
 
-      hls.loadSource(src)
+      hls.loadSource(hlsSrc)
       hls.attachMedia(video)
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play().catch(() => {
-          // Autoplay blocked — user will click the unmute overlay
+        video.play().catch((err) => {
+          console.warn('[StreamPlayer] autoplay blocked:', err.message)
         })
       })
 
       // HLS.js has built-in error recovery for live streams
       hls.on(Hls.Events.ERROR, (_event, data) => {
+        console.warn('[StreamPlayer] HLS error:', data.type, data.details, data.fatal)
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
@@ -86,14 +84,16 @@ export function StreamPlayer({
       }
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       // Safari / iOS — native HLS support
-      video.src = src
-      video.play().catch(() => {})
+      video.src = hlsSrc
+      video.play().catch((err) => {
+        console.warn('[StreamPlayer] autoplay blocked:', err.message)
+      })
       return () => {
         video.removeAttribute('src')
         video.load()
       }
     }
-  }, [hlsSrc, mountId, initialMuted])
+  }, [hlsSrc, initialMuted])
 
   const handleUnmute = useCallback(() => {
     setShowUnmute(false)
@@ -156,9 +156,11 @@ export function StreamPlayer({
       )}
 
       {/* 16:9 responsive video element */}
-      <div className="aspect-video">
+      <div className="aspect-video bg-black">
         <video
           ref={videoRef}
+          autoPlay
+          muted
           playsInline
           className="w-full h-full"
         />
