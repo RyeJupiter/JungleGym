@@ -8,13 +8,11 @@ import { SessionAutoRefresh } from './SessionAutoRefresh'
  * Client wrapper that connects the auto-refresh poller to the stream player,
  * enabling the BRB overlay when the session is paused.
  *
- * When unpausing, increments a key to force the iframe to remount and
- * reload (with cache-bust) — the CF player doesn't auto-recover after
- * the stream reconnects.
+ * When unpausing, increments a key to force the player to remount and
+ * reconnect to the live HLS stream.
  *
  * Keeps BRB visible for a few seconds after detecting unpause so the
- * CF CDN has time to propagate the resumed stream (without this,
- * desktop browsers can hit a stale CDN edge and show a loading spinner).
+ * CF CDN has time to propagate the resumed stream.
  *
  * Mute state is tracked here so it survives across StreamPlayer remounts —
  * viewers don't have to re-unmute after BRB.
@@ -22,14 +20,14 @@ import { SessionAutoRefresh } from './SessionAutoRefresh'
 export function LiveSessionWrapper({
   sessionId,
   currentStatus,
-  iframeSrc,
+  hlsSrc,
   isLive,
   isRecording,
   initialPaused,
 }: {
   sessionId: string
   currentStatus: string
-  iframeSrc: string
+  hlsSrc: string
   isLive: boolean
   isRecording: boolean
   initialPaused: boolean
@@ -40,7 +38,6 @@ export function LiveSessionWrapper({
   const wasPausedRef = useRef(initialPaused)
   const reconnectingRef = useRef(false)
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const retryCountRef = useRef(0)
 
   useEffect(() => {
     return () => {
@@ -48,21 +45,11 @@ export function LiveSessionWrapper({
     }
   }, [])
 
-  // Auto-retry: if the CF player crashes (LL-HLS 405 / Shaka null manifest),
-  // force a reload with a new cache-bust URL. Max 2 retries (3 total attempts).
-  const handleRetry = useCallback(() => {
-    if (retryCountRef.current < 2) {
-      retryCountRef.current++
-      setPlayerKey(k => k + 1)
-    }
-  }, [])
-
   const handlePausedChange = useCallback((p: boolean) => {
     if (wasPausedRef.current && !p) {
-      // Stream resumed — force iframe reload with cache-bust.
+      // Stream resumed — force player reload.
       // Keep BRB visible for a few seconds so the CF CDN edge has time
-      // to serve the resumed stream (desktop browsers hit this more than mobile).
-      retryCountRef.current = 0
+      // to serve the resumed stream.
       setPlayerKey(k => k + 1)
       reconnectingRef.current = true
       reconnectTimerRef.current = setTimeout(() => {
@@ -86,13 +73,12 @@ export function LiveSessionWrapper({
       <div className="mb-6">
         <StreamPlayer
           key={playerKey}
-          iframeSrc={iframeSrc}
+          hlsSrc={hlsSrc}
           isLive={isLive}
           isRecording={isRecording}
           isPaused={paused}
           initialMuted={muted}
           onMutedChange={setMuted}
-          onRetry={handleRetry}
         />
       </div>
     </>

@@ -1,108 +1,109 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import Hls from 'hls.js'
 
 /**
- * Responsive Cloudflare Stream player.
+ * Responsive Cloudflare Stream player using HLS.js.
  *
- * Uses the CF player's internal postMessage protocol for mute control
- * rather than the external SDK — this avoids the SDK script loading delay
- * that was causing iframeReady race conditions and LL-HLS 405 errors
- * on desktop.
+ * Replaces the CF iframe embed with a native <video> element powered by
+ * HLS.js (Chrome/Firefox/Edge) or native HLS (Safari/iOS). This avoids
+ * CF's iframe player bugs (LL-HLS 405 → Shaka null manifest crash) and
+ * gives us direct <video> element control for mute/unmute — no postMessage
+ * or SDK needed.
  *
- * Protocol (from CF SDK source):
- * - Iframe sends: { __privateUnstableMessageType: "iframeReady" }
- * - We send:      { __privateUnstableMessageType: "setProperty", property, value }
+ * CF serves all HLS manifests and segments with Access-Control-Allow-Origin: *,
+ * so cross-origin playback works without issues.
  */
 
-function cfSetProperty(property: string, value: unknown) {
-  return { __privateUnstableMessageType: 'setProperty', property, value }
-}
-
 export function StreamPlayer({
-  iframeSrc,
+  hlsSrc,
   isLive,
   isRecording,
   isPaused,
   initialMuted = true,
   onMutedChange,
-  onRetry,
 }: {
-  iframeSrc: string
+  hlsSrc: string
   isLive?: boolean
   isRecording?: boolean
   isPaused?: boolean
   initialMuted?: boolean
   onMutedChange?: (muted: boolean) => void
-  onRetry?: () => void
 }) {
   const [showUnmute, setShowUnmute] = useState(initialMuted)
-  // Unique per mount — busts browser cache when component remounts via key change
+  // Cache-bust on each mount so the CDN serves a fresh manifest after BRB resume
   const [mountId] = useState(() => Date.now())
-  const iframeRef = useRef<HTMLIFrameElement>(null)
-  const readyRef = useRef(false)
-  // Refs so the message listener always has the latest values without
-  // needing to re-subscribe (which would miss iframeReady if it already fired).
-  const initialMutedRef = useRef(initialMuted)
-  initialMutedRef.current = initialMuted
-  const onRetryRef = useRef(onRetry)
-  onRetryRef.current = onRetry
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const hlsRef = useRef<Hls | null>(null)
 
-  // Listen for postMessages from the CF player iframe.
-  // - On iframeReady: enforce mute state
-  // - Watchdog: if the player doesn't send anything beyond iframeReady
-  //   within 8s, the CF player likely crashed (LL-HLS 405 / Shaka null
-  //   manifest bug). Call onRetry to force a reload.
+  // Initialize HLS.js (or native HLS on Safari) and start playback
   useEffect(() => {
-    readyRef.current = false
-    let msgCount = 0
-    let watchdog: ReturnType<typeof setTimeout> | null = null
+    const video = videoRef.current
+    if (!video || !hlsSrc) return
 
-    const handleMessage = (e: MessageEvent) => {
-      if (e.source !== iframeRef.current?.contentWindow) return
-      msgCount++
+    video.muted = initialMuted
 
-      if (e.data?.__privateUnstableMessageType === 'iframeReady') {
-        readyRef.current = true
-        iframeRef.current?.contentWindow?.postMessage(
-          cfSetProperty('muted', initialMutedRef.current),
-          '*'
-        )
+    const src = `${hlsSrc}?_r=${mountId}`
+
+    if (Hls.isSupported()) {
+      const hls = new Hls({
+        liveSyncDurationCount: 3,
+        liveMaxLatencyDurationCount: 6,
+      })
+      hlsRef.current = hls
+
+      hls.loadSource(src)
+      hls.attachMedia(video)
+
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {
+          // Autoplay blocked — user will click the unmute overlay
+        })
+      })
+
+      // HLS.js has built-in error recovery for live streams
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (data.fatal) {
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              // Live stream may not be active yet — retry
+              hls.startLoad()
+              break
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              hls.recoverMediaError()
+              break
+            default:
+              hls.destroy()
+              break
+          }
+        }
+      })
+
+      return () => {
+        hls.destroy()
+        hlsRef.current = null
       }
-
-      // Any message beyond iframeReady means the player is alive —
-      // cancel the watchdog so we don't retry unnecessarily.
-      if (msgCount > 1 && watchdog) {
-        clearTimeout(watchdog)
-        watchdog = null
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari / iOS — native HLS support
+      video.src = src
+      video.play().catch(() => {})
+      return () => {
+        video.removeAttribute('src')
+        video.load()
       }
     }
-
-    // Start watchdog — fires if the player gets stuck
-    watchdog = setTimeout(() => {
-      watchdog = null
-      onRetryRef.current?.()
-    }, 8000)
-
-    window.addEventListener('message', handleMessage)
-    return () => {
-      window.removeEventListener('message', handleMessage)
-      if (watchdog) clearTimeout(watchdog)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps — uses refs intentionally
+  }, [hlsSrc, mountId, initialMuted])
 
   const handleUnmute = useCallback(() => {
     setShowUnmute(false)
-    if (readyRef.current) {
-      iframeRef.current?.contentWindow?.postMessage(
-        cfSetProperty('muted', false),
-        '*'
-      )
+    if (videoRef.current) {
+      videoRef.current.muted = false
     }
     onMutedChange?.(false)
   }, [onMutedChange])
 
-  if (!iframeSrc) {
+  if (!hlsSrc) {
     return (
       <div className="bg-stone-900 rounded-2xl aspect-video flex items-center justify-center">
         <div className="text-center">
@@ -154,14 +155,12 @@ export function StreamPlayer({
         </button>
       )}
 
-      {/* 16:9 responsive iframe (stays rendered behind overlay when paused) */}
+      {/* 16:9 responsive video element */}
       <div className="aspect-video">
-        <iframe
-          ref={iframeRef}
-          src={`${iframeSrc}?autoplay=true&muted=true&preload=true&_r=${mountId}`}
+        <video
+          ref={videoRef}
+          playsInline
           className="w-full h-full"
-          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
-          allowFullScreen
         />
       </div>
     </div>

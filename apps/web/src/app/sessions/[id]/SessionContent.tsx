@@ -97,7 +97,7 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
         <LiveSessionWrapper
           sessionId={session.id}
           currentStatus={session.status}
-          iframeSrc={playbackUrls.iframe}
+          hlsSrc={playbackUrls.hls}
           isLive={isLive}
           isRecording={isPast}
           initialPaused={!!pausedAt}
