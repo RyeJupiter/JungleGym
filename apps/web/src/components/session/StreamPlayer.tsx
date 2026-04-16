@@ -1,30 +1,33 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import Hls from 'hls.js'
 
 /**
- * Responsive Cloudflare Stream player using HLS.js.
+ * Responsive Cloudflare Stream player using the CF iframe embed.
  *
- * Replaces the CF iframe embed with a native <video> element powered by
- * HLS.js (Chrome/Firefox/Edge) or native HLS (Safari/iOS). This avoids
- * CF's iframe player bugs (LL-HLS 405 → Shaka null manifest crash) and
- * gives us direct <video> element control for mute/unmute — no postMessage
- * or SDK needed.
+ * Uses the CF player's internal postMessage protocol for mute control.
+ * The stream never disconnects during pause (creator sends black video +
+ * silence instead), so the iframe maintains a continuous connection —
+ * no reload or protocol renegotiation needed on resume.
  *
- * CF serves all HLS manifests and segments with Access-Control-Allow-Origin: *,
- * so cross-origin playback works without issues.
+ * Protocol (from CF SDK source):
+ * - Iframe sends: { __privateUnstableMessageType: "iframeReady" }
+ * - We send:      { __privateUnstableMessageType: "setProperty", property, value }
  */
 
+function cfSetProperty(property: string, value: unknown) {
+  return { __privateUnstableMessageType: 'setProperty', property, value }
+}
+
 export function StreamPlayer({
-  hlsSrc,
+  iframeSrc,
   isLive,
   isRecording,
   isPaused,
   initialMuted = true,
   onMutedChange,
 }: {
-  hlsSrc: string
+  iframeSrc: string
   isLive?: boolean
   isRecording?: boolean
   isPaused?: boolean
@@ -32,95 +35,42 @@ export function StreamPlayer({
   onMutedChange?: (muted: boolean) => void
 }) {
   const [showUnmute, setShowUnmute] = useState(initialMuted)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const hlsRef = useRef<Hls | null>(null)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const readyRef = useRef(false)
+  const initialMutedRef = useRef(initialMuted)
+  initialMutedRef.current = initialMuted
 
-  // Initialize HLS.js (or native HLS on Safari) and start playback
+  // Listen for iframeReady from the CF player, then enforce mute state.
   useEffect(() => {
-    const video = videoRef.current
-    if (!video || !hlsSrc) return
+    readyRef.current = false
 
-    video.muted = initialMuted
-
-    // Diagnostic: fetch the manifest directly to see what CF returns
-    fetch(hlsSrc)
-      .then(async (res) => {
-        const text = await res.text()
-        const isHls = text.trimStart().startsWith('#EXTM3U')
-        console.log('[StreamPlayer] manifest diagnostic:', {
-          url: hlsSrc,
-          status: res.status,
-          contentType: res.headers.get('content-type'),
-          isValidHls: isHls,
-          bodyPreview: text.substring(0, 300),
-        })
-      })
-      .catch((err) => {
-        console.error('[StreamPlayer] manifest fetch failed:', err.message)
-      })
-
-    if (Hls.isSupported()) {
-      const hls = new Hls({
-        liveSyncDurationCount: 3,
-        liveMaxLatencyDurationCount: 6,
-        enableWorker: true,
-      })
-      hlsRef.current = hls
-
-      hls.loadSource(hlsSrc)
-      hls.attachMedia(video)
-
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play().catch((err) => {
-          console.warn('[StreamPlayer] autoplay blocked:', err.message)
-        })
-      })
-
-      // HLS.js has built-in error recovery for live streams
-      hls.on(Hls.Events.ERROR, (_event, data) => {
-        console.warn('[StreamPlayer] HLS error:', data.type, data.details, data.fatal)
-        if (data.fatal) {
-          switch (data.type) {
-            case Hls.ErrorTypes.NETWORK_ERROR:
-              // Live stream may not be active yet — retry
-              hls.startLoad()
-              break
-            case Hls.ErrorTypes.MEDIA_ERROR:
-              hls.recoverMediaError()
-              break
-            default:
-              hls.destroy()
-              break
-          }
-        }
-      })
-
-      return () => {
-        hls.destroy()
-        hlsRef.current = null
-      }
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari / iOS — native HLS support
-      video.src = hlsSrc
-      video.play().catch((err) => {
-        console.warn('[StreamPlayer] autoplay blocked:', err.message)
-      })
-      return () => {
-        video.removeAttribute('src')
-        video.load()
+    const handleMessage = (e: MessageEvent) => {
+      if (e.source !== iframeRef.current?.contentWindow) return
+      if (e.data?.__privateUnstableMessageType === 'iframeReady') {
+        readyRef.current = true
+        iframeRef.current?.contentWindow?.postMessage(
+          cfSetProperty('muted', initialMutedRef.current),
+          '*'
+        )
       }
     }
-  }, [hlsSrc, initialMuted])
+
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [])
 
   const handleUnmute = useCallback(() => {
     setShowUnmute(false)
-    if (videoRef.current) {
-      videoRef.current.muted = false
+    if (readyRef.current) {
+      iframeRef.current?.contentWindow?.postMessage(
+        cfSetProperty('muted', false),
+        '*'
+      )
     }
     onMutedChange?.(false)
   }, [onMutedChange])
 
-  if (!hlsSrc) {
+  if (!iframeSrc) {
     return (
       <div className="bg-stone-900 rounded-2xl aspect-video flex items-center justify-center">
         <div className="text-center">
@@ -172,14 +122,14 @@ export function StreamPlayer({
         </button>
       )}
 
-      {/* 16:9 responsive video element */}
-      <div className="aspect-video bg-black">
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          playsInline
+      {/* 16:9 responsive iframe */}
+      <div className="aspect-video">
+        <iframe
+          ref={iframeRef}
+          src={`${iframeSrc}?autoplay=true&muted=true&preload=true`}
           className="w-full h-full"
+          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+          allowFullScreen
         />
       </div>
     </div>

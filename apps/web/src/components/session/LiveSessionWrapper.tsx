@@ -1,66 +1,39 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { StreamPlayer } from './StreamPlayer'
 import { SessionAutoRefresh } from './SessionAutoRefresh'
 
 /**
- * Client wrapper that connects the auto-refresh poller to the stream player,
- * enabling the BRB overlay when the session is paused.
+ * Client wrapper that connects the auto-refresh poller to the stream player.
  *
- * When unpausing, increments a key to force the player to remount and
- * reconnect to the live HLS stream.
+ * The stream never disconnects during pause — the creator swaps real
+ * camera/mic tracks for black video + silence, keeping the WHIP connection
+ * alive. This means the CF iframe maintains a continuous connection and
+ * viewers get instant resume with no iframe reload needed.
  *
- * Keeps BRB visible for a few seconds after detecting unpause so the
- * CF CDN has time to propagate the resumed stream.
- *
- * Mute state is tracked here so it survives across StreamPlayer remounts —
- * viewers don't have to re-unmute after BRB.
+ * Mute state is tracked here so it survives across renders.
  */
 export function LiveSessionWrapper({
   sessionId,
   currentStatus,
-  hlsSrc,
+  iframeSrc,
   isLive,
   isRecording,
   initialPaused,
 }: {
   sessionId: string
   currentStatus: string
-  hlsSrc: string
+  iframeSrc: string
   isLive: boolean
   isRecording: boolean
   initialPaused: boolean
 }) {
   const [paused, setPaused] = useState(initialPaused)
-  const [playerKey, setPlayerKey] = useState(0)
   const [muted, setMuted] = useState(true)
-  const wasPausedRef = useRef(initialPaused)
-  const reconnectingRef = useRef(false)
-  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current)
-    }
-  }, [])
 
   const handlePausedChange = useCallback((p: boolean) => {
-    if (wasPausedRef.current && !p) {
-      // Stream resumed — force player reload.
-      // Keep BRB visible for a few seconds so the CF CDN edge has time
-      // to serve the resumed stream.
-      setPlayerKey(k => k + 1)
-      reconnectingRef.current = true
-      reconnectTimerRef.current = setTimeout(() => {
-        reconnectingRef.current = false
-        reconnectTimerRef.current = null
-        setPaused(false)
-      }, 3000)
-    } else if (!reconnectingRef.current) {
-      setPaused(p)
-    }
-    wasPausedRef.current = p
+    setPaused(p)
   }, [])
 
   return (
@@ -72,8 +45,7 @@ export function LiveSessionWrapper({
       />
       <div className="mb-6">
         <StreamPlayer
-          key={playerKey}
-          hlsSrc={hlsSrc}
+          iframeSrc={iframeSrc}
           isLive={isLive}
           isRecording={isRecording}
           isPaused={paused}

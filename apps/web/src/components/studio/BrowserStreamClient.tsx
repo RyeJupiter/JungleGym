@@ -18,12 +18,38 @@ type DeviceInfo = {
 
 const PAUSE_TIMEOUT_MS = 15 * 60 * 1000 // 15 minutes
 
+/** Creates a black video track via an offscreen canvas (1 fps). */
+function createBlackVideoTrack(width = 1280, height = 720): MediaStreamTrack {
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')!
+  ctx.fillStyle = 'black'
+  ctx.fillRect(0, 0, width, height)
+  return canvas.captureStream(1).getVideoTracks()[0]
+}
+
+/** Creates a silent audio track via a zero-gain oscillator. */
+function createSilentAudioTrack(): MediaStreamTrack {
+  const ctx = new AudioContext()
+  const oscillator = ctx.createOscillator()
+  const gain = ctx.createGain()
+  gain.gain.value = 0
+  oscillator.connect(gain)
+  const dest = ctx.createMediaStreamDestination()
+  gain.connect(dest)
+  oscillator.start()
+  return dest.stream.getAudioTracks()[0]
+}
+
 export function BrowserStreamClient({ sessionId, cfInputId, cfStreamKey, whipUrl }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const pcRef = useRef<RTCPeerConnection | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pauseStartRef = useRef<number | null>(null)
+  // Saved real tracks during pause so we can swap them back on resume
+  const realTracksRef = useRef<{ video: MediaStreamTrack | null; audio: MediaStreamTrack | null }>({ video: null, audio: null })
 
   const [status, setStatus] = useState<ConnectionStatus>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -110,7 +136,7 @@ export function BrowserStreamClient({ sessionId, cfInputId, cfStreamKey, whipUrl
   // ── Beforeunload: pause on tab close so server cleanup kicks in ─
   useEffect(() => {
     function handleBeforeUnload() {
-      if (status === 'live' || status === 'connecting') {
+      if (status === 'live' || status === 'connecting' || status === 'paused') {
         // Use sendBeacon for reliability — fetch may be cancelled during unload
         navigator.sendBeacon(
           '/api/stream/status',
@@ -252,13 +278,30 @@ export function BrowserStreamClient({ sessionId, cfInputId, cfStreamKey, whipUrl
   }
 
   // ── Pause stream ──────────────────────────────────────────────
-  function pauseStream() {
-    // Disconnect from CF (stops billing)
-    if (pcRef.current) { pcRef.current.close(); pcRef.current = null }
+  // Instead of disconnecting from CF (which caused unreliable resume),
+  // we keep the WHIP connection alive and swap the real camera/mic
+  // tracks for black video + silent audio. The stream stays connected
+  // so viewers get an instant resume with no protocol renegotiation.
+  async function pauseStream() {
+    // Save real tracks so we can restore them on resume
+    const videoTrack = streamRef.current?.getVideoTracks()[0] ?? null
+    const audioTrack = streamRef.current?.getAudioTracks()[0] ?? null
+    realTracksRef.current = { video: videoTrack, audio: audioTrack }
+
+    // Replace with black video + silent audio on the WHIP connection
+    if (pcRef.current) {
+      const blackTrack = createBlackVideoTrack()
+      const silentTrack = createSilentAudioTrack()
+      const videoSender = pcRef.current.getSenders().find(s => s.track?.kind === 'video')
+      const audioSender = pcRef.current.getSenders().find(s => s.track?.kind === 'audio')
+      if (videoSender) await videoSender.replaceTrack(blackTrack)
+      if (audioSender) await audioSender.replaceTrack(silentTrack)
+    }
+
     setStatus('paused')
     setError(null)
 
-    // Tell the DB we're paused (viewers see BRB)
+    // Tell the DB we're paused (viewers see BRB overlay)
     updateStreamStatus('pause')
 
     // Start 15-min auto-end timer
@@ -269,19 +312,30 @@ export function BrowserStreamClient({ sessionId, cfInputId, cfStreamKey, whipUrl
   }
 
   // ── Resume stream ─────────────────────────────────────────────
+  // Swap real camera/mic tracks back in — instant resume, no reconnection.
   async function resumeStream() {
     if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null }
     pauseStartRef.current = null
-    // Don't clear paused_at here — the WHIP proxy clears it when the
-    // connection actually succeeds. This keeps the BRB overlay visible
-    // for viewers during the reconnection window.
-    await goLive()
+
+    const { video, audio } = realTracksRef.current
+    if (pcRef.current) {
+      const videoSender = pcRef.current.getSenders().find(s => s.track?.kind === 'video')
+      const audioSender = pcRef.current.getSenders().find(s => s.track?.kind === 'audio')
+      if (videoSender && video) await videoSender.replaceTrack(video)
+      if (audioSender && audio) await audioSender.replaceTrack(audio)
+    }
+    realTracksRef.current = { video: null, audio: null }
+
+    setStatus('live')
+    setError(null)
+    updateStreamStatus('resume')
   }
 
   // ── End stream ────────────────────────────────────────────────
   function endStream() {
     if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null }
     pauseStartRef.current = null
+    realTracksRef.current = { video: null, audio: null }
     if (pcRef.current) { pcRef.current.close(); pcRef.current = null }
     setStatus('idle')
     setError(null)
