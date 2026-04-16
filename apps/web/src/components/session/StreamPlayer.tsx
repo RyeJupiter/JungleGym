@@ -1,22 +1,23 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useStreamSDK } from '@cloudflare/stream-react'
-import type { StreamPlayerApi } from '@cloudflare/stream-react'
 
 /**
  * Responsive Cloudflare Stream player.
  *
- * Shows one of three states:
- * - Idle: "Stream hasn't started yet" placeholder
- * - Live: Embedded CF Stream iframe player
- * - Recording: Embedded playback of a saved recording
+ * Uses the CF player's internal postMessage protocol for mute control
+ * rather than the external SDK — this avoids the SDK script loading delay
+ * that was causing iframeReady race conditions and LL-HLS 405 errors
+ * on desktop.
  *
- * Uses the CF Stream Player SDK for programmatic control (mute/unmute).
- * The SDK is loaded BEFORE the iframe renders to prevent the iframeReady
- * race condition (where the iframe sends its readiness signal before the
- * SDK sets up its message listener, causing commands to queue forever).
+ * Protocol (from CF SDK source):
+ * - Iframe sends: { __privateUnstableMessageType: "iframeReady" }
+ * - We send:      { __privateUnstableMessageType: "setProperty", property, value }
  */
+
+function cfSetProperty(property: string, value: unknown) {
+  return { __privateUnstableMessageType: 'setProperty', property, value }
+}
 
 export function StreamPlayer({
   iframeSrc,
@@ -37,39 +38,45 @@ export function StreamPlayer({
   // Unique per mount — busts browser cache when component remounts via key change
   const [mountId] = useState(() => Date.now())
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const playerRef = useRef<StreamPlayerApi | undefined>(undefined)
+  const readyRef = useRef(false)
+  // Capture initialMuted in a ref so the message listener always has
+  // the latest value without needing to re-subscribe (which would miss
+  // iframeReady if it already fired).
+  const initialMutedRef = useRef(initialMuted)
+  initialMutedRef.current = initialMuted
 
-  // Loads the CF Stream SDK script; returns the Stream constructor when ready.
-  // Returns undefined while the script is still loading.
-  const streamSdk = useStreamSDK()
-
-  // Initialize the SDK player AFTER the iframe mounts.
-  // Because we only render the iframe once streamSdk is defined (see the
-  // early return below), the SDK listener is guaranteed to be set up before
-  // the iframe's internal player sends its "iframeReady" postMessage.
+  // Listen for iframeReady from the CF player, then enforce mute state.
+  // This runs once on mount — the listener uses refs for current values.
   useEffect(() => {
-    if (!streamSdk || !iframeRef.current) return
+    readyRef.current = false
 
-    const player = streamSdk(iframeRef.current)
-    playerRef.current = player
-
-    // If the viewer had previously unmuted (e.g. before a BRB pause),
-    // wait for playback to actually start, then restore unmuted state.
-    // We can't set muted=false in the iframe URL because browsers block
-    // autoplay with sound — so we always load muted, then unmute via SDK.
-    if (!initialMuted) {
-      const restore = () => {
-        if (playerRef.current) playerRef.current.muted = false
+    const handleMessage = (e: MessageEvent) => {
+      if (e.source !== iframeRef.current?.contentWindow) return
+      if (e.data?.__privateUnstableMessageType === 'iframeReady') {
+        readyRef.current = true
+        // Enforce the correct mute state on the player.
+        // The URL param sets muted=true for autoplay compliance, but if
+        // the viewer had previously unmuted (initialMuted=false), we
+        // override it here. Sending muted=true is also safe as a
+        // belt-and-suspenders reinforcement of the URL param.
+        iframeRef.current?.contentWindow?.postMessage(
+          cfSetProperty('muted', initialMutedRef.current),
+          '*'
+        )
       }
-      player.addEventListener('playing', restore)
-      return () => player.removeEventListener('playing', restore)
     }
-  }, [streamSdk, initialMuted])
+
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps — uses refs intentionally
 
   const handleUnmute = useCallback(() => {
     setShowUnmute(false)
-    if (playerRef.current) {
-      playerRef.current.muted = false
+    if (readyRef.current) {
+      iframeRef.current?.contentWindow?.postMessage(
+        cfSetProperty('muted', false),
+        '*'
+      )
     }
     onMutedChange?.(false)
   }, [onMutedChange])
@@ -80,18 +87,6 @@ export function StreamPlayer({
         <div className="text-center">
           <p className="text-4xl mb-3">📡</p>
           <p className="text-white/70 font-medium">Stream not available</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Don't render the iframe until the SDK is loaded.
-  // This prevents the iframeReady race condition.
-  if (!streamSdk) {
-    return (
-      <div className="relative rounded-2xl overflow-hidden bg-black">
-        <div className="aspect-video flex items-center justify-center">
-          <div className="animate-pulse text-white/30 text-sm">Loading player…</div>
         </div>
       </div>
     )
