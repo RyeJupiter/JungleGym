@@ -26,6 +26,7 @@ export function StreamPlayer({
   isPaused,
   initialMuted = true,
   onMutedChange,
+  onRetry,
 }: {
   iframeSrc: string
   isLive?: boolean
@@ -33,41 +34,61 @@ export function StreamPlayer({
   isPaused?: boolean
   initialMuted?: boolean
   onMutedChange?: (muted: boolean) => void
+  onRetry?: () => void
 }) {
   const [showUnmute, setShowUnmute] = useState(initialMuted)
   // Unique per mount — busts browser cache when component remounts via key change
   const [mountId] = useState(() => Date.now())
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const readyRef = useRef(false)
-  // Capture initialMuted in a ref so the message listener always has
-  // the latest value without needing to re-subscribe (which would miss
-  // iframeReady if it already fired).
+  // Refs so the message listener always has the latest values without
+  // needing to re-subscribe (which would miss iframeReady if it already fired).
   const initialMutedRef = useRef(initialMuted)
   initialMutedRef.current = initialMuted
+  const onRetryRef = useRef(onRetry)
+  onRetryRef.current = onRetry
 
-  // Listen for iframeReady from the CF player, then enforce mute state.
-  // This runs once on mount — the listener uses refs for current values.
+  // Listen for postMessages from the CF player iframe.
+  // - On iframeReady: enforce mute state
+  // - Watchdog: if the player doesn't send anything beyond iframeReady
+  //   within 8s, the CF player likely crashed (LL-HLS 405 / Shaka null
+  //   manifest bug). Call onRetry to force a reload.
   useEffect(() => {
     readyRef.current = false
+    let msgCount = 0
+    let watchdog: ReturnType<typeof setTimeout> | null = null
 
     const handleMessage = (e: MessageEvent) => {
       if (e.source !== iframeRef.current?.contentWindow) return
+      msgCount++
+
       if (e.data?.__privateUnstableMessageType === 'iframeReady') {
         readyRef.current = true
-        // Enforce the correct mute state on the player.
-        // The URL param sets muted=true for autoplay compliance, but if
-        // the viewer had previously unmuted (initialMuted=false), we
-        // override it here. Sending muted=true is also safe as a
-        // belt-and-suspenders reinforcement of the URL param.
         iframeRef.current?.contentWindow?.postMessage(
           cfSetProperty('muted', initialMutedRef.current),
           '*'
         )
       }
+
+      // Any message beyond iframeReady means the player is alive —
+      // cancel the watchdog so we don't retry unnecessarily.
+      if (msgCount > 1 && watchdog) {
+        clearTimeout(watchdog)
+        watchdog = null
+      }
     }
 
+    // Start watchdog — fires if the player gets stuck
+    watchdog = setTimeout(() => {
+      watchdog = null
+      onRetryRef.current?.()
+    }, 8000)
+
     window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
+    return () => {
+      window.removeEventListener('message', handleMessage)
+      if (watchdog) clearTimeout(watchdog)
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps — uses refs intentionally
 
   const handleUnmute = useCallback(() => {

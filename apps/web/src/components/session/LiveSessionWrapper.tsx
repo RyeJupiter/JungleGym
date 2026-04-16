@@ -40,10 +40,20 @@ export function LiveSessionWrapper({
   const wasPausedRef = useRef(initialPaused)
   const reconnectingRef = useRef(false)
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const retryCountRef = useRef(0)
 
   useEffect(() => {
     return () => {
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current)
+    }
+  }, [])
+
+  // Auto-retry: if the CF player crashes (LL-HLS 405 / Shaka null manifest),
+  // force a reload with a new cache-bust URL. Max 2 retries (3 total attempts).
+  const handleRetry = useCallback(() => {
+    if (retryCountRef.current < 2) {
+      retryCountRef.current++
+      setPlayerKey(k => k + 1)
     }
   }, [])
 
@@ -52,6 +62,7 @@ export function LiveSessionWrapper({
       // Stream resumed — force iframe reload with cache-bust.
       // Keep BRB visible for a few seconds so the CF CDN edge has time
       // to serve the resumed stream (desktop browsers hit this more than mobile).
+      retryCountRef.current = 0
       setPlayerKey(k => k + 1)
       reconnectingRef.current = true
       reconnectTimerRef.current = setTimeout(() => {
@@ -81,6 +92,7 @@ export function LiveSessionWrapper({
           isPaused={paused}
           initialMuted={muted}
           onMutedChange={setMuted}
+          onRetry={handleRetry}
         />
       </div>
     </>
