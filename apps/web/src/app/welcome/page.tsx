@@ -24,7 +24,7 @@ export default function WelcomePage() {
           <div className="flex flex-col items-center mb-10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/api/tamarin"
+              src="/emperor-tamarin.jpg"
               alt="Emperor tamarin — Saguinus imperator"
               className="w-40 h-40 rounded-full object-cover shadow-md border-4 border-jungle-600"
             />
