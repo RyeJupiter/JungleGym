@@ -12,6 +12,8 @@ export interface Profile {
   supportedRate: number
   communityRate: number
   abundanceRate: number
+  stripeAccountId: string | null
+  stripeOnboardingComplete: boolean
   createdAt: string
   updatedAt: string
 }

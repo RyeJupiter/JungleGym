@@ -199,6 +199,19 @@ export async function POST(req: Request) {
       break
     }
 
+    // ── Stripe Connect: account onboarding status changes ──────────────
+    case 'account.updated': {
+      const account = event.data.object as Stripe.Account
+      if (account.charges_enabled && account.details_submitted) {
+        // Mark creator's onboarding as complete
+        await supabase
+          .from('profiles')
+          .update({ stripe_onboarding_complete: true })
+          .eq('stripe_account_id', account.id)
+      }
+      break
+    }
+
     default:
       // Unhandled event — return 200 so Stripe doesn't retry
       break

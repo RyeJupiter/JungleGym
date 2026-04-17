@@ -56,14 +56,16 @@ async function uploadVideoResumable(
 export function VideoUploadForm({
   creatorId,
   defaultRates,
+  stripeConnected = false,
 }: {
   creatorId: string
   defaultRates: { supported: number; community: number; abundance: number }
+  stripeConnected?: boolean
 }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [tags, setTags] = useState<string[]>([])
-  const [isFree, setIsFree] = useState(false)
+  const [isFree, setIsFree] = useState(!stripeConnected)
   const [durationSecs, setDurationSecs] = useState('')
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
@@ -315,19 +317,40 @@ export function VideoUploadForm({
       <div className="bg-white rounded-2xl border border-stone-200 p-6 space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-stone-700">Pricing</span>
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className={`flex items-center gap-2 ${stripeConnected ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
             <span className="text-sm text-stone-500">Free</span>
             <button
               type="button"
-              onClick={() => setIsFree(!isFree)}
-              className={`relative inline-flex h-5 w-9 rounded-full transition-colors ${isFree ? 'bg-jungle-500' : 'bg-stone-300'}`}
+              onClick={() => stripeConnected && setIsFree(!isFree)}
+              disabled={!stripeConnected}
+              className={`relative inline-flex h-5 w-9 rounded-full transition-colors ${
+                !stripeConnected
+                  ? 'bg-jungle-500'
+                  : isFree ? 'bg-jungle-500' : 'bg-stone-300'
+              }`}
             >
-              <span className={`inline-block w-4 h-4 rounded-full bg-white shadow transform transition-transform mt-0.5 ${isFree ? 'translate-x-4' : 'translate-x-0.5'}`} />
+              <span className={`inline-block w-4 h-4 rounded-full bg-white shadow transform transition-transform mt-0.5 ${
+                !stripeConnected
+                  ? 'translate-x-4'
+                  : isFree ? 'translate-x-4' : 'translate-x-0.5'
+              }`} />
             </button>
           </label>
         </div>
 
-        {!isFree && calculatedPrices && (
+        {!stripeConnected && (
+          <div className="bg-amber-50 rounded-xl px-4 py-3">
+            <p className="text-sm text-amber-800 font-medium">Paid videos require a connected Stripe account</p>
+            <p className="text-xs text-amber-600 mt-1">
+              Set up payouts so you can receive your 80% share of each sale.{' '}
+              <a href="/settings" className="underline font-medium hover:text-amber-800 transition-colors">
+                Connect Stripe in Settings
+              </a>
+            </p>
+          </div>
+        )}
+
+        {stripeConnected && !isFree && calculatedPrices && (
           <div className="space-y-2">
             <div className="grid grid-cols-3 gap-3">
               {([
@@ -364,7 +387,7 @@ export function VideoUploadForm({
           </div>
         )}
 
-        {!isFree && !calculatedPrices && (
+        {stripeConnected && !isFree && !calculatedPrices && (
           <p className="text-xs text-stone-400">Add a video file or enter duration to calculate prices.</p>
         )}
       </div>

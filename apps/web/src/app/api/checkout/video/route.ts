@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getStripe } from '@/lib/stripe'
 import { PLATFORM_FEE_PCT, calculatePriceBreakdown } from '@junglegym/shared'
-import type { PriceTier } from '@junglegym/shared'
+import type Stripe from 'stripe'
 
 export async function POST(req: Request) {
   const stripe = getStripe()
@@ -61,8 +61,20 @@ export async function POST(req: Request) {
 
   const { creatorAmount, platformFee, total } = calculatePriceBreakdown(videoPrice)
   const totalCents = Math.round(total * 100)
+  const platformFeeCents = Math.round(platformFee * 100)
 
-  const paymentIntent = await stripe.paymentIntents.create({
+  // Check if the creator has a connected Stripe account for direct payouts
+  const { data: creatorProfile } = await supabase
+    .from('profiles')
+    .select('stripe_account_id, stripe_onboarding_complete')
+    .eq('user_id', video.creator_id)
+    .single()
+
+  const hasConnectedAccount =
+    creatorProfile?.stripe_account_id && creatorProfile?.stripe_onboarding_complete
+
+  // Build PaymentIntent params — with or without destination charge
+  const params: Stripe.PaymentIntentCreateParams = {
     amount: totalCents,
     currency: 'usd',
     automatic_payment_methods: { enabled: true },
@@ -76,7 +88,17 @@ export async function POST(req: Request) {
       platform_amount: String(platformFee),
       total_amount: String(total),
     },
-  })
+  }
+
+  // If creator has Stripe Connect, route 80% to them automatically
+  if (hasConnectedAccount) {
+    params.application_fee_amount = platformFeeCents
+    params.transfer_data = {
+      destination: creatorProfile.stripe_account_id!,
+    }
+  }
+
+  const paymentIntent = await stripe.paymentIntents.create(params)
 
   return NextResponse.json({ clientSecret: paymentIntent.client_secret })
 }

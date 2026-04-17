@@ -40,6 +40,8 @@ export type Database = {
           abundance_rate: number
           instagram_url: string | null
           website_url: string | null
+          stripe_account_id: string | null
+          stripe_onboarding_complete: boolean
           created_at: string
           updated_at: string
         }
@@ -58,6 +60,8 @@ export type Database = {
           abundance_rate?: number
           instagram_url?: string | null
           website_url?: string | null
+          stripe_account_id?: string | null
+          stripe_onboarding_complete?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -74,6 +78,8 @@ export type Database = {
           abundance_rate?: number
           instagram_url?: string | null
           website_url?: string | null
+          stripe_account_id?: string | null
+          stripe_onboarding_complete?: boolean
           updated_at?: string
         }
       }

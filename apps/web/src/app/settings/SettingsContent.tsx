@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { ProfileForm } from '@/components/profile/ProfileForm'
 import { StudioSettingsForm } from '@/components/studio/StudioSettingsForm'
+import { StripeConnectSection } from '@/components/studio/StripeConnectSection'
 import { DangerZone } from '@/components/profile/DangerZone'
 import { EmailPreferences } from '@/components/profile/EmailPreferences'
 
@@ -22,7 +23,14 @@ export async function SettingsContent({ userId, email }: { userId: string; email
       <ProfileForm profile={profile} userId={userId} email={email} isCreator={isCreator} />
 
       {isCreator && profile && (
-        <div className="mt-6">
+        <div className="mt-6 space-y-6">
+          <StripeConnectSection
+            initialStatus={
+              profile.stripe_onboarding_complete ? 'connected'
+                : profile.stripe_account_id ? 'pending'
+                : 'not_connected'
+            }
+          />
           <StudioSettingsForm profile={{
             user_id: profile.user_id,
             display_name: profile.display_name ?? '',

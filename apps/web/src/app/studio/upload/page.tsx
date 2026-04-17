@@ -16,7 +16,7 @@ export default async function UploadPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('supported_rate, community_rate, abundance_rate')
+    .select('supported_rate, community_rate, abundance_rate, stripe_onboarding_complete')
     .eq('user_id', authUser.id)
     .single()
 
@@ -36,6 +36,7 @@ export default async function UploadPage() {
             community: Math.max(1, profile?.community_rate ?? 2),
             abundance: Math.max(1, profile?.abundance_rate ?? 3),
           }}
+          stripeConnected={!!profile?.stripe_onboarding_complete}
         />
       </div>
     </div>
