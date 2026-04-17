@@ -53,10 +53,35 @@ export async function GET() {
     serviceError = e instanceof Error ? e.message : String(e)
   }
 
+  // Test raw fetch to Supabase (bypassing @supabase/ssr)
+  let rawFetchResult: unknown = null
+  try {
+    const resp = await fetch(`${url}/rest/v1/videos?select=id,title&published=eq.true&limit=1`, {
+      headers: {
+        apikey: anonKey!,
+        Authorization: `Bearer ${anonKey}`,
+      },
+    })
+    rawFetchResult = { status: resp.status, statusText: resp.statusText, body: await resp.text().then(t => t.slice(0, 200)) }
+  } catch (e) {
+    rawFetchResult = { error: e instanceof Error ? e.message : String(e) }
+  }
+
+  // Test connectivity to a non-Supabase URL
+  let externalFetchResult: unknown = null
+  try {
+    const resp = await fetch('https://httpbin.org/get', { headers: { 'User-Agent': 'junglegym-debug' } })
+    externalFetchResult = { status: resp.status }
+  } catch (e) {
+    externalFetchResult = { error: e instanceof Error ? e.message : String(e) }
+  }
+
   return NextResponse.json({
     envCheck,
     anonClient: { data: anonResult, error: anonError },
     serviceClient: { data: serviceResult, error: serviceError },
+    rawFetch: rawFetchResult,
+    externalFetch: externalFetchResult,
     timestamp: new Date().toISOString(),
   })
 }
