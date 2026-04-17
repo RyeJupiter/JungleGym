@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
-export function ScheduleSessionForm({ creatorId }: { creatorId: string }) {
+export function ScheduleSessionForm({ creatorId, stripeConnected = false }: { creatorId: string; stripeConnected?: boolean }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [scheduledAt, setScheduledAt] = useState('')
@@ -79,8 +79,20 @@ export function ScheduleSessionForm({ creatorId }: { creatorId: string }) {
         🎁 Gift-based — learners give freely, you receive 100% of every gift.
       </div>
 
+      {!stripeConnected && (
+        <div className="bg-amber-50 rounded-xl px-4 py-3">
+          <p className="text-sm text-amber-800 font-medium">Stripe account required to receive gifts</p>
+          <p className="text-xs text-amber-600 mt-1">
+            Connect your bank account so viewers can send you gifts during the session.{' '}
+            <a href="/settings?tab=payments" className="underline font-medium hover:text-amber-800 transition-colors">
+              Connect Stripe in Settings
+            </a>
+          </p>
+        </div>
+      )}
+
       <button
-        type="submit" disabled={loading}
+        type="submit" disabled={loading || !stripeConnected}
         className="w-full bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
       >
         {loading ? 'Scheduling...' : 'Schedule session'}

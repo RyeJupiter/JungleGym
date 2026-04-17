@@ -11,8 +11,10 @@ export default async function NewSessionPage() {
   const { data: { user: authUser } } = await supabase.auth.getUser()
   if (!authUser) redirect('/auth/login')
 
-  const { data: user } = await supabase
-    .from('users').select('role').eq('id', authUser.id).single()
+  const [{ data: user }, { data: profile }] = await Promise.all([
+    supabase.from('users').select('role').eq('id', authUser.id).single(),
+    supabase.from('profiles').select('stripe_onboarding_complete').eq('user_id', authUser.id).single(),
+  ])
   if (user?.role !== 'creator') redirect('/dashboard')
 
   return (
@@ -22,7 +24,7 @@ export default async function NewSessionPage() {
       <div className="max-w-2xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-black text-stone-900 mb-2">Schedule a session</h1>
         <p className="text-stone-500 mb-8">Gift-based. 100% of gifts go directly to you.</p>
-        <ScheduleSessionForm creatorId={authUser.id} />
+        <ScheduleSessionForm creatorId={authUser.id} stripeConnected={!!profile?.stripe_onboarding_complete} />
       </div>
     </div>
   )
