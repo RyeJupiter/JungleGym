@@ -7,7 +7,7 @@ import { getStripe } from '@/lib/stripe'
  *
  * Called after Stripe payment succeeds client-side.
  * Verifies the PaymentIntent, then credits the user's wallet.
- * Idempotent — checks wallet_transactions to prevent double-credit.
+ * Idempotent — unique index on wallet_transactions.description prevents double-credit.
  */
 export async function POST(req: Request) {
   const stripe = getStripe()
@@ -47,36 +47,15 @@ export async function POST(req: Request) {
 
   const svc = createServiceSupabaseClient()
 
-  // Idempotency: check if this PI was already credited
-  const { data: existingTx } = await svc
-    .from('wallet_transactions')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('type', 'topup')
-    .eq('description', `topup:${paymentIntentId}`)
-    .maybeSingle()
-
-  if (existingTx) {
-    // Already credited — return current balance
-    const { data: wallet } = await svc
-      .from('wallets')
-      .select('balance')
-      .eq('user_id', user.id)
-      .single()
-    return NextResponse.json({ success: true, balance: wallet?.balance ?? 0 })
-  }
-
   // Upsert wallet (create if first top-up)
-  const { data: wallet } = await svc
+  await svc
     .from('wallets')
     .upsert(
       { user_id: user.id, balance: 0 },
       { onConflict: 'user_id', ignoreDuplicates: true }
     )
-    .select('balance')
-    .single()
 
-  // Fetch current balance (upsert with ignoreDuplicates doesn't return updated row)
+  // Get current balance
   const { data: currentWallet } = await svc
     .from('wallets')
     .select('balance')
@@ -86,25 +65,35 @@ export async function POST(req: Request) {
   const currentBalance = currentWallet?.balance ?? 0
   const newBalance = Math.round((currentBalance + walletAmount) * 100) / 100
 
-  // Update balance
-  const { error: updateError } = await svc
-    .from('wallets')
-    .update({ balance: newBalance })
-    .eq('user_id', user.id)
-
-  if (updateError) {
-    console.error('[wallet/topup/confirm] balance update failed:', updateError)
-    return NextResponse.json({ error: 'Failed to credit wallet' }, { status: 500 })
-  }
-
-  // Record transaction
-  await svc.from('wallet_transactions').insert({
+  // Insert transaction FIRST — unique index on description prevents double-credit.
+  // If the webhook already credited this PI, the insert fails and we skip the balance update.
+  const { error: txError } = await svc.from('wallet_transactions').insert({
     user_id: user.id,
     type: 'topup' as const,
     amount: walletAmount,
     balance_after: newBalance,
     description: `topup:${paymentIntentId}`,
   })
+
+  if (txError) {
+    // Duplicate key = already credited (by webhook or prior confirm call)
+    if (txError.code === '23505' || txError.message?.includes('duplicate')) {
+      const { data: wallet } = await svc
+        .from('wallets')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single()
+      return NextResponse.json({ success: true, balance: wallet?.balance ?? 0 })
+    }
+    console.error('[wallet/topup/confirm] tx insert failed:', txError)
+    return NextResponse.json({ error: 'Failed to credit wallet' }, { status: 500 })
+  }
+
+  // Transaction inserted successfully — now update balance
+  await svc
+    .from('wallets')
+    .update({ balance: newBalance })
+    .eq('user_id', user.id)
 
   return NextResponse.json({ success: true, balance: newBalance })
 }

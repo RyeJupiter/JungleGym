@@ -25,7 +25,7 @@ export async function GET(req: Request) {
 
   if (!profile?.stripe_account_id) {
     // No account yet — send them back to settings to start over
-    return NextResponse.redirect(new URL('/settings?stripe=error', req.url))
+    return NextResponse.redirect(new URL('/settings?tab=payments&stripe=error', req.url))
   }
 
   const origin = new URL(req.url).origin

@@ -25,7 +25,7 @@ export async function GET(req: Request) {
     .single()
 
   if (!profile?.stripe_account_id || !profile.stripe_onboarding_complete) {
-    return NextResponse.redirect(new URL('/settings?stripe=not-connected', req.url))
+    return NextResponse.redirect(new URL('/settings?tab=payments&stripe=not-connected', req.url))
   }
 
   const loginLink = await stripe.accounts.createLoginLink(profile.stripe_account_id)

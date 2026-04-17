@@ -159,48 +159,41 @@ export async function POST(req: Request) {
       }
 
       if (meta.type === 'wallet_topup') {
-        // Safety net — confirm route usually handles this first
+        // Safety net — confirm route usually handles this first.
+        // Unique index on description prevents double-credit even under race conditions.
         const walletAmount = Number(meta.wallet_amount)
         if (walletAmount > 0 && meta.user_id) {
-          // Check if already credited (idempotency via description field)
-          const { data: existingTx } = await supabase
-            .from('wallet_transactions')
-            .select('id')
+          await supabase
+            .from('wallets')
+            .upsert(
+              { user_id: meta.user_id, balance: 0 },
+              { onConflict: 'user_id', ignoreDuplicates: true }
+            )
+
+          const { data: wallet } = await supabase
+            .from('wallets')
+            .select('balance')
             .eq('user_id', meta.user_id)
-            .eq('type', 'topup')
-            .eq('description', `topup:${pi.id}`)
-            .maybeSingle()
+            .single()
 
-          if (!existingTx) {
-            // Upsert wallet
-            await supabase
-              .from('wallets')
-              .upsert(
-                { user_id: meta.user_id, balance: 0 },
-                { onConflict: 'user_id', ignoreDuplicates: true }
-              )
+          const currentBalance = wallet?.balance ?? 0
+          const newBalance = Math.round((currentBalance + walletAmount) * 100) / 100
 
-            const { data: wallet } = await supabase
-              .from('wallets')
-              .select('balance')
-              .eq('user_id', meta.user_id)
-              .single()
+          // Insert transaction first — unique index catches duplicates
+          const { error: txError } = await supabase.from('wallet_transactions').insert({
+            user_id: meta.user_id,
+            type: 'topup',
+            amount: walletAmount,
+            balance_after: newBalance,
+            description: `topup:${pi.id}`,
+          })
 
-            const currentBalance = wallet?.balance ?? 0
-            const newBalance = Math.round((currentBalance + walletAmount) * 100) / 100
-
+          // Only update balance if the insert succeeded (not a duplicate)
+          if (!txError) {
             await supabase
               .from('wallets')
               .update({ balance: newBalance })
               .eq('user_id', meta.user_id)
-
-            await supabase.from('wallet_transactions').insert({
-              user_id: meta.user_id,
-              type: 'topup',
-              amount: walletAmount,
-              balance_after: newBalance,
-              description: `topup:${pi.id}`,
-            })
           }
         }
       }

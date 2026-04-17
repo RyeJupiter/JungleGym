@@ -343,7 +343,7 @@ export function VideoUploadForm({
             <p className="text-sm text-amber-800 font-medium">Paid videos require a connected Stripe account</p>
             <p className="text-xs text-amber-600 mt-1">
               Set up payouts so you can receive your 80% share of each sale.{' '}
-              <a href="/settings" className="underline font-medium hover:text-amber-800 transition-colors">
+              <a href="/settings?tab=payments" className="underline font-medium hover:text-amber-800 transition-colors">
                 Connect Stripe in Settings
               </a>
             </p>
