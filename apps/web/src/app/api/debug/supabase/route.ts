@@ -67,23 +67,22 @@ export async function GET() {
     rawFetchResult = { error: e instanceof Error ? e.message : String(e) }
   }
 
-  // Test URL-rewrite approach: fetch via same-zone proxied CNAME
-  // sb-api.junglegym.academy (proxied CNAME → agiofjruimagfkhzeira.supabase.co)
-  let sameZoneFetchResult: unknown = null
-  try {
-    const rewrittenUrl = `${url}/rest/v1/videos?select=id,title&published=eq.true&limit=1`.replace(
-      'agiofjruimagfkhzeira.supabase.co',
-      'sb-api.junglegym.academy'
-    )
-    const resp = await fetch(rewrittenUrl, {
-      headers: {
-        apikey: anonKey!.trim(),
-        Authorization: `Bearer ${anonKey!.trim()}`,
-      },
-    })
-    sameZoneFetchResult = { status: resp.status, statusText: resp.statusText, body: await resp.text().then(t => t.slice(0, 300)) }
-  } catch (e) {
-    sameZoneFetchResult = { error: e instanceof Error ? e.message : String(e) }
+  // Test retry approach — community reports ~60% failure rate, so some should succeed
+  let retryResults: unknown[] = []
+  for (let i = 0; i < 5; i++) {
+    try {
+      const resp = await fetch(`${url}/rest/v1/videos?select=id,title&published=eq.true&limit=1`, {
+        headers: {
+          apikey: anonKey!.trim(),
+          Authorization: `Bearer ${anonKey!.trim()}`,
+        },
+      })
+      const body = await resp.text()
+      retryResults.push({ attempt: i + 1, status: resp.status, body: body.slice(0, 150) })
+      if (resp.ok) break // Stop on success
+    } catch (e) {
+      retryResults.push({ attempt: i + 1, error: e instanceof Error ? e.message : String(e) })
+    }
   }
 
   // Test connectivity to a non-Supabase URL
@@ -100,7 +99,7 @@ export async function GET() {
     anonClient: { data: anonResult, error: anonError },
     serviceClient: { data: serviceResult, error: serviceError },
     rawFetch: rawFetchResult,
-    sameZoneFetch: sameZoneFetchResult,
+    retryAttempts: retryResults,
     externalFetch: externalFetchResult,
     timestamp: new Date().toISOString(),
   })
