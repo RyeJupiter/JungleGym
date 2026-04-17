@@ -67,20 +67,23 @@ export async function GET() {
     rawFetchResult = { error: e instanceof Error ? e.message : String(e) }
   }
 
-  // Test raw fetch WITH resolveOverride workaround
-  let resolveOverrideFetchResult: unknown = null
+  // Test URL-rewrite approach: fetch via same-zone proxied CNAME
+  // sb-api.junglegym.academy (proxied CNAME → agiofjruimagfkhzeira.supabase.co)
+  let sameZoneFetchResult: unknown = null
   try {
-    const resp = await fetch(`${url}/rest/v1/videos?select=id,title&published=eq.true&limit=1`, {
+    const rewrittenUrl = `${url}/rest/v1/videos?select=id,title&published=eq.true&limit=1`.replace(
+      'agiofjruimagfkhzeira.supabase.co',
+      'sb-api.junglegym.academy'
+    )
+    const resp = await fetch(rewrittenUrl, {
       headers: {
         apikey: anonKey!.trim(),
         Authorization: `Bearer ${anonKey!.trim()}`,
       },
-      // @ts-expect-error CF Workers-specific option
-      cf: { resolveOverride: 'sb-api.junglegym.academy' },
     })
-    resolveOverrideFetchResult = { status: resp.status, statusText: resp.statusText, body: await resp.text().then(t => t.slice(0, 300)) }
+    sameZoneFetchResult = { status: resp.status, statusText: resp.statusText, body: await resp.text().then(t => t.slice(0, 300)) }
   } catch (e) {
-    resolveOverrideFetchResult = { error: e instanceof Error ? e.message : String(e) }
+    sameZoneFetchResult = { error: e instanceof Error ? e.message : String(e) }
   }
 
   // Test connectivity to a non-Supabase URL
@@ -97,7 +100,7 @@ export async function GET() {
     anonClient: { data: anonResult, error: anonError },
     serviceClient: { data: serviceResult, error: serviceError },
     rawFetch: rawFetchResult,
-    resolveOverrideFetch: resolveOverrideFetchResult,
+    sameZoneFetch: sameZoneFetchResult,
     externalFetch: externalFetchResult,
     timestamp: new Date().toISOString(),
   })
