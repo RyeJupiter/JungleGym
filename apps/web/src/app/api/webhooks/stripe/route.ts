@@ -157,6 +157,53 @@ export async function POST(req: Request) {
           stripe_payment_intent_id: pi.id,
         })
       }
+
+      if (meta.type === 'wallet_topup') {
+        // Safety net — confirm route usually handles this first
+        const walletAmount = Number(meta.wallet_amount)
+        if (walletAmount > 0 && meta.user_id) {
+          // Check if already credited (idempotency via description field)
+          const { data: existingTx } = await supabase
+            .from('wallet_transactions')
+            .select('id')
+            .eq('user_id', meta.user_id)
+            .eq('type', 'topup')
+            .eq('description', `topup:${pi.id}`)
+            .maybeSingle()
+
+          if (!existingTx) {
+            // Upsert wallet
+            await supabase
+              .from('wallets')
+              .upsert(
+                { user_id: meta.user_id, balance: 0 },
+                { onConflict: 'user_id', ignoreDuplicates: true }
+              )
+
+            const { data: wallet } = await supabase
+              .from('wallets')
+              .select('balance')
+              .eq('user_id', meta.user_id)
+              .single()
+
+            const currentBalance = wallet?.balance ?? 0
+            const newBalance = Math.round((currentBalance + walletAmount) * 100) / 100
+
+            await supabase
+              .from('wallets')
+              .update({ balance: newBalance })
+              .eq('user_id', meta.user_id)
+
+            await supabase.from('wallet_transactions').insert({
+              user_id: meta.user_id,
+              type: 'topup',
+              amount: walletAmount,
+              balance_after: newBalance,
+              description: `topup:${pi.id}`,
+            })
+          }
+        }
+      }
       break
     }
 

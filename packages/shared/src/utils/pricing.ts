@@ -67,6 +67,17 @@ export function formatPrice(dollars: number): string {
 
 export const PLATFORM_FEE_PCT = 20
 
+export const WALLET_TOPUP_FEE_PCT = 7
+
+export function calculateTopUpTotal(walletAmount: number): {
+  fee: number
+  chargeTotal: number
+} {
+  const fee = Math.round(walletAmount * (WALLET_TOPUP_FEE_PCT / 100) * 100) / 100
+  const chargeTotal = Math.round((walletAmount + fee) * 100) / 100
+  return { fee, chargeTotal }
+}
+
 export function calculateGiftTotal(basePrice: number, tipPct: number): {
   platformAmount: number
   total: number

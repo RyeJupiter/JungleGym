@@ -307,6 +307,49 @@ export type Database = {
         }
         Update: Record<string, never>
       }
+      wallets: {
+        Row: {
+          id: string
+          user_id: string
+          balance: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          balance?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          updated_at?: string
+        }
+      }
+      wallet_transactions: {
+        Row: {
+          id: string
+          user_id: string
+          type: 'topup' | 'gift_sent' | 'gift_received' | 'refund'
+          amount: number
+          balance_after: number
+          related_id: string | null
+          description: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: 'topup' | 'gift_sent' | 'gift_received' | 'refund'
+          amount: number
+          balance_after: number
+          related_id?: string | null
+          description?: string | null
+          created_at?: string
+        }
+        Update: Record<string, never>
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -319,6 +362,7 @@ export type Database = {
       user_role: 'creator' | 'learner'
       session_status: 'scheduled' | 'live' | 'completed' | 'cancelled'
       price_tier: 'supported' | 'community' | 'abundance'
+      wallet_tx_type: 'topup' | 'gift_sent' | 'gift_received' | 'refund'
     }
   }
 }
