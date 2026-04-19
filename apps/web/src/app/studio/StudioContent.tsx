@@ -81,6 +81,9 @@ export async function StudioVideos({ userId }: { userId: string }) {
 
 function SessionRow({ session: s, index }: { session: { id: string; title: string; scheduled_at: string; duration_minutes: number; status: string }; index: number }) {
   const isLive = s.status === 'live'
+  // Show "Go Live" button when scheduled start is within the next hour (or already started)
+  const msUntilStart = new Date(s.scheduled_at).getTime() - Date.now()
+  const showGoLive = isLive || (s.status === 'scheduled' && msUntilStart <= 60 * 60 * 1000)
   return (
     <div className={`flex items-center justify-between gap-3 px-4 sm:px-5 py-3 sm:py-4 ${index > 0 ? 'border-t border-stone-100' : ''}`}>
       <Link href={`/sessions/${s.id}`} className="flex-1 min-w-0 hover:opacity-80 transition-opacity">
@@ -99,6 +102,15 @@ function SessionRow({ session: s, index }: { session: { id: string; title: strin
         </span>
         {isLive && (
           <span className="sm:hidden inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" aria-label="live" />
+        )}
+        {showGoLive && (
+          <Link
+            href={`/studio/sessions/${s.id}/manage`}
+            className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white transition-colors shadow-sm"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            Go Live
+          </Link>
         )}
         <Link
           href={`/studio/sessions/${s.id}/manage`}

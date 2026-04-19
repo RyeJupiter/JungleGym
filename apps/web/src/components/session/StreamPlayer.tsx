@@ -81,6 +81,20 @@ export function StreamPlayer({
     )
   }
 
+  // Past session — don't show the CF iframe (which displays a confusing
+  // "This stream hasn't started" message). Show a thank-you screen instead.
+  if (isRecording) {
+    return (
+      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-jungle-800 to-jungle-950 aspect-video flex items-center justify-center">
+        <div className="text-center px-6">
+          <p className="text-5xl mb-4">🌿</p>
+          <p className="text-white text-2xl sm:text-3xl font-black tracking-tight mb-2">Thanks for watching!</p>
+          <p className="text-jungle-300 text-sm sm:text-base">This session has ended.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="relative rounded-2xl overflow-hidden bg-black">
       {/* Live indicator */}

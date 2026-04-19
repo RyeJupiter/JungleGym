@@ -208,11 +208,15 @@ export async function ExploreSessions({ q, tag }: { q?: string; tag?: string }) 
             <div className="bg-white rounded-2xl border border-stone-200 hover:border-jungle-400 hover:shadow-md transition-all p-5">
               <div className="flex items-start justify-between mb-2">
                 <h3 className="font-bold text-stone-900 text-sm">{s.title}</h3>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ml-2 ${
-                  isLive ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-jungle-50 text-jungle-700'
-                }`}>
-                  {isLive ? 'Live' : 'Upcoming'}
-                </span>
+                {isLive ? (
+                  <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse flex-shrink-0 ml-2">
+                    LIVE
+                  </span>
+                ) : (
+                  <span className="bg-jungle-50 text-jungle-700 text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ml-2">
+                    Upcoming
+                  </span>
+                )}
               </div>
               {s.description && (
                 <p className="text-stone-500 text-xs mb-3 line-clamp-2">{s.description}</p>

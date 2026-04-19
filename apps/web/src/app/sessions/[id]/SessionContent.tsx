@@ -44,14 +44,6 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
         <SessionAutoRefresh sessionId={session.id} currentStatus={session.status} />
       )}
 
-      {/* Status banner */}
-      {isLive && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl px-4 sm:px-6 py-4 mb-6 sm:mb-8 flex items-center gap-3">
-          <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse flex-shrink-0" />
-          <p className="text-red-700 font-bold">This session is live right now</p>
-        </div>
-      )}
-
       {isPast && (
         <div className="bg-stone-100 border border-stone-200 rounded-2xl px-4 sm:px-6 py-4 mb-6 sm:mb-8">
           <p className="text-stone-500 font-medium capitalize">This session has {session.status}.</p>
@@ -110,21 +102,29 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
         />
       )}
 
-      {/* Creator tile */}
+      {/* Creator tile + live indicator */}
       {creator && (
-        <Link href={`/@${creator.username}`} className="flex items-center gap-3 bg-white rounded-xl border border-stone-200 px-4 py-3 mb-8 hover:border-jungle-400 transition-colors group w-fit">
-          <div className="w-9 h-9 rounded-full bg-jungle-100 overflow-hidden flex items-center justify-center text-sm flex-shrink-0">
-            {creator.photo_url ? (
-              <img src={creator.photo_url} alt="" className="w-full h-full object-cover" />
-            ) : '🌿'}
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-stone-900 group-hover:text-jungle-700 transition-colors leading-tight">
-              {creator.display_name}
-            </p>
-            <p className="text-xs text-stone-400">@{creator.username}</p>
-          </div>
-        </Link>
+        <div className="flex items-center justify-between gap-3 mb-8 flex-wrap">
+          <Link href={`/@${creator.username}`} className="flex items-center gap-3 bg-white rounded-xl border border-stone-200 px-4 py-3 hover:border-jungle-400 transition-colors group">
+            <div className="w-9 h-9 rounded-full bg-jungle-100 overflow-hidden flex items-center justify-center text-sm flex-shrink-0">
+              {creator.photo_url ? (
+                <img src={creator.photo_url} alt="" className="w-full h-full object-cover" />
+              ) : '🌿'}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-stone-900 group-hover:text-jungle-700 transition-colors leading-tight">
+                {creator.display_name}
+              </p>
+              <p className="text-xs text-stone-400">@{creator.username}</p>
+            </div>
+          </Link>
+          {isLive && (
+            <span className="inline-flex items-center gap-2 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-white" />
+              LIVE
+            </span>
+          )}
+        </div>
       )}
 
       {!isPast && (

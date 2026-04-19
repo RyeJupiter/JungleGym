@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LocalTime } from '@/components/LocalTime'
 import type { ThemeClasses } from '../themes'
 
 type SessionData = {
@@ -36,7 +37,6 @@ export function LiveSessionsSection({ sessions, theme }: Props) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {sessions.map((s) => {
-          const sessionDate = new Date(s.scheduled_at)
           const isLive = s.status === 'live'
           return (
             <Link
@@ -68,21 +68,10 @@ export function LiveSessionsSection({ sessions, theme }: Props) {
                 </p>
               )}
 
-              <div className={`flex items-center gap-3 ${theme.textMuted} text-xs`}>
-                <span>
-                  {sessionDate.toLocaleDateString(undefined, {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
-                </span>
+              <div className={`flex items-center gap-3 ${theme.textMuted} text-xs flex-wrap`}>
+                <LocalTime iso={s.scheduled_at} options={{ weekday: 'short', month: 'short', day: 'numeric' }} />
                 <span>·</span>
-                <span>
-                  {sessionDate.toLocaleTimeString(undefined, {
-                    hour: 'numeric',
-                    minute: '2-digit',
-                  })}
-                </span>
+                <LocalTime iso={s.scheduled_at} options={{ hour: 'numeric', minute: '2-digit' }} />
                 <span>·</span>
                 <span>{s.duration_minutes} min</span>
                 {s.max_participants && (

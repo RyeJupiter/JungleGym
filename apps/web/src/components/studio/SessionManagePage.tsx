@@ -43,7 +43,7 @@ type Props = {
   transactions: GiftTransaction[]
 }
 
-type Tab = 'overview' | 'stream' | 'settings'
+type Tab = 'stream' | 'overview' | 'settings'
 
 const STATUS_LABELS: Record<string, string> = {
   scheduled: 'Scheduled',
@@ -72,7 +72,7 @@ function toLocalInput(iso: string) {
 export function SessionManagePage({ session: initial, whipUrl, metrics, transactions }: Props) {
   const supabase = createBrowserSupabaseClient()
   const router = useRouter()
-  const [tab, setTab] = useState<Tab>('overview')
+  const [tab, setTab] = useState<Tab>('stream')
 
   const [title, setTitle] = useState(initial.title)
   const [description, setDescription] = useState(initial.description ?? '')
@@ -165,7 +165,7 @@ export function SessionManagePage({ session: initial, whipUrl, metrics, transact
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 sm:mb-8 bg-stone-100 p-1 rounded-xl w-full sm:w-fit overflow-x-auto">
-        {(['overview', 'stream', 'settings'] as Tab[]).map((t) => (
+        {(['stream', 'overview', 'settings'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -274,6 +274,7 @@ export function SessionManagePage({ session: initial, whipUrl, metrics, transact
           cfInputId={initial.cf_input_id}
           cfStreamKey={initial.cf_stream_key}
           whipUrl={whipUrl}
+          sessionStatus={status}
         />
       )}
 
