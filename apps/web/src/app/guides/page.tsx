@@ -6,7 +6,17 @@ import { GuideGridSkeleton } from '@/components/skeletons'
 import { GuidesContent } from './GuidesContent'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Movement Guides' }
+export const metadata: Metadata = {
+  title: 'Movement Guides — Vetted Teachers on JungleGym',
+  description:
+    'Meet the teachers on JungleGym. Every guide is vetted — yoga, strength, mobility, breathwork, dance, kettlebell. Real practice, real transmission.',
+  alternates: { canonical: '/guides' },
+  openGraph: {
+    title: 'Movement Guides on JungleGym',
+    description: 'Vetted teachers sharing what they love.',
+    url: '/guides',
+  },
+}
 
 export default async function GuidesPage({
   searchParams,

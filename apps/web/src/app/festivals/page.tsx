@@ -4,7 +4,14 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'JungleGym at Festivals',
   description:
-    'JungleGym brings a full movement space to conscious festivals — jungle bars, rings, acro mats, live music, and men\'s work. Come move. Come play.',
+    'JungleGym brings a full movement space to conscious festivals — jungle bars, gymnastic rings, acro mats, live music, and men\'s work. Come move. Come play.',
+  alternates: { canonical: '/festivals' },
+  openGraph: {
+    title: 'JungleGym at Festivals',
+    description:
+      'A full movement space at festivals — bars, rings, mats, music. Open to everyone. Held with care.',
+    url: '/festivals',
+  },
 }
 
 export default function FestivalsPage() {

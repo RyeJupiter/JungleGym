@@ -4,9 +4,16 @@ import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 
 export const metadata: Metadata = {
-  title: 'Why the Jungle Exists – JungleGym',
+  title: 'Why the Jungle Exists',
   description:
-    'Physical movement is one of the most powerful things we can offer each other. Not as exercise. As transmission.',
+    'Physical movement is one of the most powerful things we can offer each other. Not as exercise. As transmission. JungleGym exists to give the best movement teachers a stage.',
+  alternates: { canonical: '/why' },
+  openGraph: {
+    title: 'Why the Jungle Exists',
+    description:
+      'Movement as transmission — from a body that knows, to a body that\'s ready to learn.',
+    url: '/why',
+  },
 }
 
 export default function WhyPage() {

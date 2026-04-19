@@ -7,7 +7,18 @@ import { VideoGridSkeleton } from '@/components/skeletons'
 import { ClassesContent } from './ClassesContent'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Classes' }
+export const metadata: Metadata = {
+  title: 'Movement Classes — Yoga, Strength, Mobility, Dance',
+  description:
+    'Browse movement classes from vetted teachers. Yoga, strength, mobility, breathwork, dance, kettlebell and more. Buy once, own forever — 80% goes to the teacher.',
+  alternates: { canonical: '/classes' },
+  openGraph: {
+    title: 'Movement Classes on JungleGym',
+    description:
+      'Browse movement classes from vetted teachers. Yoga, strength, mobility, breathwork, dance, kettlebell and more.',
+    url: '/classes',
+  },
+}
 
 export default async function ClassesPage({
   searchParams,

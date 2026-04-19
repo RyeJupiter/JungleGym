@@ -7,7 +7,18 @@ import { VideoGridSkeleton, SessionListSkeleton, ExploreGuideCardSkeleton } from
 import { ExploreVideos, ExploreGuides, ExploreSessions } from './ExploreContent'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Explore' }
+export const metadata: Metadata = {
+  title: 'Explore Movement Teachers, Classes & Live Sessions',
+  description:
+    'Discover movement classes, real teachers, and live sessions on JungleGym. Find yoga, strength, mobility, breathwork, and dance from people who love what they teach.',
+  alternates: { canonical: '/explore' },
+  openGraph: {
+    title: 'Explore JungleGym',
+    description:
+      'Discover movement classes, real teachers, and live sessions on JungleGym.',
+    url: '/explore',
+  },
+}
 
 function GuidesSectionSkeleton() {
   return (

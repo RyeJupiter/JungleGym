@@ -6,7 +6,18 @@ import { SessionsPageCardSkeleton } from '@/components/skeletons'
 import { SessionsContent } from './SessionsContent'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Live Sessions' }
+export const metadata: Metadata = {
+  title: 'Live Movement Sessions — Gift-Based',
+  description:
+    'Join live movement classes on JungleGym. Gift-based — give freely. 80% of your gift goes directly to the teacher. Yoga, strength, mobility, and more.',
+  alternates: { canonical: '/sessions' },
+  openGraph: {
+    title: 'Live Sessions on JungleGym',
+    description:
+      'Join live movement classes. Gift-based — no minimums. Real teachers, real community.',
+    url: '/sessions',
+  },
+}
 
 function SessionsListSkeleton() {
   return (
