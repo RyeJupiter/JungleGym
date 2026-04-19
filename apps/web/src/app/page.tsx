@@ -179,15 +179,15 @@ export default async function HomePage() {
       >
         {/* Dark overlay */}
         <div className="bg-jungle-950/70">
-        <section className="pt-28 pb-24 px-6 text-center relative overflow-hidden">
+        <section className="pt-20 sm:pt-28 pb-16 sm:pb-24 px-4 sm:px-6 text-center relative overflow-hidden">
 
           <div className="max-w-3xl mx-auto relative z-10">
-            <h1 className="text-6xl sm:text-7xl font-black tracking-tight text-white mb-6 leading-none" style={{ textShadow: '-1px -1px 0 rgba(0,0,0,0.25), 1px -1px 0 rgba(0,0,0,0.25), -1px 1px 0 rgba(0,0,0,0.25), 1px 1px 0 rgba(0,0,0,0.25)' }}>
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white mb-6 leading-[1.05] sm:leading-none" style={{ textShadow: '-1px -1px 0 rgba(0,0,0,0.25), 1px -1px 0 rgba(0,0,0,0.25), -1px 1px 0 rgba(0,0,0,0.25), 1px 1px 0 rgba(0,0,0,0.25)' }}>
               Welcome to JungleGym.
               <br />
-              <span className="block mt-3 text-jungle-400">Let&apos;s learn &amp; play.</span>
+              <span className="block mt-2 sm:mt-3 text-jungle-400">Let&apos;s learn &amp; play.</span>
             </h1>
-            <p className="text-lg text-jungle-300 mb-10 max-w-xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg text-jungle-300 mb-8 sm:mb-10 max-w-xl mx-auto leading-relaxed">
               Movement classes from skilled guides.
               Every class leaves you with something your body didn't have before.
             </p>
@@ -215,8 +215,8 @@ export default async function HomePage() {
         </section>
 
         {/* How it works — quick 3-step */}
-        <section className="pb-20 px-6">
-          <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-[1fr_1.3fr_1fr] gap-4 text-center">
+        <section className="pb-16 sm:pb-20 px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-[1fr_1.3fr_1fr] gap-3 sm:gap-4 text-center">
             {[
               { emoji: '🔍', title: 'Find a teacher', body: 'Browse by style — yoga, kettlebell, mobility, and more.', href: '/classes' },
               { emoji: '🎬', title: 'Watch & train', body: 'Buy videos from curated guides. 80% to the teacher, 20% to JungleGym.', href: '/classes' },
@@ -234,25 +234,25 @@ export default async function HomePage() {
       </div>
 
       {/* Pricing — fun & transparent */}
-      <section className="py-20 px-6 bg-white">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <section className="py-14 sm:py-20 px-4 sm:px-6 bg-white">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
 
           {/* Left: pricing info */}
           <div>
             <p className="text-xs font-semibold text-jungle-500 uppercase tracking-widest mb-3">Radical Transparency</p>
-            <h2 className="text-4xl font-black text-stone-900 mb-3">Buy classes from lovers of movement.</h2>
-            <p className="text-stone-600 text-lg mb-8">
+            <h2 className="text-3xl sm:text-4xl font-black text-stone-900 mb-3">Buy classes from lovers of movement.</h2>
+            <p className="text-stone-600 text-base sm:text-lg mb-6 sm:mb-8">
               Creator sets their price. Choose your tier.<br />80% goes directly to the teacher, 20% to JungleGym.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {[
                 { emoji: '🌱', tier: 'Supported', bg: 'bg-stone-50', border: 'border-stone-200' },
                 { emoji: '🌿', tier: 'Community', bg: 'bg-jungle-50', border: 'border-jungle-200' },
                 { emoji: '🌳', tier: 'Abundance', bg: 'bg-jungle-100', border: 'border-jungle-300' },
               ].map((t) => (
-                <div key={t.tier} className={`${t.bg} border ${t.border} rounded-xl p-5 flex sm:flex-col items-center sm:items-center gap-3 sm:gap-2 sm:text-center`}>
-                  <div className="text-3xl">{t.emoji}</div>
-                  <h3 className="font-black text-stone-900 text-sm">{t.tier}</h3>
+                <div key={t.tier} className={`${t.bg} border ${t.border} rounded-xl p-3 sm:p-5 flex flex-col items-center gap-1.5 sm:gap-2 text-center`}>
+                  <div className="text-2xl sm:text-3xl">{t.emoji}</div>
+                  <h3 className="font-black text-stone-900 text-xs sm:text-sm">{t.tier}</h3>
                 </div>
               ))}
             </div>
@@ -299,29 +299,29 @@ export default async function HomePage() {
         className="bg-no-repeat bg-jungle-900"
         style={{ backgroundImage: "url('/jungle-gateway-web-blur.jpg')", backgroundAttachment: 'fixed', backgroundPosition: 'center 0px', backgroundSize: 'auto 200%' }}
       >
-      <div className="bg-jungle-950/70 py-20 px-6">
+      <div className="bg-jungle-950/70 py-14 sm:py-20 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
 
           {/* Header — centered */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-10 sm:mb-12">
             <div className="flex justify-center mb-5">
               <img
                 src={IMG_MONKEY_SECTION}
                 alt="Chimpanzee — Philip Henry Gosse, 1848 (public domain)"
-                className="w-32 h-auto invert mix-blend-screen opacity-55"
+                className="w-24 sm:w-32 h-auto invert mix-blend-screen opacity-55"
               />
             </div>
-            <p className="text-jungle-400 text-sm font-semibold uppercase tracking-widest mb-3">The oldest wisdom</p>
-            <h2 className="text-4xl font-black text-white mb-4">Monkey see. Monkey do.</h2>
+            <p className="text-jungle-400 text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3">The oldest wisdom</p>
+            <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">Monkey see. Monkey do.</h2>
             <div className="w-20 h-px bg-earth-300/60 mx-auto" />
           </div>
 
           {/* Two columns */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 mb-8 sm:mb-10">
 
             {/* Left: purpose statement quote */}
-            <blockquote className="bg-black/25 rounded-2xl px-6 py-5 border-l-2 border-jungle-500">
-              <p className="text-xl font-bold text-white leading-snug mb-4">
+            <blockquote className="bg-black/25 rounded-2xl px-5 sm:px-6 py-5 border-l-2 border-jungle-500">
+              <p className="text-lg sm:text-xl font-bold text-white leading-snug mb-4">
                 &ldquo;Liquidate Physical Education. Replace the standardized, joyless model with vetted
                 teachers sharing what they love, students choosing what moves them, money flowing
                 directly to the source.&rdquo;
@@ -335,7 +335,7 @@ export default async function HomePage() {
             </blockquote>
 
             {/* Right: updated text */}
-            <div className="bg-black/25 rounded-2xl px-6 py-5 text-jungle-200 text-lg leading-relaxed space-y-4">
+            <div className="bg-black/25 rounded-2xl px-5 sm:px-6 py-5 text-jungle-200 text-base sm:text-lg leading-relaxed space-y-4">
               <p>Mimicry is the oldest way to learn.</p>
               <p>JungleGym is built on that idea.</p>
               <p>Watch someone move with ease, and your body starts to understand — mirror neurons activate.</p>
@@ -346,7 +346,7 @@ export default async function HomePage() {
           {/* CTA — full-width wood-texture button */}
           <Link
             href="/classes"
-            className="block w-full text-center font-display font-black text-white text-xl py-5 rounded-xl transition-all hover:brightness-110 shadow-lg"
+            className="block w-full text-center font-display font-black text-white text-lg sm:text-xl py-4 sm:py-5 rounded-xl transition-all hover:brightness-110 shadow-lg"
             style={{
               background: "repeating-linear-gradient(88deg, transparent 0px, transparent 10px, rgba(0,0,0,0.07) 10px, rgba(0,0,0,0.07) 11px), linear-gradient(135deg, #c4892a 0%, #a36b1e 40%, #7a5018 75%, #c4892a 100%)"
             }}
@@ -359,16 +359,16 @@ export default async function HomePage() {
       </section>
 
       {/* Live sessions */}
-      <section className="py-14 px-6 bg-stone-50 border-t border-stone-200">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+      <section className="py-10 sm:py-14 px-4 sm:px-6 bg-stone-50 border-t border-stone-200">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10 items-start">
 
           {/* Left: blurb */}
           <div>
-            <h2 className="text-2xl font-black text-stone-900 mb-2">We stream live classes.</h2>
+            <h2 className="text-xl sm:text-2xl font-black text-stone-900 mb-2">We stream live classes.</h2>
             <p className="text-stone-600 text-sm leading-relaxed mb-5">
               Live classes let you move alongside a real guide, ask questions mid-practice, and get the kind of personalization you just can&apos;t get from a recording.
             </p>
-            <Link href="/sessions" className="inline-block bg-jungle-800 hover:bg-jungle-700 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors">
+            <Link href="/sessions" className="inline-block bg-jungle-800 hover:bg-jungle-700 text-white font-bold px-5 sm:px-6 py-3 rounded-xl text-sm transition-colors">
               See all sessions →
             </Link>
           </div>

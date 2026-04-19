@@ -29,10 +29,10 @@ export default async function SessionsPage({
     <div className="min-h-screen bg-stone-50">
       <Navbar />
 
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-black text-stone-900">Live Sessions</h1>
-          <p className="text-stone-500 mt-2">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-4xl font-black text-stone-900">Live Sessions</h1>
+          <p className="text-stone-500 mt-2 text-sm sm:text-base">
             Gift-based. No minimums. 80% of your gift goes to the creator.
           </p>
         </div>

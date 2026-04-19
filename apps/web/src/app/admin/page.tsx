@@ -42,7 +42,7 @@ export default async function AdminPage({
       <div className="min-h-screen bg-stone-50">
         <Navbar />
 
-        <div className="max-w-3xl mx-auto px-6 py-12">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
           <Suspense fallback={<AdminSkeleton />}>
             <AdminContent authEmail={authUser.email ?? ''} tab={tab} />
           </Suspense>

@@ -76,8 +76,8 @@ export async function SettingsContent({ userId, email }: { userId: string; email
 
   return (
     <>
-      <h1 className="text-3xl font-black text-stone-900 mb-2">Settings</h1>
-      <p className="text-stone-500 mb-8">
+      <h1 className="text-2xl sm:text-3xl font-black text-stone-900 mb-2">Settings</h1>
+      <p className="text-stone-500 mb-6 sm:mb-8 text-sm sm:text-base">
         {profile ? `@${profile.username}` : 'Set up your public profile'}
       </p>
       <SettingsTabs tabs={tabs}>{tabContent}</SettingsTabs>

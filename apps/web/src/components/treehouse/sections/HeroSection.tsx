@@ -104,7 +104,7 @@ export function HeroSection({
             style={{ background: `linear-gradient(to bottom, transparent, ${theme.pageBgHex})` }}
           />
         )}
-        <div className="relative z-10 max-w-5xl mx-auto px-6 py-8">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <div className="flex items-center gap-4">
             {/* Avatar */}
             <div
@@ -204,7 +204,7 @@ export function HeroSection({
             style={{ background: `linear-gradient(to bottom, transparent, ${theme.pageBgHex})` }}
           />
         )}
-        <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 text-center">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 text-center">
           {/* Avatar centered */}
           <div className="flex justify-center mb-4">
             <div
@@ -303,7 +303,7 @@ export function HeroSection({
           style={{ background: `linear-gradient(to bottom, transparent, ${theme.pageBgHex})` }}
         />
       )}
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-12">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Treehouse label */}
         <div className="flex items-center gap-2 mb-6">
           <span className={`${theme.accent} text-xs font-bold uppercase tracking-widest`}>Treehouse</span>

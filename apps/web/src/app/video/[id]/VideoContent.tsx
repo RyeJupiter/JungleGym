@@ -56,12 +56,12 @@ export async function VideoContent({ videoId }: { videoId: string }) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
       <Suspense>
         <PurchaseConfirm />
       </Suspense>
       {/* Video player / locked state */}
-      <div className="bg-stone-900 rounded-2xl overflow-hidden mb-8 aspect-video flex items-center justify-center relative">
+      <div className="bg-stone-900 rounded-2xl overflow-hidden mb-6 sm:mb-8 aspect-video flex items-center justify-center relative">
         {hasAccess ? (
           videoPlaybackUrl ? (
             <video
@@ -114,7 +114,7 @@ export async function VideoContent({ videoId }: { videoId: string }) {
           ))}
         </div>
 
-        <h1 className="text-3xl font-black text-stone-900 mb-3">{video.title}</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-stone-900 mb-3 break-words">{video.title}</h1>
 
         {video.description && (
           <p className="text-stone-600 leading-relaxed mb-6">{video.description}</p>

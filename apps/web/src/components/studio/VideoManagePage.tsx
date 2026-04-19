@@ -76,18 +76,18 @@ export function VideoManagePage({ video, videoPublicUrl, metrics, transactions }
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <div>
+        <div className="min-w-0 flex-1">
           <Link href="/studio" className="text-sm text-stone-400 hover:text-stone-600 transition-colors mb-2 inline-block">
             ← Studio
           </Link>
-          <Link href={`/video/${video.id}`} className="text-2xl font-black text-stone-900 leading-snug hover:text-jungle-700 transition-colors">
+          <Link href={`/video/${video.id}`} className="block text-xl sm:text-2xl font-black text-stone-900 leading-snug hover:text-jungle-700 transition-colors">
             {video.title}
           </Link>
         </div>
 
         {/* Publish toggle */}
-        <div className="flex-shrink-0 flex items-center gap-3">
-          <span className={`text-sm font-semibold ${published ? 'text-green-700' : 'text-stone-400'}`}>
+        <div className="flex-shrink-0 flex items-center gap-2 sm:gap-3">
+          <span className={`hidden sm:inline text-sm font-semibold ${published ? 'text-green-700' : 'text-stone-400'}`}>
             {toggling ? '…' : published ? 'Published' : 'Draft'}
           </span>
           <button

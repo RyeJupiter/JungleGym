@@ -15,31 +15,31 @@ export default function WhyPage() {
       <Navbar />
 
       {/* Hero */}
-      <section className="max-w-3xl mx-auto px-6 pt-12 pb-20 text-center">
-        <div className="flex flex-col items-center mb-12">
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-14 sm:pb-20 text-center">
+        <div className="flex flex-col items-center mb-10 sm:mb-12">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="https://upload.wikimedia.org/wikipedia/commons/5/52/Brehms_Het_Leven_der_DIeren_Orde_1_Lar_%28Hylobates_lar%29.jpg"
             alt="White-handed gibbon (Hylobates lar) — Brehm's Life of Animals, 19th century"
-            className="w-52 h-auto opacity-60"
+            className="w-40 sm:w-52 h-auto opacity-60"
           />
-          <p className="text-xs text-stone-400 mt-3 italic">
+          <p className="text-xs text-stone-400 mt-3 italic px-4">
             White-handed gibbon · <em>Hylobates lar</em> · Brehm&apos;s Life of Animals, c. 1880 · public domain
           </p>
         </div>
 
-        <h1 className="text-5xl sm:text-6xl font-black leading-tight mb-6 text-stone-900">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-6 text-stone-900">
           Why the<br />
           <span className="text-jungle-600">Jungle</span> exists.
         </h1>
-        <p className="text-xl text-stone-500 leading-relaxed max-w-xl mx-auto">
+        <p className="text-lg sm:text-xl text-stone-500 leading-relaxed max-w-xl mx-auto">
           Physical Education was supposed to be the place where we learned to inhabit our
           bodies with joy. It became something else.
         </p>
       </section>
 
       {/* Manifesto */}
-      <section className="max-w-2xl mx-auto px-6 pb-24 space-y-16 text-lg leading-relaxed text-stone-600">
+      <section className="max-w-2xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24 space-y-12 sm:space-y-16 text-base sm:text-lg leading-relaxed text-stone-600">
 
         <div>
           <p>
@@ -54,8 +54,8 @@ export default function WhyPage() {
           </p>
         </div>
 
-        <div className="border-l-2 border-jungle-500 pl-6">
-          <p className="text-2xl font-bold text-stone-900 leading-snug">
+        <div className="border-l-2 border-jungle-500 pl-4 sm:pl-6">
+          <p className="text-xl sm:text-2xl font-bold text-stone-900 leading-snug">
             &ldquo;Liquidate Physical Education. Replace the standardized, joyless model with vetted
             teachers sharing what they love, students choosing what moves them, money flowing
             directly to the source.&rdquo;
@@ -76,7 +76,7 @@ export default function WhyPage() {
         </div>
 
         <div>
-          <h2 className="text-2xl font-black text-stone-900 mb-4">The deal is simple.</h2>
+          <h2 className="text-xl sm:text-2xl font-black text-stone-900 mb-4">The deal is simple.</h2>
           <ul className="space-y-3 text-stone-600">
             <li className="flex gap-3">
               <span className="text-jungle-500 font-bold mt-0.5">→</span>
@@ -112,18 +112,18 @@ export default function WhyPage() {
       </section>
 
       {/* CTA */}
-      <section className="border-t border-stone-200 bg-stone-100 py-16 px-6 text-center">
-        <p className="text-stone-500 mb-6 text-lg">Ready to move?</p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <section className="border-t border-stone-200 bg-stone-100 py-12 sm:py-16 px-4 sm:px-6 text-center">
+        <p className="text-stone-500 mb-6 text-base sm:text-lg">Ready to move?</p>
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center max-w-sm sm:max-w-none mx-auto">
           <Link
             href="/explore"
-            className="bg-jungle-700 hover:bg-jungle-600 text-white font-bold px-8 py-4 rounded-xl transition-colors"
+            className="bg-jungle-700 hover:bg-jungle-600 text-white font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl transition-colors"
           >
             Explore classes
           </Link>
           <Link
             href="/apply"
-            className="border border-stone-300 hover:border-jungle-400 text-stone-700 hover:text-jungle-700 font-bold px-8 py-4 rounded-xl transition-colors"
+            className="border border-stone-300 hover:border-jungle-400 text-stone-700 hover:text-jungle-700 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl transition-colors"
           >
             Teach here
           </Link>

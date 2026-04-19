@@ -135,17 +135,17 @@ export function SessionManagePage({ session: initial, whipUrl, metrics, transact
   const isPast = new Date(initial.scheduled_at) < new Date()
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-12">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
 
       {/* Header */}
       <div className="mb-6">
         <Link href="/studio" className="text-xs text-stone-400 hover:text-stone-600 transition-colors mb-2 inline-block">
           ← Studio
         </Link>
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-black text-stone-900">{title}</h1>
-            <div className="flex items-center gap-2 mt-1 text-sm text-stone-400">
+        <div className="flex items-start justify-between gap-3 sm:gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl font-black text-stone-900 break-words">{title}</h1>
+            <div className="flex flex-wrap items-center gap-x-2 mt-1 text-xs sm:text-sm text-stone-400">
               <span suppressHydrationWarning>{formatDateTime(initial.scheduled_at)}</span>
               <span>· {initial.duration_minutes} min</span>
             </div>
@@ -154,21 +154,22 @@ export function SessionManagePage({ session: initial, whipUrl, metrics, transact
             <button
               type="button"
               onClick={() => setCancelModalOpen(true)}
-              className="bg-red-50 hover:bg-red-100 text-red-600 font-semibold px-5 py-2.5 rounded-lg text-sm border border-red-200 transition-colors flex-shrink-0"
+              className="bg-red-50 hover:bg-red-100 text-red-600 font-semibold px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm border border-red-200 transition-colors flex-shrink-0"
             >
-              Cancel Session
+              <span className="hidden sm:inline">Cancel Session</span>
+              <span className="sm:hidden">Cancel</span>
             </button>
           )}
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-8 bg-stone-100 p-1 rounded-xl w-fit">
+      <div className="flex gap-1 mb-6 sm:mb-8 bg-stone-100 p-1 rounded-xl w-full sm:w-fit overflow-x-auto">
         {(['overview', 'stream', 'settings'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-5 py-2 rounded-lg text-sm font-semibold capitalize transition-colors ${
+            className={`flex-1 sm:flex-none px-3 sm:px-5 py-2 rounded-lg text-sm font-semibold capitalize transition-colors ${
               tab === t ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'
             }`}
           >
@@ -195,41 +196,72 @@ export function SessionManagePage({ session: initial, whipUrl, metrics, transact
                 {!isPast && <p className="text-sm mt-1">Gifts will appear here as they come in.</p>}
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-stone-100 text-xs text-stone-400 uppercase tracking-widest">
-                      <th className="text-left px-5 py-3">Giver</th>
-                      <th className="text-left px-5 py-3">Message</th>
-                      <th className="text-left px-5 py-3">Date</th>
-                      <th className="text-right px-5 py-3">Creator</th>
-                      <th className="text-right px-5 py-3">Platform</th>
-                      <th className="text-right px-5 py-3">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.map((t, i) => (
-                      <tr key={t.id} className={i > 0 ? 'border-t border-stone-100' : ''}>
-                        <td className="px-5 py-3.5">
-                          <p className="font-semibold text-stone-900">{t.giverName}</p>
-                          {t.giverUsername && <p className="text-xs text-stone-400">@{t.giverUsername}</p>}
-                        </td>
-                        <td className="px-5 py-3.5 text-stone-500 max-w-xs">
-                          {t.message
-                            ? <span className="italic text-xs">"{t.message}"</span>
-                            : <span className="text-stone-300 text-xs">—</span>}
-                        </td>
-                        <td className="px-5 py-3.5 text-stone-400 text-xs whitespace-nowrap" suppressHydrationWarning>
-                          {new Date(t.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-semibold text-green-700">{fmt(t.creatorAmount)}</td>
-                        <td className="px-5 py-3.5 text-right text-stone-400">{fmt(t.platformAmount)}</td>
-                        <td className="px-5 py-3.5 text-right font-bold text-stone-900">{fmt(t.total)}</td>
+              <>
+                {/* Desktop table */}
+                <div className="hidden sm:block bg-white rounded-2xl border border-stone-200 overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-stone-100 text-xs text-stone-400 uppercase tracking-widest">
+                        <th className="text-left px-5 py-3">Giver</th>
+                        <th className="text-left px-5 py-3">Message</th>
+                        <th className="text-left px-5 py-3">Date</th>
+                        <th className="text-right px-5 py-3">Creator</th>
+                        <th className="text-right px-5 py-3">Platform</th>
+                        <th className="text-right px-5 py-3">Total</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {transactions.map((t, i) => (
+                        <tr key={t.id} className={i > 0 ? 'border-t border-stone-100' : ''}>
+                          <td className="px-5 py-3.5">
+                            <p className="font-semibold text-stone-900">{t.giverName}</p>
+                            {t.giverUsername && <p className="text-xs text-stone-400">@{t.giverUsername}</p>}
+                          </td>
+                          <td className="px-5 py-3.5 text-stone-500 max-w-xs">
+                            {t.message
+                              ? <span className="italic text-xs">&ldquo;{t.message}&rdquo;</span>
+                              : <span className="text-stone-300 text-xs">—</span>}
+                          </td>
+                          <td className="px-5 py-3.5 text-stone-400 text-xs whitespace-nowrap" suppressHydrationWarning>
+                            {new Date(t.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                          </td>
+                          <td className="px-5 py-3.5 text-right font-semibold text-green-700">{fmt(t.creatorAmount)}</td>
+                          <td className="px-5 py-3.5 text-right text-stone-400">{fmt(t.platformAmount)}</td>
+                          <td className="px-5 py-3.5 text-right font-bold text-stone-900">{fmt(t.total)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile card list */}
+                <div className="sm:hidden bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100">
+                  {transactions.map((t) => (
+                    <div key={t.id} className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-stone-900 text-sm truncate">{t.giverName}</p>
+                          {t.giverUsername && <p className="text-xs text-stone-400 truncate">@{t.giverUsername}</p>}
+                        </div>
+                        <p className="font-bold text-stone-900 text-sm flex-shrink-0">{fmt(t.total)}</p>
+                      </div>
+                      {t.message && (
+                        <p className="mt-2 text-xs italic text-stone-500">&ldquo;{t.message}&rdquo;</p>
+                      )}
+                      <div className="mt-2 flex items-center justify-between text-xs text-stone-400">
+                        <span suppressHydrationWarning>
+                          {new Date(t.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                        </span>
+                        <span>
+                          <span className="text-green-700 font-semibold">{fmt(t.creatorAmount)}</span>
+                          {' · '}
+                          <span>{fmt(t.platformAmount)} fee</span>
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </section>
         </div>
@@ -248,7 +280,7 @@ export function SessionManagePage({ session: initial, whipUrl, metrics, transact
       {/* ── Settings ──────────────────────────────────────────────────── */}
       {tab === 'settings' && (
         <form onSubmit={handleSave} className="space-y-6">
-          <section className="bg-white rounded-2xl border border-stone-200 p-8 space-y-5">
+          <section className="bg-white rounded-2xl border border-stone-200 p-5 sm:p-8 space-y-5">
             <h2 className="font-bold text-stone-900">Details</h2>
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-1">Title *</label>
@@ -267,7 +299,7 @@ export function SessionManagePage({ session: initial, whipUrl, metrics, transact
             </div>
           </section>
 
-          <section className="bg-white rounded-2xl border border-stone-200 p-8 space-y-5">
+          <section className="bg-white rounded-2xl border border-stone-200 p-5 sm:p-8 space-y-5">
             <h2 className="font-bold text-stone-900">Schedule</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -309,7 +341,7 @@ export function SessionManagePage({ session: initial, whipUrl, metrics, transact
             </p>
           )}
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <button
               type="submit" disabled={saving}
               className="bg-jungle-600 hover:bg-jungle-700 text-white font-bold py-2.5 px-6 rounded-xl text-sm transition-colors disabled:opacity-50"
@@ -330,7 +362,7 @@ export function SessionManagePage({ session: initial, whipUrl, metrics, transact
       {cancelModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => !cancelling && setCancelModalOpen(false)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8">
             <h2 className="text-xl font-black text-stone-900 mb-2">Cancel this session?</h2>
             <p className="text-sm text-stone-500 mb-6">
               <strong className="text-stone-700">{title}</strong> on <span suppressHydrationWarning>{formatDateTime(initial.scheduled_at)}</span> will be
@@ -363,9 +395,9 @@ export function SessionManagePage({ session: initial, whipUrl, metrics, transact
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm">
-      <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-3xl font-black text-stone-900">{value}</p>
+    <div className="bg-white rounded-2xl p-4 sm:p-6 border border-stone-200 shadow-sm">
+      <p className="text-[10px] sm:text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{label}</p>
+      <p className="text-xl sm:text-3xl font-black text-stone-900">{value}</p>
     </div>
   )
 }

@@ -30,10 +30,10 @@ export default async function ExplorePage({
     <div className="min-h-screen bg-stone-50">
       <Navbar />
 
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-black text-stone-900">Explore</h1>
-          <p className="text-stone-500 mt-2">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-4xl font-black text-stone-900">Explore</h1>
+          <p className="text-stone-500 mt-2 text-sm sm:text-base">
             Discover movement classes, guides, and live sessions.
           </p>
         </div>
@@ -47,10 +47,10 @@ export default async function ExplorePage({
         />
 
         {/* ── Latest Videos ─────────────────────────────────── */}
-        <section className="mb-14">
-          <div className="flex items-center justify-between mb-6">
+        <section className="mb-10 sm:mb-14">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
             <Link href="/classes" className="group">
-              <h2 className="text-2xl font-black text-stone-900 group-hover:text-jungle-700 transition-colors">
+              <h2 className="text-xl sm:text-2xl font-black text-stone-900 group-hover:text-jungle-700 transition-colors">
                 Latest Videos <span className="text-jungle-500 group-hover:text-jungle-600">&rarr;</span>
               </h2>
             </Link>
@@ -61,10 +61,10 @@ export default async function ExplorePage({
         </section>
 
         {/* ── Guides ───────────────────────────────────────── */}
-        <section className="mb-14">
-          <div className="flex items-center justify-between mb-6">
+        <section className="mb-10 sm:mb-14">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
             <Link href="/guides" className="group">
-              <h2 className="text-2xl font-black text-stone-900 group-hover:text-jungle-700 transition-colors">
+              <h2 className="text-xl sm:text-2xl font-black text-stone-900 group-hover:text-jungle-700 transition-colors">
                 Guides <span className="text-jungle-500 group-hover:text-jungle-600">&rarr;</span>
               </h2>
             </Link>
@@ -75,10 +75,10 @@ export default async function ExplorePage({
         </section>
 
         {/* ── Live Sessions ────────────────────────────────── */}
-        <section className="mb-14">
-          <div className="flex items-center justify-between mb-6">
+        <section className="mb-10 sm:mb-14">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
             <Link href="/sessions" className="group">
-              <h2 className="text-2xl font-black text-stone-900 group-hover:text-jungle-700 transition-colors">
+              <h2 className="text-xl sm:text-2xl font-black text-stone-900 group-hover:text-jungle-700 transition-colors">
                 Live Sessions <span className="text-jungle-500 group-hover:text-jungle-600">&rarr;</span>
               </h2>
             </Link>

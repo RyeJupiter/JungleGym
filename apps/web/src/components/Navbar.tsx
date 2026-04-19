@@ -38,7 +38,7 @@ export async function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 bg-jungle-900 border-b border-jungle-800 px-6 h-16 flex items-center justify-between relative">
+    <header className="sticky top-0 z-40 bg-jungle-900 border-b border-jungle-800 px-4 sm:px-6 h-16 flex items-center justify-between relative">
       <Link href="/" className="font-black text-xl text-white font-display">
         jungle<span className="text-jungle-400">gym</span>
       </Link>

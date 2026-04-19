@@ -21,9 +21,9 @@ export default async function NewSessionPage() {
     <div className="min-h-screen bg-stone-50">
       <Navbar />
 
-      <div className="max-w-2xl mx-auto px-6 py-12">
-        <h1 className="text-3xl font-black text-stone-900 mb-2">Schedule a session</h1>
-        <p className="text-stone-500 mb-8">Gift-based. 100% of gifts go directly to you.</p>
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
+        <h1 className="text-2xl sm:text-3xl font-black text-stone-900 mb-2">Schedule a session</h1>
+        <p className="text-stone-500 mb-6 sm:mb-8 text-sm sm:text-base">Gift-based. 100% of gifts go directly to you.</p>
         <ScheduleSessionForm creatorId={authUser.id} stripeConnected={!!profile?.stripe_onboarding_complete} />
       </div>
     </div>

@@ -12,7 +12,7 @@ export default function WelcomePage() {
     <div className="min-h-screen bg-stone-50 text-stone-900">
 
       {/* Nav */}
-      <header className="px-6 py-5 bg-white border-b border-stone-100">
+      <header className="px-4 sm:px-6 py-5 bg-white border-b border-stone-100">
         <Link href="/" className="font-black text-xl text-jungle-900">
           jungle<span className="text-jungle-500">gym</span>
         </Link>
@@ -20,13 +20,13 @@ export default function WelcomePage() {
 
       {/* Hero — jungle green */}
       <section className="relative bg-jungle-800 overflow-hidden">
-        <div className="relative max-w-3xl mx-auto px-6 pt-16 pb-20 text-center">
-          <div className="flex flex-col items-center mb-10">
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-14 sm:pb-20 text-center">
+          <div className="flex flex-col items-center mb-8 sm:mb-10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/emperor-tamarin.jpg"
               alt="Emperor tamarin — Saguinus imperator"
-              className="w-40 h-40 rounded-full object-cover shadow-md border-4 border-jungle-600"
+              className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover shadow-md border-4 border-jungle-600"
             />
             <p className="text-xs text-jungle-400 mt-3 italic">
               Emperor tamarin · <em>Saguinus imperator</em> · public domain
@@ -36,11 +36,11 @@ export default function WelcomePage() {
           <p className="text-jungle-400 font-semibold tracking-widest text-xs uppercase mb-4">
             Personal invitation
           </p>
-          <h1 className="text-5xl sm:text-6xl font-black leading-tight text-white mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight text-white mb-6">
             You have been invited<br />
             to the <span className="text-jungle-400">JungleGym</span>.
           </h1>
-          <p className="text-lg text-jungle-300 leading-relaxed max-w-lg mx-auto">
+          <p className="text-base sm:text-lg text-jungle-300 leading-relaxed max-w-lg mx-auto">
             Someone who knows your work sent you here. That means something.
           </p>
         </div>
@@ -48,13 +48,13 @@ export default function WelcomePage() {
 
       {/* Section 1 — warm white, jungle text */}
       <section className="bg-white border-t border-stone-100">
-        <div className="max-w-2xl mx-auto px-6 py-16 space-y-6 text-lg leading-relaxed text-stone-600">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-6 text-base sm:text-lg leading-relaxed text-stone-600">
           <p>
             The best movement teachers we know aren&apos;t on YouTube. They&apos;re at festivals,
             in community spaces, in someone&apos;s backyard — sharing something real, with
             nowhere to put it.
           </p>
-          <p className="text-jungle-800 font-semibold text-xl">
+          <p className="text-jungle-800 font-semibold text-lg sm:text-xl">
             JungleGym is the stage we built for them. For you.
           </p>
           <p>
@@ -67,9 +67,9 @@ export default function WelcomePage() {
 
       {/* Blockquote — amber warmth */}
       <section className="bg-amber-50 border-t border-b border-amber-100">
-        <div className="max-w-2xl mx-auto px-6 py-14">
-          <div className="border-l-4 border-amber-400 pl-7">
-            <p className="text-2xl font-bold text-amber-900 leading-snug">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+          <div className="border-l-4 border-amber-400 pl-5 sm:pl-7">
+            <p className="text-xl sm:text-2xl font-bold text-amber-900 leading-snug">
               You&apos;re not a content creator here.<br />
               You&apos;re a movement guide. A lead monkey.<br />
               The difference matters.
@@ -80,8 +80,8 @@ export default function WelcomePage() {
 
       {/* Section 2 — the deal, stone bg */}
       <section className="bg-stone-100 border-t border-stone-200">
-        <div className="max-w-2xl mx-auto px-6 py-16">
-          <h2 className="text-2xl font-black text-stone-800 mb-8">Here is how it works.</h2>
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+          <h2 className="text-xl sm:text-2xl font-black text-stone-800 mb-6 sm:mb-8">Here is how it works.</h2>
           <ul className="space-y-6">
             <li className="flex gap-4">
               <span className="text-jungle-600 font-black text-lg mt-0.5 flex-shrink-0">→</span>
@@ -138,9 +138,9 @@ export default function WelcomePage() {
 
       {/* Section 3 — what we ask, back to white */}
       <section className="bg-white border-t border-stone-100">
-        <div className="max-w-2xl mx-auto px-6 py-16">
-          <h2 className="text-2xl font-black text-stone-800 mb-6">What we ask.</h2>
-          <ul className="space-y-4 text-stone-600 text-lg leading-relaxed">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+          <h2 className="text-xl sm:text-2xl font-black text-stone-800 mb-5 sm:mb-6">What we ask.</h2>
+          <ul className="space-y-4 text-stone-600 text-base sm:text-lg leading-relaxed">
             <li className="flex gap-3">
               <span className="text-stone-400 font-bold mt-0.5 flex-shrink-0">—</span>
               <span>Only upload what you own or have the rights to share — music included.</span>
@@ -168,26 +168,26 @@ export default function WelcomePage() {
           <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full bg-jungle-300 blur-3xl" />
           <div className="absolute bottom-0 right-0 w-72 h-72 rounded-full bg-amber-300 blur-3xl" />
         </div>
-        <div className="relative max-w-2xl mx-auto px-6 py-20 text-center">
-          <p className="text-jungle-300 font-semibold mb-2 text-lg">
+        <div className="relative max-w-2xl mx-auto px-4 sm:px-6 py-14 sm:py-20 text-center">
+          <p className="text-jungle-300 font-semibold mb-2 text-base sm:text-lg">
             Glad you are here.
           </p>
-          <h2 className="text-4xl font-black text-white mb-4 leading-tight">
+          <h2 className="text-3xl sm:text-4xl font-black text-white mb-4 leading-tight">
             Ready to set up your space?
           </h2>
-          <p className="text-jungle-400 mb-10 text-base">
+          <p className="text-jungle-400 mb-8 sm:mb-10 text-sm sm:text-base">
             Create an account, then apply to teach. We will get you from there.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center max-w-sm sm:max-w-none mx-auto">
             <Link
               href="/auth/signup"
-              className="bg-jungle-400 hover:bg-jungle-300 text-jungle-950 font-bold px-8 py-4 rounded-xl transition-colors"
+              className="bg-jungle-400 hover:bg-jungle-300 text-jungle-950 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl transition-colors"
             >
               Create your account
             </Link>
             <Link
               href="/apply"
-              className="border border-jungle-600 hover:border-jungle-400 text-jungle-300 hover:text-jungle-100 font-bold px-8 py-4 rounded-xl transition-colors"
+              className="border border-jungle-600 hover:border-jungle-400 text-jungle-300 hover:text-jungle-100 font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl transition-colors"
             >
               Apply to teach
             </Link>

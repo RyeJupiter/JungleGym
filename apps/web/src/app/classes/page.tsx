@@ -29,10 +29,10 @@ export default async function ClassesPage({
     <div className="min-h-screen bg-stone-50">
       <Navbar />
 
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-black text-stone-900">Classes</h1>
-          <p className="text-stone-500 mt-2">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-4xl font-black text-stone-900">Classes</h1>
+          <p className="text-stone-500 mt-2 text-sm sm:text-base">
             Movement classes from skilled guides. Pay once, own forever.
           </p>
         </div>
@@ -47,14 +47,14 @@ export default async function ClassesPage({
         />
 
         {/* Sort + heading */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-black text-stone-900">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 sm:mb-6">
+          <h2 className="text-xl sm:text-2xl font-black text-stone-900 truncate">
             {q ? `Results for "${q}"` : tag ? `#${tag}` : 'Latest videos'}
           </h2>
-          <div className="flex gap-1 text-sm">
+          <div className="flex gap-1 text-xs sm:text-sm flex-shrink-0">
             <Link
               href={sortUrl('newest')}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-medium transition-colors ${
                 sort !== 'popular' ? 'bg-jungle-600 text-white' : 'text-stone-500 hover:text-stone-700'
               }`}
             >
@@ -62,7 +62,7 @@ export default async function ClassesPage({
             </Link>
             <Link
               href={sortUrl('popular')}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-medium transition-colors ${
                 sort === 'popular' ? 'bg-jungle-600 text-white' : 'text-stone-500 hover:text-stone-700'
               }`}
             >

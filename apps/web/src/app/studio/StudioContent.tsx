@@ -82,24 +82,27 @@ export async function StudioVideos({ userId }: { userId: string }) {
 function SessionRow({ session: s, index }: { session: { id: string; title: string; scheduled_at: string; duration_minutes: number; status: string }; index: number }) {
   const isLive = s.status === 'live'
   return (
-    <div className={`flex items-center justify-between px-5 py-4 ${index > 0 ? 'border-t border-stone-100' : ''}`}>
+    <div className={`flex items-center justify-between gap-3 px-4 sm:px-5 py-3 sm:py-4 ${index > 0 ? 'border-t border-stone-100' : ''}`}>
       <Link href={`/sessions/${s.id}`} className="flex-1 min-w-0 hover:opacity-80 transition-opacity">
-        <p className="font-semibold text-stone-900 text-sm">{s.title}</p>
-        <p className="text-xs text-stone-400 mt-0.5">
+        <p className="font-semibold text-stone-900 text-sm truncate">{s.title}</p>
+        <p className="text-xs text-stone-400 mt-0.5 truncate">
           <LocalTime iso={s.scheduled_at} options={{ weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }} /> · {s.duration_minutes} min
         </p>
       </Link>
-      <div className="flex items-center gap-3 flex-shrink-0">
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${
+      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+        <span className={`hidden sm:inline-block text-xs px-2 py-0.5 rounded-full font-medium capitalize ${
           isLive ? 'bg-red-50 text-red-600' :
           s.status === 'scheduled' ? 'bg-blue-50 text-blue-600' :
           'bg-stone-100 text-stone-500'
         }`}>
           {s.status}
         </span>
+        {isLive && (
+          <span className="sm:hidden inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" aria-label="live" />
+        )}
         <Link
           href={`/studio/sessions/${s.id}/manage`}
-          className="text-xs font-semibold px-3 py-1.5 rounded-full bg-green-50 text-green-700 hover:bg-green-100 transition-colors"
+          className="text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-full bg-green-50 text-green-700 hover:bg-green-100 transition-colors"
         >
           Manage
         </Link>

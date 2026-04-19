@@ -19,10 +19,10 @@ export default async function GuidesPage({
     <div className="min-h-screen bg-stone-50">
       <Navbar />
 
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-black text-stone-900">Movement Guides</h1>
-          <p className="text-stone-500 mt-2">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-4xl font-black text-stone-900">Movement Guides</h1>
+          <p className="text-stone-500 mt-2 text-sm sm:text-base">
             Vetted teachers. Real movement. Browse their classes and join their sessions.
           </p>
         </div>

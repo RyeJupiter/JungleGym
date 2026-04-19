@@ -38,7 +38,7 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
   const playbackUrls = cfInputId ? getPlaybackUrls(cfInputId) : null
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-12">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
       {/* Auto-refresh poller (only when no stream player — LiveSessionWrapper has its own) */}
       {!(playbackUrls && (isLive || isPast)) && (
         <SessionAutoRefresh sessionId={session.id} currentStatus={session.status} />
@@ -46,14 +46,14 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
 
       {/* Status banner */}
       {isLive && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl px-6 py-4 mb-8 flex items-center gap-3">
+        <div className="bg-red-50 border border-red-200 rounded-2xl px-4 sm:px-6 py-4 mb-6 sm:mb-8 flex items-center gap-3">
           <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse flex-shrink-0" />
           <p className="text-red-700 font-bold">This session is live right now</p>
         </div>
       )}
 
       {isPast && (
-        <div className="bg-stone-100 border border-stone-200 rounded-2xl px-6 py-4 mb-8">
+        <div className="bg-stone-100 border border-stone-200 rounded-2xl px-4 sm:px-6 py-4 mb-6 sm:mb-8">
           <p className="text-stone-500 font-medium capitalize">This session has {session.status}.</p>
         </div>
       )}
@@ -63,7 +63,7 @@ export async function SessionContent({ sessionId }: { sessionId: string }) {
         <Link href="/sessions" className="text-sm text-stone-400 hover:text-stone-600 transition-colors mb-3 inline-block">
           ← All sessions
         </Link>
-        <h1 className="text-3xl font-black text-stone-900 mb-3">{session.title}</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-stone-900 mb-3 break-words">{session.title}</h1>
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-stone-500 mb-4">
           <LocalTime iso={session.scheduled_at} options={{ weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }} />

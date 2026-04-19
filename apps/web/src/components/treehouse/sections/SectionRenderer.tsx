@@ -105,14 +105,14 @@ export function SectionRenderer({
 
     case 'live_sessions':
       return (
-        <div className={`max-w-5xl mx-auto px-6 ${opacity}`}>
+        <div className={`max-w-5xl mx-auto px-4 sm:px-6 ${opacity}`}>
           <LiveSessionsSection sessions={data.sessions} theme={theme} />
         </div>
       )
 
     case 'free_videos':
       return (
-        <div className={`max-w-5xl mx-auto px-6 ${opacity}`}>
+        <div className={`max-w-5xl mx-auto px-4 sm:px-6 ${opacity}`}>
           <VideoGridSection
             videos={data.freeVideos}
             title="Free classes"
@@ -123,7 +123,7 @@ export function SectionRenderer({
 
     case 'paid_videos':
       return (
-        <div className={`max-w-5xl mx-auto px-6 ${opacity}`}>
+        <div className={`max-w-5xl mx-auto px-4 sm:px-6 ${opacity}`}>
           <VideoGridSection
             videos={data.paidVideos}
             title="Paid classes"
@@ -135,7 +135,7 @@ export function SectionRenderer({
 
     case 'intro_video':
       return (
-        <div className={`max-w-5xl mx-auto px-6 ${opacity}`}>
+        <div className={`max-w-5xl mx-auto px-4 sm:px-6 ${opacity}`}>
           <IntroVideoSection
             videoUrl={(section.data?.url as string) ?? undefined}
             theme={theme}
@@ -149,7 +149,7 @@ export function SectionRenderer({
 
     case 'photo_gallery':
       return (
-        <div className={`max-w-5xl mx-auto px-6 ${opacity}`}>
+        <div className={`max-w-5xl mx-auto px-4 sm:px-6 ${opacity}`}>
           <PhotoGallerySection
             images={(section.data?.images as GalleryImage[]) ?? []}
             theme={theme}
@@ -162,7 +162,7 @@ export function SectionRenderer({
 
     case 'bio':
       return (
-        <div className={`max-w-5xl mx-auto px-6 ${opacity}`}>
+        <div className={`max-w-5xl mx-auto px-4 sm:px-6 ${opacity}`}>
           <BioSection
             title={(section.data?.title as string) ?? ''}
             body={(section.data?.body as string) ?? ''}

@@ -28,8 +28,8 @@ export function TreehouseRenderer({ config, data }: Props) {
 
         {/* Empty state */}
         {data.allVideos.length === 0 && (
-          <div className="max-w-5xl mx-auto px-6">
-            <div className="text-center py-20">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <div className="text-center py-14 sm:py-20">
               <div className="text-5xl mb-4 select-none">🌱</div>
               <p className={`${theme.accent} font-semibold text-lg mb-1`}>No videos yet</p>
               <p className={`${theme.textMuted} text-sm`}>
@@ -40,7 +40,7 @@ export function TreehouseRenderer({ config, data }: Props) {
         )}
 
         {/* Footer attribution */}
-        <div className="max-w-5xl mx-auto px-6 py-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
           <div className={`border-t ${theme.divider} pt-8 flex flex-col sm:flex-row items-center justify-between gap-4`}>
             <p className={`${theme.textMuted} text-xs`}>
               {data.profile.display_name}&apos;s treehouse on{' '}
