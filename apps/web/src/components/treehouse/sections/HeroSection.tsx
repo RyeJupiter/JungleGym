@@ -171,6 +171,16 @@ export function HeroSection({
               </div>
             )}
           </div>
+
+          {/* Meta + social rows — available in edit mode on every variant so creators can always update links */}
+          {(editing || profile.location || profile.tags?.length > 0) && (
+            <div className="mt-3">
+              <MetaRow profile={profile} theme={theme} editing={editing} onFieldChange={onFieldChange} />
+            </div>
+          )}
+          {(editing || profile.instagram_url || profile.website_url) && (
+            <SocialRow profile={profile} theme={theme} editing={editing} onFieldChange={onFieldChange} />
+          )}
         </div>
       </div>
       {cropModal}
