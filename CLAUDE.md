@@ -234,6 +234,15 @@ This file is the shared source of truth for all Claude Code instances working in
 - JungleGym live sessions linking directly into Kinectr events
 - Kinectr as the "profiles hub" that JungleGym plugs into
 
+### SEO follow-ups
+- **Google Search Console verification** — not done yet. Rye likely wants to own this (his Google account, his domain auth). Steps once he's ready:
+  1. Add property at [search.google.com/search-console](https://search.google.com/search-console) — pick **Domain** verification for full coverage
+  2. Add the TXT record in Cloudflare DNS (requires Davin's explicit approval per CF API rules)
+  3. Submit `https://junglegym.academy/sitemap.xml` under Sitemaps
+  4. Also link Bing Webmaster Tools — powers DuckDuckGo, way less competition for fitness keywords
+- Sitemap is already live at `/sitemap.xml`, robots.txt at `/robots.txt` (added 2026-04-19)
+- OG tags + JSON-LD structured data live on video, session, treehouse, and homepage
+
 ---
 
 ## JungleGym + Kinectr Connection

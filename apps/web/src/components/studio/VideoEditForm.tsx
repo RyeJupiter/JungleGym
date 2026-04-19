@@ -5,6 +5,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { TagInput } from './TagInput'
 import { VideoThumbnailPicker } from './VideoThumbnailPicker'
 import { PriceInput } from './PriceInput'
+import { PolishButton } from '@/components/PolishButton'
 import { suggestTagsFromTitle } from '@/lib/movementTags'
 
 type Video = {
@@ -158,7 +159,14 @@ export function VideoEditForm({ video, videoPublicUrl, onSaved }: Props) {
 
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-1">Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} />
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className={inputClass} />
+          <PolishButton
+            className="mt-2"
+            kind="description"
+            current={description}
+            context={{ title, tags }}
+            onAccept={(next) => setDescription(next)}
+          />
         </div>
 
         <div>

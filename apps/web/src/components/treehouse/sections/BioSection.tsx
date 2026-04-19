@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { PolishButton } from '@/components/PolishButton'
 import type { ThemeClasses } from '../themes'
 
 type Props = {
@@ -9,9 +10,10 @@ type Props = {
   theme: ThemeClasses
   editing?: boolean
   onChange?: (title: string, body: string) => void
+  polishContext?: Record<string, string | string[] | null | undefined>
 }
 
-export function BioSection({ title, body, theme, editing = false, onChange }: Props) {
+export function BioSection({ title, body, theme, editing = false, onChange, polishContext }: Props) {
   const [localTitle, setLocalTitle] = useState(title || 'My Movement Story')
   const [localBody, setLocalBody] = useState(body)
 
@@ -44,7 +46,15 @@ export function BioSection({ title, body, theme, editing = false, onChange }: Pr
           rows={8}
           className={`w-full bg-transparent border ${theme.cardBorder} rounded-xl p-4 focus:outline-none ${theme.textSecondary} text-base leading-relaxed resize-none placeholder-current/30`}
         />
-        <p className={`text-xs ${theme.textMuted} mt-2`}>{localBody.length} characters</p>
+        <div className="flex items-center justify-between mt-2 gap-3 flex-wrap">
+          <p className={`text-xs ${theme.textMuted}`}>{localBody.length} characters</p>
+          <PolishButton
+            kind="bio"
+            current={localBody}
+            context={polishContext}
+            onAccept={(next) => handleBodyChange(next)}
+          />
+        </div>
       </div>
     )
   }

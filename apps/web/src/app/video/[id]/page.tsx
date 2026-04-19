@@ -20,26 +20,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!data) return { title: 'Video' }
 
-  const description =
-    (data.description as string | null)?.slice(0, 160) ??
-    'A movement class on JungleGym.'
+  const title = data.title as string
+  const rawDesc = (data.description as string | null) ?? ''
+  const tags = (data.tags as string[] | null) ?? []
+  // If the creator hasn't written a description (or it's thin), derive one
+  // from the title + tags so Google has something substantive to index.
+  const description = rawDesc.trim().length >= 50
+    ? rawDesc.slice(0, 160)
+    : tags.length > 0
+      ? `${title} — a ${tags.slice(0, 3).join(', ')} class on JungleGym. Pay once, own forever.`
+      : `${title} — a movement class on JungleGym. Pay once, own forever.`
   const image = data.thumbnail_url as string | null
 
   return {
-    title: data.title as string,
+    title,
     description,
-    keywords: (data.tags as string[] | null) ?? undefined,
+    keywords: tags.length > 0 ? tags : undefined,
     alternates: { canonical: `/video/${id}` },
     openGraph: {
       type: 'video.other',
-      title: data.title as string,
+      title,
       description,
       url: `/video/${id}`,
       images: image ? [{ url: image }] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
-      title: data.title as string,
+      title,
       description,
       images: image ? [image] : undefined,
     },

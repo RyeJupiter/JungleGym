@@ -169,6 +169,13 @@ export function SectionRenderer({
             theme={theme}
             editing={editing}
             onChange={(title, body) => onSectionDataChange?.(section.id, { title, body })}
+            polishContext={{
+              display_name: data.profile.display_name,
+              tagline: data.profile.tagline,
+              tags: data.profile.tags,
+              location: data.profile.location,
+              short_bio: data.profile.bio,
+            }}
           />
         </div>
       )

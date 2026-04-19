@@ -7,6 +7,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { calculateTierPrices, formatPrice } from '@junglegym/shared'
 import { TagInput } from './TagInput'
 import { VideoThumbnailPicker } from './VideoThumbnailPicker'
+import { PolishButton } from '@/components/PolishButton'
 import { suggestTagsFromTitle } from '@/lib/movementTags'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -300,7 +301,14 @@ export function VideoUploadForm({
         </div>
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-1">Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} placeholder="What will learners take away?" />
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className={inputClass} placeholder="What will learners take away?" />
+          <PolishButton
+            className="mt-2"
+            kind="description"
+            current={description}
+            context={{ title, tags }}
+            onAccept={(next) => setDescription(next)}
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-1">Tags</label>
