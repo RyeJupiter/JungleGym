@@ -199,21 +199,21 @@ export function ApplyToTeachForm({ userId }: { userId: string }) {
         <div>
           <label className="block text-sm font-semibold text-stone-700 mb-1">Instagram</label>
           <input
-            type="url"
+            type="text"
             value={instagram}
             onChange={(e) => setInstagram(e.target.value)}
             className={inputClass}
-            placeholder="https://instagram.com/yourhandle"
+            placeholder="@yourhandle or full link"
           />
         </div>
         <div>
           <label className="block text-sm font-semibold text-stone-700 mb-1">YouTube</label>
           <input
-            type="url"
+            type="text"
             value={youtube}
             onChange={(e) => setYoutube(e.target.value)}
             className={inputClass}
-            placeholder="https://youtube.com/@yourchannel"
+            placeholder="@yourchannel or full link"
           />
         </div>
       </div>

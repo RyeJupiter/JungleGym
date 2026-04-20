@@ -37,6 +37,27 @@ function formatDate(iso: string) {
   })
 }
 
+/**
+ * Applicants can enter `@handle`, `instagram.com/handle`, or a full URL.
+ * Build a usable href so the admin's click always lands somewhere sensible.
+ */
+function buildSocialHref(raw: string, host: 'instagram.com' | 'youtube.com'): string {
+  const trimmed = raw.trim()
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  if (trimmed.startsWith('@')) {
+    return host === 'youtube.com'
+      ? `https://www.youtube.com/${trimmed}`
+      : `https://www.instagram.com/${trimmed.slice(1)}`
+  }
+  if (trimmed.startsWith(host) || trimmed.startsWith(`www.${host}`)) {
+    return `https://${trimmed}`
+  }
+  // Bare handle — assume it's the username
+  return host === 'youtube.com'
+    ? `https://www.youtube.com/@${trimmed.replace(/^@/, '')}`
+    : `https://www.instagram.com/${trimmed.replace(/^@/, '')}`
+}
+
 function StatusPill({ status }: { status: AdminApplication['status'] }) {
   const cls =
     status === 'pending' ? 'bg-yellow-50 text-yellow-700' :
@@ -244,7 +265,7 @@ export function ApplicationCard({
               <div className="space-y-1.5">
                 {app.instagram_url && (
                   <a
-                    href={app.instagram_url}
+                    href={buildSocialHref(app.instagram_url, 'instagram.com')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block text-sm text-jungle-700 hover:text-jungle-500 transition-colors break-all"
@@ -254,7 +275,7 @@ export function ApplicationCard({
                 )}
                 {app.youtube_url && (
                   <a
-                    href={app.youtube_url}
+                    href={buildSocialHref(app.youtube_url, 'youtube.com')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block text-sm text-jungle-700 hover:text-jungle-500 transition-colors break-all"
