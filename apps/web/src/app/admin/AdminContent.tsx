@@ -125,55 +125,23 @@ export async function AdminContent({
     }
 
     const publishedVideos = videos.filter((v) => v.published)
-    const totalCreatorRevenue = purchases.reduce((sum, p) => sum + (p.amount_paid ?? 0), 0)
-    const totalPlatformFromPurchases = purchases.reduce((sum, p) => sum + (p.platform_amount ?? 0), 0)
-    const totalPlatformFromGifts = gifts.reduce((sum, g) => sum + (g.platform_amount ?? 0), 0)
-    const totalGiftCreatorAmount = gifts.reduce((sum, g) => sum + (g.creator_amount ?? 0), 0)
 
     const profileMap = new Map(profiles.map((p) => [p.user_id, p]))
-    const videosByCreator = new Map<string, string[]>()
-    for (const v of videos) {
-      const arr = videosByCreator.get(v.creator_id) ?? []
-      arr.push(v.id)
-      videosByCreator.set(v.creator_id, arr)
-    }
-    const purchasesByVideo = new Map<string, number>()
-    for (const p of purchases) {
-      purchasesByVideo.set(p.video_id, (purchasesByVideo.get(p.video_id) ?? 0) + (p.amount_paid ?? 0))
-    }
-    const sessionsByCreator = new Map<string, string[]>()
-    for (const s of sessions) {
-      const arr = sessionsByCreator.get(s.creator_id) ?? []
-      arr.push(s.id)
-      sessionsByCreator.set(s.creator_id, arr)
-    }
-    const giftsBySession = new Map<string, number>()
-    for (const g of gifts) {
-      giftsBySession.set(g.session_id, (giftsBySession.get(g.session_id) ?? 0) + (g.creator_amount ?? 0))
-    }
-
-    const payouts = creatorsList.map((u) => {
-      const profile = profileMap.get(u.id)
-      const videoEarnings = (videosByCreator.get(u.id) ?? [])
-        .reduce((sum, vid) => sum + (purchasesByVideo.get(vid) ?? 0), 0)
-      const giftEarnings = (sessionsByCreator.get(u.id) ?? [])
-        .reduce((sum, sid) => sum + (giftsBySession.get(sid) ?? 0), 0)
-      return {
-        userId: u.id,
-        displayName: profile?.display_name ?? u.email,
-        username: profile?.username ?? '',
-        email: u.email,
-        videoEarnings,
-        giftEarnings,
-        creatorCut: videoEarnings + giftEarnings,
-      }
-    }).sort((a, b) => b.creatorCut - a.creatorCut)
-
     const videoMap = new Map(videos.map((v) => [v.id, v]))
     const buyerProfileMap = new Map(buyerProfiles.map((p) => [p.user_id, p]))
     const creatorProfileMap = new Map(profiles.map((p) => [p.user_id, p]))
     const giverProfileMap = new Map(giverProfiles.map((p) => [p.user_id, p]))
     const sessionMap = new Map(sessions.map((s) => [s.id, s]))
+
+    const creatorRoster = creatorsList.map((u) => {
+      const profile = profileMap.get(u.id)
+      return {
+        userId: u.id,
+        displayName: profile?.display_name ?? u.email,
+        username: profile?.username ?? '',
+        email: u.email,
+      }
+    })
 
     const purchaseTransactions = purchases.map((p) => {
       const video = videoMap.get(p.video_id)
@@ -191,6 +159,7 @@ export async function AdminContent({
         buyerName: buyerProfile?.display_name ?? 'Unknown',
         buyerEmail: users.find((u) => u.id === p.user_id)?.email ?? '',
         creatorName: creatorProfile?.display_name ?? 'Unknown creator',
+        creatorUserId: video?.creator_id ?? '',
       }
     })
 
@@ -210,6 +179,7 @@ export async function AdminContent({
         sessionTitle: session?.title ?? 'Unknown session',
         message: g.message ?? undefined,
         creatorName: creatorProfile?.display_name ?? 'Unknown creator',
+        creatorUserId: session?.creator_id ?? '',
       }
     })
 
@@ -224,13 +194,8 @@ export async function AdminContent({
         publishedVideos: publishedVideos.length,
         freeVideos: publishedVideos.filter((v) => v.is_free).length,
         paidVideos: publishedVideos.filter((v) => !v.is_free).length,
-        totalPurchases: purchases.length,
-        creatorRevenue: totalCreatorRevenue + totalGiftCreatorAmount,
-        platformRevenue: totalPlatformFromPurchases + totalPlatformFromGifts,
-        grossRevenue: purchases.reduce((sum, p) => sum + (p.total_amount ?? 0), 0)
-          + gifts.reduce((sum, g) => sum + (g.creator_amount ?? 0) + (g.platform_amount ?? 0), 0),
       },
-      payouts,
+      creators: creatorRoster,
       allTransactions,
     }
   } else if (tab === 'admins' && isSuperAdmin) {

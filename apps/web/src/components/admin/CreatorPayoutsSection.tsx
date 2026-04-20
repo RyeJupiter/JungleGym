@@ -17,7 +17,13 @@ const SORT_LABELS: Record<SortOption, string> = {
   alphabetical: 'A–Z',
 }
 
-export function CreatorPayoutsSection({ payouts }: { payouts: CreatorPayout[] }) {
+export function CreatorPayoutsSection({
+  payouts,
+  rangeLabel,
+}: {
+  payouts: CreatorPayout[]
+  rangeLabel?: string
+}) {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState<SortOption>('creatorCut')
 
@@ -48,7 +54,12 @@ export function CreatorPayoutsSection({ payouts }: { payouts: CreatorPayout[] })
 
   return (
     <section>
-      <h2 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">Creator payouts</h2>
+      <div className="flex items-baseline justify-between mb-4">
+        <h2 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">Creator payouts</h2>
+        {rangeLabel && (
+          <span className="text-xs text-stone-400">{rangeLabel}</span>
+        )}
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <input
