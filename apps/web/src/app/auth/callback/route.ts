@@ -2,10 +2,20 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// Only allow same-origin paths. Rejects `//evil.com`, `http://evil.com`,
+// and anything that doesn't start with a single `/` followed by a non-slash.
+function safeRedirectPath(next: string | null): string {
+  if (!next) return '/explore'
+  if (!next.startsWith('/')) return '/explore'
+  if (next.startsWith('//')) return '/explore'
+  if (next.startsWith('/\\')) return '/explore'
+  return next
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/explore'
+  const next = safeRedirectPath(searchParams.get('next'))
 
   if (code) {
     const supabase = await createServerSupabaseClient()

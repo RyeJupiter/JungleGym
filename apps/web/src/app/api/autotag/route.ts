@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { fetchGhostTags } from '@/lib/ghostTags'
 import { suggestTagsFromTitle } from '@/lib/movementTags'
+import { rateLimit } from '@/lib/rateLimit'
 
 /**
  * POST /api/autotag
@@ -13,6 +14,13 @@ export async function POST(request: Request) {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Cap per-user spam against paid Groq API. 30 calls / 10 min is plenty
+  // for real editing while curbing a runaway client.
+  const rl = rateLimit(`autotag:${user.id}`, 30, 10 * 60 * 1000)
+  if (!rl.ok) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
 
   const body = await request.json().catch(() => null)
   const title = typeof body?.title === 'string' ? body.title.trim().slice(0, 500) : ''

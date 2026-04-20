@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { AvatarCropModal } from '@/components/AvatarCropModal'
 import { convertHeicIfNeeded } from '@/lib/compressImage'
+import { safeExternalUrl } from '@/lib/safeUrl'
 import type { ThemeClasses } from '../themes'
 import type { HeroVariant } from '../config'
 
@@ -617,9 +618,9 @@ function SocialRow({
           @{handle}
         </a>
       )}
-      {profile.website_url && (
+      {profile.website_url && safeExternalUrl(profile.website_url) && (
         <a
-          href={profile.website_url.startsWith('http') ? profile.website_url : `https://${profile.website_url}`}
+          href={safeExternalUrl(profile.website_url)!}
           target="_blank"
           rel="noopener noreferrer"
           className={`${theme.textSecondary} hover:${theme.textPrimary} text-xs flex items-center gap-1.5 transition-colors`}

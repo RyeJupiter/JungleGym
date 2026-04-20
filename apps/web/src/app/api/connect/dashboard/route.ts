@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getStripe } from '@/lib/stripe'
+import { SITE_URL } from '@/lib/siteUrl'
 
 /**
  * GET /api/connect/dashboard
@@ -9,13 +10,13 @@ import { getStripe } from '@/lib/stripe'
  * Redirects them to the Stripe-hosted dashboard where they can view payouts,
  * update bank info, and manage their account.
  */
-export async function GET(req: Request) {
+export async function GET() {
   const stripe = getStripe()
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.redirect(new URL('/auth/login', req.url))
+    return NextResponse.redirect(`${SITE_URL}/auth/login`)
   }
 
   const { data: profile } = await supabase
@@ -25,7 +26,7 @@ export async function GET(req: Request) {
     .single()
 
   if (!profile?.stripe_account_id || !profile.stripe_onboarding_complete) {
-    return NextResponse.redirect(new URL('/settings?tab=payments&stripe=not-connected', req.url))
+    return NextResponse.redirect(`${SITE_URL}/settings?tab=payments&stripe=not-connected`)
   }
 
   const loginLink = await stripe.accounts.createLoginLink(profile.stripe_account_id)

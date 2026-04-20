@@ -89,19 +89,37 @@ export async function POST(req: Request) {
 
     // ── Subscription lifecycle ───────────────────────────────────────────────
     case 'customer.subscription.created': {
-      // Backup to checkout.session.completed — upsert in case it fires first
+      // Safety net for checkout.session.completed. We only write if we can
+      // confidently resolve the owning user — either via metadata set on the
+      // subscription, or by matching an existing membership row on
+      // stripe_customer_id (written by the checkout.session.completed handler).
       const sub = event.data.object as Stripe.Subscription
-      await supabase.from('memberships').upsert(
-        {
-          stripe_subscription_id: sub.id,
-          stripe_customer_id: typeof sub.customer === 'string' ? sub.customer : null,
-          status: sub.status,
-          current_period_end: subPeriodEnd(sub),
-          // user_id resolved via checkout.session metadata — this is a safety net only
-          user_id: (sub.metadata?.user_id as string | undefined) ?? '',
-        },
-        { onConflict: 'stripe_subscription_id' }
-      )
+      const customerId = typeof sub.customer === 'string' ? sub.customer : null
+      let userId = (sub.metadata?.user_id as string | undefined) ?? null
+
+      if (!userId && customerId) {
+        const { data: existing } = await supabase
+          .from('memberships')
+          .select('user_id')
+          .eq('stripe_customer_id', customerId)
+          .maybeSingle()
+        userId = (existing?.user_id as string | undefined) ?? null
+      }
+
+      if (userId) {
+        await supabase.from('memberships').upsert(
+          {
+            stripe_subscription_id: sub.id,
+            stripe_customer_id: customerId,
+            status: sub.status,
+            current_period_end: subPeriodEnd(sub),
+            user_id: userId,
+          },
+          { onConflict: 'stripe_subscription_id' }
+        )
+      } else {
+        console.warn('[stripe webhook] subscription.created without resolvable user_id', sub.id)
+      }
       break
     }
 

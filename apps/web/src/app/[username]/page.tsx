@@ -8,7 +8,8 @@ import type { Metadata } from 'next'
 type Props = { params: Promise<{ username: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { username } = await params
+  const raw = (await params).username
+  const username = raw.toLowerCase() // DB stores lowercased
   const supabase = await createServerSupabaseClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: metaProfile } = await (supabase as any)
@@ -53,7 +54,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function TreehousePage({ params }: Props) {
-  const { username } = await params
+  const raw = (await params).username
+  const username = raw.toLowerCase()
   const supabase = await createServerSupabaseClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (supabase as any)

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { createServiceSupabaseClient } from '@/lib/supabase/server'
 import { getStripe } from '@/lib/stripe'
+import { SITE_URL } from '@/lib/siteUrl'
 
 /**
  * POST /api/connect/onboard
@@ -9,7 +10,7 @@ import { getStripe } from '@/lib/stripe'
  * Creates a Stripe Connect Express account for the current creator (or reuses
  * an existing one) and returns a Stripe-hosted Account Link URL for onboarding.
  */
-export async function POST(req: Request) {
+export async function POST() {
   const stripe = getStripe()
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -68,14 +69,12 @@ export async function POST(req: Request) {
       .eq('user_id', user.id)
   }
 
-  // Parse origin from request for return/refresh URLs
-  const origin = req.headers.get('origin') || 'https://junglegym.academy'
-
-  // Generate the Account Link (single-use, temporary)
+  // Generate the Account Link (single-use, temporary).
+  // Use SITE_URL — never trust Host/Origin headers for redirect targets.
   const accountLink = await stripe.accountLinks.create({
     account: accountId,
-    refresh_url: `${origin}/api/connect/onboard/refresh`,
-    return_url: `${origin}/settings?stripe=complete`,
+    refresh_url: `${SITE_URL}/api/connect/onboard/refresh`,
+    return_url: `${SITE_URL}/settings?stripe=complete`,
     type: 'account_onboarding',
   })
 

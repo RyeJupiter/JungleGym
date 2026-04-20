@@ -21,6 +21,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'sessionId and positive amount required' }, { status: 400 })
   }
 
+  if (amount > 10000) {
+    return NextResponse.json({ error: 'Gift amount too large' }, { status: 400 })
+  }
+
   // Verify session exists
   const { data: session } = await supabase
     .from('live_sessions')
@@ -35,22 +39,27 @@ export async function POST(req: Request) {
   const { creatorAmount, platformFee, total } = calculatePriceBreakdown(amount)
   const totalCents = Math.round(total * 100)
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: totalCents,
-    currency: 'usd',
-    automatic_payment_methods: { enabled: true },
-    metadata: {
-      type: 'gift',
-      user_id: user.id,
-      session_id: sessionId,
-      creator_id: session.creator_id,
-      fee_pct: String(PLATFORM_FEE_PCT),
-      creator_amount: String(creatorAmount),
-      platform_amount: String(platformFee),
-      total_amount: String(total),
-      message,
+  const idempotencyKey = `gift:${user.id}:${sessionId}:${amount}:${new Date().toISOString().slice(0, 10)}`
+
+  const paymentIntent = await stripe.paymentIntents.create(
+    {
+      amount: totalCents,
+      currency: 'usd',
+      automatic_payment_methods: { enabled: true },
+      metadata: {
+        type: 'gift',
+        user_id: user.id,
+        session_id: sessionId,
+        creator_id: session.creator_id,
+        fee_pct: String(PLATFORM_FEE_PCT),
+        creator_amount: String(creatorAmount),
+        platform_amount: String(platformFee),
+        total_amount: String(total),
+        message,
+      },
     },
-  })
+    { idempotencyKey }
+  )
 
   return NextResponse.json({ clientSecret: paymentIntent.client_secret })
 }

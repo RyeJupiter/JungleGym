@@ -1,12 +1,23 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { rateLimit, clientIp } from '@/lib/rateLimit'
 
 export async function POST(req: Request) {
+  // 5 submissions per IP per 10 minutes. See rateLimit.ts caveats — this is
+  // edge-isolate-local, not a hard guarantee. Layer CF WAF for real limits.
+  const rl = rateLimit(`email-capture:${clientIp(req)}`, 5, 10 * 60 * 1000)
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfterMs / 1000)) } }
+    )
+  }
+
   const body = await req.json().catch(() => null)
   const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : ''
   const source = typeof body?.source === 'string' ? body.source : 'homepage'
 
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: 'Valid email required' }, { status: 400 })
   }
 
