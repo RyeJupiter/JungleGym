@@ -7,10 +7,10 @@
 ALTER TABLE public.purchases
   ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
 
--- Partial index for quick "active access" lookups
-CREATE INDEX IF NOT EXISTS purchases_active_access_idx
-  ON public.purchases (user_id, video_id)
-  WHERE expires_at IS NULL OR expires_at > NOW();
+-- No additional index needed: the existing UNIQUE(user_id, video_id) index
+-- on purchases handles every ownership lookup. A partial index on
+-- `expires_at IS NULL OR expires_at > NOW()` wouldn't work anyway —
+-- Postgres requires index predicates to be IMMUTABLE, and NOW() is STABLE.
 
 -- Replace RPC to stamp expires_at on share-redemption purchases.
 -- If the recipient already has a temp (share) purchase for this video,
