@@ -35,11 +35,40 @@ export async function AdminContent({
 
   if (tab === 'creators') {
     const svc = await createServiceSupabaseClient()
+    // No direct FK from teacher_applications to profiles (they're siblings
+    // through users), so do a three-step fetch and merge manually.
     const { data: appsData } = await svc
       .from('teacher_applications')
-      .select('*, users(email), profiles(display_name, username)')
+      .select('id, user_id, motivation, status, created_at')
       .order('created_at', { ascending: false })
-    applications = appsData ?? []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawApps: any[] = appsData ?? []
+    const appUserIds = [...new Set(rawApps.map((a) => a.user_id))]
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let appUsers: any[] = []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let appProfiles: any[] = []
+    if (appUserIds.length > 0) {
+      const [{ data: us }, { data: ps }] = await Promise.all([
+        svc.from('users').select('id, email').in('id', appUserIds),
+        svc.from('profiles').select('user_id, display_name, username').in('user_id', appUserIds),
+      ])
+      appUsers = us ?? []
+      appProfiles = ps ?? []
+    }
+    const appUserMap = new Map(appUsers.map((u) => [u.id, u]))
+    const appProfileMap = new Map(appProfiles.map((p) => [p.user_id, p]))
+
+    applications = rawApps.map((a) => {
+      const u = appUserMap.get(a.user_id)
+      const p = appProfileMap.get(a.user_id)
+      return {
+        ...a,
+        users: u ? { email: u.email } : null,
+        profiles: p ? { display_name: p.display_name, username: p.username } : null,
+      }
+    })
 
     const { data: creatorUsers } = await svc
       .from('users').select('id, email, role').eq('role', 'creator')
