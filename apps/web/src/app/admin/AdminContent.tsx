@@ -18,8 +18,11 @@ export async function AdminContent({
   const supabase = await createServerSupabaseClient()
   const isSuperAdmin = ADMIN_EMAILS.includes(authEmail)
 
-  // Always fetch pending count for the creators tab badge
-  const { count: pendingCount } = await supabase
+  // Always fetch pending count for the creators tab badge.
+  // Service role bypasses RLS so the admin sees the platform-wide count,
+  // not just their own (if any) application.
+  const svcPending = await createServiceSupabaseClient()
+  const { count: pendingCount } = await svcPending
     .from('teacher_applications')
     .select('*', { count: 'exact', head: true })
     .eq('status', 'pending')
