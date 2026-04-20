@@ -25,30 +25,36 @@ export async function POST(req: Request) {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://junglegym.academy'
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'subscription',
-    customer_email: user.email,
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: 'usd',
-          recurring: { interval: 'month' },
-          unit_amount: 10000, // $100.00
-          product_data: {
-            name: 'JungleGym Membership',
-            description: 'Access to 6 videos of your choice each month. 80% goes directly to creators.',
+  const idempotencyKey = `membership_checkout:${user.id}:${new Date().toISOString().slice(0, 10)}`
+
+  const session = await stripe.checkout.sessions.create(
+    {
+      mode: 'subscription',
+      customer_email: user.email,
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: 'usd',
+            recurring: { interval: 'month' },
+            unit_amount: 10000, // $100.00
+            product_data: {
+              name: 'JungleGym Membership',
+              description:
+                'Access to 6 videos of your choice each month. 80% goes directly to creators.',
+            },
           },
         },
+      ],
+      metadata: {
+        type: 'membership',
+        user_id: user.id,
       },
-    ],
-    metadata: {
-      type: 'membership',
-      user_id: user.id,
+      success_url: `${siteUrl}/library?membership=welcome`,
+      cancel_url: `${siteUrl}/#membership`,
     },
-    success_url: `${siteUrl}/library?membership=welcome`,
-    cancel_url: `${siteUrl}/#membership`,
-  })
+    { idempotencyKey }
+  )
 
   return NextResponse.json({ url: session.url })
 }

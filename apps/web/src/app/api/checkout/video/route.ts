@@ -99,7 +99,15 @@ export async function POST(req: Request) {
     }
   }
 
-  const paymentIntent = await stripe.paymentIntents.create(params)
+  // Idempotency key: if the client retries the same (user, video, tier)
+  // purchase within Stripe's 24-hour idempotency window, we get the same
+  // PaymentIntent back instead of creating duplicates. Scoped to the
+  // calendar day so a legitimate re-attempt tomorrow still goes through.
+  const idempotencyKey = `video_purchase:${user.id}:${videoId}:${tier}:${new Date().toISOString().slice(0, 10)}`
+
+  const paymentIntent = await stripe.paymentIntents.create(params, {
+    idempotencyKey,
+  })
 
   return NextResponse.json({ clientSecret: paymentIntent.client_secret })
 }

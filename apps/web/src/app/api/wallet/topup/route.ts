@@ -33,19 +33,24 @@ export async function POST(req: Request) {
   const { fee, chargeTotal } = calculateTopUpTotal(walletAmount)
   const chargeCents = Math.round(chargeTotal * 100)
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: chargeCents,
-    currency: 'usd',
-    automatic_payment_methods: { enabled: true },
-    metadata: {
-      type: 'wallet_topup',
-      user_id: user.id,
-      wallet_amount: String(walletAmount),
-      fee: String(fee),
-      fee_pct: String(WALLET_TOPUP_FEE_PCT),
-      charge_total: String(chargeTotal),
+  const idempotencyKey = `wallet_topup:${user.id}:${walletAmount}:${new Date().toISOString().slice(0, 10)}`
+
+  const paymentIntent = await stripe.paymentIntents.create(
+    {
+      amount: chargeCents,
+      currency: 'usd',
+      automatic_payment_methods: { enabled: true },
+      metadata: {
+        type: 'wallet_topup',
+        user_id: user.id,
+        wallet_amount: String(walletAmount),
+        fee: String(fee),
+        fee_pct: String(WALLET_TOPUP_FEE_PCT),
+        charge_total: String(chargeTotal),
+      },
     },
-  })
+    { idempotencyKey }
+  )
 
   return NextResponse.json({ clientSecret: paymentIntent.client_secret })
 }
