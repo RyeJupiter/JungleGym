@@ -13,7 +13,9 @@ export async function GET(
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.redirect(`${origin}/auth/login?next=/api/share/${token}`)
+    // Send logged-out visitors to the friendly landing page instead of straight
+    // to login — gives context and an inline signup path.
+    return NextResponse.redirect(`${origin}/share/${token}`)
   }
 
   const result = await supabase.rpc('redeem_video_share', {

@@ -35,7 +35,7 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
         .select('token')
         .single()
       if (error) throw error
-      setLink(`${window.location.origin}/api/share/${data.token}`)
+      setLink(`${window.location.origin}/share/${data.token}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Could not generate link')
     } finally {
