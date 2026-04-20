@@ -56,9 +56,9 @@ export async function CreatorDetailContent({ userId }: { userId: string }) {
     { data: videosData },
     { data: sessionsData },
   ] = await Promise.all([
-    supabase.from('profiles').select('*').eq('user_id', userId).single(),
-    supabase.from('videos').select('id, title, is_free, published, duration_seconds, view_count, created_at').eq('creator_id', userId).order('created_at', { ascending: false }),
-    supabase.from('live_sessions').select('id, title, creator_id').eq('creator_id', userId),
+    svc.from('profiles').select('*').eq('user_id', userId).single(),
+    svc.from('videos').select('id, title, is_free, published, duration_seconds, view_count, created_at').eq('creator_id', userId).order('created_at', { ascending: false }),
+    svc.from('live_sessions').select('id, title, creator_id').eq('creator_id', userId),
   ])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,7 +73,7 @@ export async function CreatorDetailContent({ userId }: { userId: string }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let purchases: any[] = []
   if (videoIds.length > 0) {
-    const { data } = await supabase
+    const { data } = await svc
       .from('purchases')
       .select('id, video_id, amount_paid, platform_amount, tier, created_at')
       .in('video_id', videoIds)
@@ -83,7 +83,7 @@ export async function CreatorDetailContent({ userId }: { userId: string }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let gifts: any[] = []
   if (sessionIds.length > 0) {
-    const { data } = await supabase
+    const { data } = await svc
       .from('gifts')
       .select('id, session_id, creator_amount, platform_amount')
       .in('session_id', sessionIds)
