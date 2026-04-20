@@ -105,7 +105,8 @@ export async function CreatorDetailContent({ userId }: { userId: string }) {
 
   const totalVideoEarnings = purchases.reduce((sum, p) => sum + (p.amount_paid ?? 0), 0)
   const totalGiftEarnings = gifts.reduce((sum, g) => sum + (g.creator_amount ?? 0), 0)
-  const totalOwed = totalVideoEarnings + totalGiftEarnings
+  const creatorCut = totalVideoEarnings + totalGiftEarnings
+  const stripeConnected = !!profile?.stripe_onboarding_complete
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
@@ -164,7 +165,11 @@ export async function CreatorDetailContent({ userId }: { userId: string }) {
       <div className="grid grid-cols-3 gap-3 mb-8">
         <StatCard label="Video sales" value={fmt(totalVideoEarnings)} sub={`${purchases.length} purchase${purchases.length !== 1 ? 's' : ''}`} />
         <StatCard label="Gifts" value={fmt(totalGiftEarnings)} sub={`${gifts.length} gift${gifts.length !== 1 ? 's' : ''}`} />
-        <StatCard label="Total owed" value={fmt(totalOwed)} />
+        <StatCard
+          label="Creator cut"
+          value={fmt(creatorCut)}
+          sub={stripeConnected ? 'auto-paid via Stripe' : 'Stripe not connected'}
+        />
       </div>
 
       {/* ── Videos Table ── */}

@@ -165,9 +165,9 @@ export async function AdminContent({
         email: u.email,
         videoEarnings,
         giftEarnings,
-        totalOwed: videoEarnings + giftEarnings,
+        creatorCut: videoEarnings + giftEarnings,
       }
-    }).sort((a, b) => b.totalOwed - a.totalOwed)
+    }).sort((a, b) => b.creatorCut - a.creatorCut)
 
     const videoMap = new Map(videos.map((v) => [v.id, v]))
     const buyerProfileMap = new Map(buyerProfiles.map((p) => [p.user_id, p]))

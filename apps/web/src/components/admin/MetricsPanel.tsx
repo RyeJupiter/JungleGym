@@ -5,7 +5,7 @@ export type CreatorPayout = {
   email: string
   videoEarnings: number
   giftEarnings: number
-  totalOwed: number
+  creatorCut: number
 }
 
 export type UnifiedTransaction = {
@@ -89,14 +89,14 @@ export function MetricsPanel({ data }: { data: MetricsData }) {
             value={stats.totalPurchases.toString()}
           />
           <StatCard
-            label="Creator revenue"
+            label="Creator payouts"
             value={fmt(stats.creatorRevenue)}
-            sub="owed to teachers"
+            sub="80% auto-routed via Stripe Connect"
           />
           <StatCard
             label="Platform fees"
             value={fmt(stats.platformRevenue)}
-            sub="JungleGym income"
+            sub="JungleGym income (20%)"
           />
           <StatCard
             label="Gross revenue"

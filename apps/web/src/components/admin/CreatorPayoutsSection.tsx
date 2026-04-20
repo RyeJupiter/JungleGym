@@ -4,14 +4,14 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import type { CreatorPayout } from './MetricsPanel'
 
-type SortOption = 'totalOwed' | 'videoEarnings' | 'giftEarnings' | 'alphabetical'
+type SortOption = 'creatorCut' | 'videoEarnings' | 'giftEarnings' | 'alphabetical'
 
 function fmt(n: number) {
   return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
 const SORT_LABELS: Record<SortOption, string> = {
-  totalOwed: 'Total owed',
+  creatorCut: 'Creator cut',
   videoEarnings: 'Video sales',
   giftEarnings: 'Gifts',
   alphabetical: 'A–Z',
@@ -19,7 +19,7 @@ const SORT_LABELS: Record<SortOption, string> = {
 
 export function CreatorPayoutsSection({ payouts }: { payouts: CreatorPayout[] }) {
   const [search, setSearch] = useState('')
-  const [sortBy, setSortBy] = useState<SortOption>('totalOwed')
+  const [sortBy, setSortBy] = useState<SortOption>('creatorCut')
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
@@ -34,8 +34,8 @@ export function CreatorPayoutsSection({ payouts }: { payouts: CreatorPayout[] })
       })
       .sort((a, b) => {
         switch (sortBy) {
-          case 'totalOwed':
-            return b.totalOwed - a.totalOwed
+          case 'creatorCut':
+            return b.creatorCut - a.creatorCut
           case 'videoEarnings':
             return b.videoEarnings - a.videoEarnings
           case 'giftEarnings':
@@ -87,7 +87,7 @@ export function CreatorPayoutsSection({ payouts }: { payouts: CreatorPayout[] })
                 <th className="px-5 py-3 text-xs font-semibold text-stone-400 uppercase tracking-wider">Creator</th>
                 <th className="px-5 py-3 text-xs font-semibold text-stone-400 uppercase tracking-wider text-right">Video sales</th>
                 <th className="px-5 py-3 text-xs font-semibold text-stone-400 uppercase tracking-wider text-right">Gifts</th>
-                <th className="px-5 py-3 text-xs font-semibold text-stone-400 uppercase tracking-wider text-right">Total owed</th>
+                <th className="px-5 py-3 text-xs font-semibold text-stone-400 uppercase tracking-wider text-right">Creator cut</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
@@ -101,7 +101,7 @@ export function CreatorPayoutsSection({ payouts }: { payouts: CreatorPayout[] })
                   </td>
                   <td className="px-5 py-4 text-right text-stone-700">{fmt(p.videoEarnings)}</td>
                   <td className="px-5 py-4 text-right text-stone-700">{fmt(p.giftEarnings)}</td>
-                  <td className="px-5 py-4 text-right font-bold text-stone-900">{fmt(p.totalOwed)}</td>
+                  <td className="px-5 py-4 text-right font-bold text-stone-900">{fmt(p.creatorCut)}</td>
                 </tr>
               ))}
             </tbody>
