@@ -160,6 +160,8 @@ export async function addSiteAdmin(email: string): Promise<{ error?: string }> {
 export async function approveApplication(appId: string, userId: string): Promise<{ error?: string }> {
   try {
     await assertCallerIsAdmin()
+    const supabase = await createServerSupabaseClient()
+    const { data: { user: reviewer } } = await supabase.auth.getUser()
     const svc = await createServiceSupabaseClient()
 
     // Grant creator role + set default rates
@@ -177,11 +179,16 @@ export async function approveApplication(appId: string, userId: string): Promise
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: appErr } = await (svc as any)
       .from('teacher_applications')
-      .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+      .update({
+        status: 'approved',
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: reviewer?.id ?? null,
+      })
       .eq('id', appId)
     if (appErr) return { error: appErr.message }
 
     revalidatePath('/admin')
+    revalidatePath('/admin/applications/reviewed')
     revalidatePath('/guides')
     return {}
   } catch (err) {
@@ -192,14 +199,21 @@ export async function approveApplication(appId: string, userId: string): Promise
 export async function rejectApplication(appId: string): Promise<{ error?: string }> {
   try {
     await assertCallerIsAdmin()
+    const supabase = await createServerSupabaseClient()
+    const { data: { user: reviewer } } = await supabase.auth.getUser()
     const svc = await createServiceSupabaseClient()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (svc as any)
       .from('teacher_applications')
-      .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+      .update({
+        status: 'rejected',
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: reviewer?.id ?? null,
+      })
       .eq('id', appId)
     if (error) return { error: error.message }
     revalidatePath('/admin')
+    revalidatePath('/admin/applications/reviewed')
     return {}
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to reject application' }

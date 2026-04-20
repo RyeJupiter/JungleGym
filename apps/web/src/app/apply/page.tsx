@@ -21,21 +21,23 @@ function ApplySkeleton() {
 
 export default function ApplyPage() {
   return (
-    <main className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-lg">
-        <div className="text-center mb-8">
-          <a href="/" className="font-black text-2xl text-stone-900 font-display">
-            jungle<span className="text-jungle-600">gym</span>
-          </a>
-          <h1 className="text-3xl font-black text-stone-900 mt-6">Become a teacher</h1>
-          <p className="text-stone-500 mt-2">
-            We curate every creator on the network. Tell us about your practice.
-          </p>
-        </div>
+    <main className="min-h-screen bg-stone-50 flex flex-col">
+      <div className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-xl">
+          <div className="text-center mb-8">
+            <a href="/" className="font-black text-2xl text-stone-900 font-display">
+              jungle<span className="text-jungle-600">gym</span>
+            </a>
+            <h1 className="text-3xl font-black text-stone-900 mt-6">Become a teacher</h1>
+            <p className="text-stone-500 mt-2">
+              We curate every creator on the network. Tell us about your practice.
+            </p>
+          </div>
 
-        <Suspense fallback={<ApplySkeleton />}>
-          <ApplyContent />
-        </Suspense>
+          <Suspense fallback={<ApplySkeleton />}>
+            <ApplyContent />
+          </Suspense>
+        </div>
       </div>
       <FooterCompact />
     </main>

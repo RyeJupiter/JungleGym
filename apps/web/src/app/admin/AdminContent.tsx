@@ -5,6 +5,8 @@ import { CreatorsPanel } from '@/components/admin/CreatorsPanel'
 import { MetricsPanel } from '@/components/admin/MetricsPanel'
 import type { MetricsData } from '@/components/admin/MetricsPanel'
 import type { UserSearchResult } from '@/app/admin/actions'
+import type { AdminApplication } from '@/components/admin/ApplicationCard'
+import { fetchAdminApplications, countReviewedApplications } from '@/lib/admin-applications'
 import { ADMIN_EMAILS } from '@/lib/admin'
 import Link from 'next/link'
 
@@ -27,48 +29,18 @@ export async function AdminContent({
     .select('*', { count: 'exact', head: true })
     .eq('status', 'pending')
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let applications: any[] = []
+  let pendingApplications: AdminApplication[] = []
+  let reviewedCount = 0
   let siteAdmins: SiteAdmin[] = []
   let metricsData: MetricsData | null = null
   let creators: UserSearchResult[] = []
 
   if (tab === 'creators') {
     const svc = await createServiceSupabaseClient()
-    // No direct FK from teacher_applications to profiles (they're siblings
-    // through users), so do a three-step fetch and merge manually.
-    const { data: appsData } = await svc
-      .from('teacher_applications')
-      .select('id, user_id, motivation, status, created_at')
-      .order('created_at', { ascending: false })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rawApps: any[] = appsData ?? []
-    const appUserIds = [...new Set(rawApps.map((a) => a.user_id))]
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let appUsers: any[] = []
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let appProfiles: any[] = []
-    if (appUserIds.length > 0) {
-      const [{ data: us }, { data: ps }] = await Promise.all([
-        svc.from('users').select('id, email').in('id', appUserIds),
-        svc.from('profiles').select('user_id, display_name, username').in('user_id', appUserIds),
-      ])
-      appUsers = us ?? []
-      appProfiles = ps ?? []
-    }
-    const appUserMap = new Map(appUsers.map((u) => [u.id, u]))
-    const appProfileMap = new Map(appProfiles.map((p) => [p.user_id, p]))
-
-    applications = rawApps.map((a) => {
-      const u = appUserMap.get(a.user_id)
-      const p = appProfileMap.get(a.user_id)
-      return {
-        ...a,
-        users: u ? { email: u.email } : null,
-        profiles: p ? { display_name: p.display_name, username: p.username } : null,
-      }
-    })
+    ;[pendingApplications, reviewedCount] = await Promise.all([
+      fetchAdminApplications({ status: 'pending' }),
+      countReviewedApplications(),
+    ])
 
     const { data: creatorUsers } = await svc
       .from('users').select('id, email, role').eq('role', 'creator')
@@ -319,7 +291,11 @@ export async function AdminContent({
             </div>
           </section>
 
-          <CreatorsPanel initialCreators={creators} initialApplications={applications} />
+          <CreatorsPanel
+            initialCreators={creators}
+            pendingApplications={pendingApplications}
+            reviewedCount={reviewedCount}
+          />
         </>
       )}
 
