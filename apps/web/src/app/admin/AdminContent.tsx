@@ -71,11 +71,11 @@ export async function AdminContent({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let profiles: any[] = []
     if (creatorIds.length > 0) {
-      const { data } = await supabase.from('profiles').select('user_id, display_name, username').in('user_id', creatorIds)
+      const { data } = await svcMetrics.from('profiles').select('user_id, display_name, username').in('user_id', creatorIds)
       profiles = data ?? []
     }
 
-    const { data: videosData } = await supabase.from('videos').select('id, creator_id, is_free, published, title')
+    const { data: videosData } = await svcMetrics.from('videos').select('id, creator_id, is_free, published, title')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const videos: any[] = videosData ?? []
     const videoIds: string[] = videos.map((v) => v.id)
@@ -83,7 +83,7 @@ export async function AdminContent({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let purchases: any[] = []
     if (videoIds.length > 0) {
-      const { data } = await supabase
+      const { data } = await svcMetrics
         .from('purchases')
         .select('id, user_id, video_id, tier, amount_paid, platform_amount, total_amount, created_at')
         .order('created_at', { ascending: false })
@@ -93,7 +93,7 @@ export async function AdminContent({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let sessions: any[] = []
     if (creatorIds.length > 0) {
-      const { data } = await supabase.from('live_sessions').select('id, creator_id, title').in('creator_id', creatorIds)
+      const { data } = await svcMetrics.from('live_sessions').select('id, creator_id, title').in('creator_id', creatorIds)
       sessions = data ?? []
     }
     const sessionIds: string[] = sessions.map((s) => s.id)
@@ -101,7 +101,7 @@ export async function AdminContent({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let gifts: any[] = []
     if (sessionIds.length > 0) {
-      const { data } = await supabase
+      const { data } = await svcMetrics
         .from('gifts')
         .select('id, session_id, giver_id, creator_amount, platform_amount, total_amount, message, created_at')
         .order('created_at', { ascending: false })
@@ -112,7 +112,7 @@ export async function AdminContent({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let buyerProfiles: any[] = []
     if (buyerIds.length > 0) {
-      const { data } = await supabase.from('profiles').select('user_id, display_name').in('user_id', buyerIds)
+      const { data } = await svcMetrics.from('profiles').select('user_id, display_name').in('user_id', buyerIds)
       buyerProfiles = data ?? []
     }
 
@@ -120,7 +120,7 @@ export async function AdminContent({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let giverProfiles: any[] = []
     if (giverIds.length > 0) {
-      const { data } = await supabase.from('profiles').select('user_id, display_name').in('user_id', giverIds)
+      const { data } = await svcMetrics.from('profiles').select('user_id, display_name').in('user_id', giverIds)
       giverProfiles = data ?? []
     }
 
