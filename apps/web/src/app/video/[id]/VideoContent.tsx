@@ -30,17 +30,19 @@ export async function VideoContent({ videoId }: { videoId: string }) {
 
   const isAdmin = user?.email ? await checkIsAdmin(user.email, supabase) : false
 
-  // Check if learner already purchased this
+  // Check if learner already purchased this (or has active share access)
   const { data: purchase } = user
     ? await supabase
         .from('purchases')
-        .select('tier')
+        .select('tier, expires_at')
         .eq('user_id', user.id)
         .eq('video_id', video.id)
+        .or('expires_at.is.null,expires_at.gt.now()')
         .maybeSingle()
     : { data: null }
 
   const hasAccess = video.is_free || !!purchase
+  const sharedAccess = !!purchase?.expires_at
 
   // Generate signed URL for private video bucket
   let videoPlaybackUrl: string | null = null
@@ -126,10 +128,23 @@ export async function VideoContent({ videoId }: { videoId: string }) {
             <div className="bg-jungle-50 border border-jungle-200 rounded-2xl p-5 text-center">
               <div className="text-3xl mb-2">✓</div>
               <p className="font-bold text-jungle-800">
-                {video.is_free ? 'Free access' : `Unlocked (${purchase?.tier})`}
+                {video.is_free
+                  ? 'Free access'
+                  : sharedAccess
+                    ? 'Shared access'
+                    : `Unlocked (${purchase?.tier})`}
               </p>
+              {sharedAccess && purchase?.expires_at && (
+                <p className="text-xs text-jungle-700 mt-1">
+                  Expires {new Date(purchase.expires_at).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </p>
+              )}
               <AddToCalendarButton videoTitle={video.title} videoId={video.id} />
-              {!video.is_free && (
+              {!video.is_free && !sharedAccess && (
                 <ShareButton videoId={video.id} isLoggedIn={!!user} />
               )}
             </div>

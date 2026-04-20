@@ -26,12 +26,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
   }
 
-  // Check if user already owns this video
+  // Check if user already has active access (ignore expired share redemptions)
   const { data: existing } = await supabase
     .from('purchases')
     .select('id')
     .eq('user_id', user.id)
     .eq('video_id', videoId)
+    .or('expires_at.is.null,expires_at.gt.now()')
     .maybeSingle()
 
   if (existing) {

@@ -82,7 +82,12 @@ export function LoginForm() {
       </button>
       <p className="text-center text-sm text-stone-500">
         No account?{' '}
-        <Link href="/auth/signup" className="font-semibold text-jungle-600 hover:text-jungle-800 transition-colors">Join free</Link>
+        <Link
+          href={next !== '/explore' ? `/auth/signup?next=${encodeURIComponent(next)}` : '/auth/signup'}
+          className="font-semibold text-jungle-600 hover:text-jungle-800 transition-colors"
+        >
+          Join free
+        </Link>
       </p>
     </form>
   )

@@ -32,6 +32,10 @@ export async function GET(
   if (data.error === 'already_redeemed') {
     return NextResponse.redirect(`${origin}/explore?notice=share_used`)
   }
+  if (data.error === 'cannot_redeem_own') {
+    // Owner clicked their own share link — just send them to the video
+    return NextResponse.redirect(`${origin}/explore?notice=own_share`)
+  }
 
   return NextResponse.redirect(`${origin}/video/${data.video_id}?shared=1`)
 }

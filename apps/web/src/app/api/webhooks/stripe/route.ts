@@ -46,8 +46,8 @@ export async function POST(req: Request) {
       const meta = session.metadata ?? {}
 
       if (meta.type === 'video_purchase') {
-        // Idempotent: ignore duplicate if payment_intent already recorded
-        await supabase.from('purchases').insert({
+        // Upsert — overwrites expired share rows and is idempotent with the confirm route
+        await supabase.from('purchases').upsert({
           user_id: meta.user_id,
           video_id: meta.video_id,
           tier: meta.tier,
@@ -59,7 +59,8 @@ export async function POST(req: Request) {
             typeof session.payment_intent === 'string'
               ? session.payment_intent
               : (session.payment_intent?.id ?? null),
-        })
+          expires_at: null,
+        }, { onConflict: 'user_id,video_id' })
       }
 
       if (meta.type === 'membership') {
@@ -145,8 +146,8 @@ export async function POST(req: Request) {
       const meta = pi.metadata ?? {}
 
       if (meta.type === 'video_purchase') {
-        // Idempotent: unique(user_id, video_id) constraint prevents duplicates
-        await supabase.from('purchases').insert({
+        // Upsert — overwrites expired share rows and is idempotent with the confirm route
+        await supabase.from('purchases').upsert({
           user_id: meta.user_id,
           video_id: meta.video_id,
           tier: meta.tier,
@@ -155,7 +156,8 @@ export async function POST(req: Request) {
           platform_amount: Number(meta.platform_amount),
           total_amount: Number(meta.total_amount),
           stripe_payment_intent_id: pi.id,
-        })
+          expires_at: null,
+        }, { onConflict: 'user_id,video_id' })
       }
 
       if (meta.type === 'wallet_topup') {

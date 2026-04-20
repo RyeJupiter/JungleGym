@@ -125,7 +125,12 @@ export function SignupForm() {
       </button>
       <p className="text-center text-sm text-stone-500">
         Already here?{' '}
-        <Link href="/auth/login" className="font-semibold text-jungle-600 hover:text-jungle-800 transition-colors">Sign in</Link>
+        <Link
+          href={next !== '/explore' ? `/auth/login?next=${encodeURIComponent(next)}` : '/auth/login'}
+          className="font-semibold text-jungle-600 hover:text-jungle-800 transition-colors"
+        >
+          Sign in
+        </Link>
       </p>
     </form>
   )

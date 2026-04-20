@@ -38,8 +38,10 @@ export async function POST(req: Request) {
   // Use service role to bypass RLS for insert
   const svc = await createServiceSupabaseClient()
 
-  // Idempotent insert — unique(user_id, video_id) constraint prevents duplicates
-  const insertPayload = {
+  // Upsert — overwrites an expired share-redemption row with the paid purchase,
+  // idempotent against the webhook writing the same data first.
+  // expires_at is explicitly null so the row becomes permanent.
+  const upsertPayload = {
     user_id: meta.user_id,
     video_id: meta.video_id,
     tier: meta.tier,
@@ -48,13 +50,15 @@ export async function POST(req: Request) {
     platform_amount: Number(meta.platform_amount),
     total_amount: Number(meta.total_amount),
     stripe_payment_intent_id: paymentIntent.id,
+    expires_at: null,
   }
-  const { error: insertError } = await svc.from('purchases').insert(insertPayload)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: upsertError } = await (svc as any)
+    .from('purchases')
+    .upsert(upsertPayload, { onConflict: 'user_id,video_id' })
 
-  // Duplicate key error is fine — means webhook already handled it.
-  // Postgres unique violation code is 23505.
-  if (insertError && insertError.code !== '23505' && !insertError.message?.includes('duplicate')) {
-    console.error('[checkout/video/confirm] insert failed:', insertError)
+  if (upsertError) {
+    console.error('[checkout/video/confirm] upsert failed:', upsertError)
     return NextResponse.json(
       { error: 'Failed to record purchase' },
       { status: 500 }

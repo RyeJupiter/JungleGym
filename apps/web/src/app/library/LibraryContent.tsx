@@ -7,10 +7,12 @@ export async function LibraryContent({ userId, query }: { userId: string; query?
   const supabase = await createServerSupabaseClient()
 
   // Step 1: fetch purchases with video data (direct FK works: purchases.video_id → videos.id)
+  // Expired share redemptions are filtered out so users don't see broken access.
   const { data: purchases } = await supabase
     .from('purchases')
     .select('*, videos(id, title, description, thumbnail_url, duration_seconds, tags, ghost_tags, creator_id)')
     .eq('user_id', userId)
+    .or('expires_at.is.null,expires_at.gt.now()')
     .order('created_at', { ascending: false })
 
   // Step 2: look up creator profiles (two-step — no FK join from videos to profiles)
@@ -84,7 +86,7 @@ export async function LibraryContent({ userId, query }: { userId: string; query?
                   </span>
                 )}
                 <span className="absolute top-2 left-2 bg-jungle-600 text-white text-xs font-bold px-2 py-0.5 rounded-full capitalize">
-                  {purchase.tier}
+                  {purchase.expires_at ? 'Shared' : purchase.tier}
                 </span>
               </div>
               <div className="p-4">
@@ -94,7 +96,11 @@ export async function LibraryContent({ userId, query }: { userId: string; query?
                 <h3 className="font-bold text-stone-900 text-sm leading-snug group-hover:text-jungle-700 transition-colors">
                   {video.title}
                 </h3>
-                <p className="text-xs text-stone-400 mt-1">Unlocked · {formatPrice(purchase.amount_paid)}</p>
+                <p className="text-xs text-stone-400 mt-1">
+                  {purchase.expires_at
+                    ? `Shared · expires ${new Date(purchase.expires_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+                    : `Unlocked · ${formatPrice(purchase.amount_paid)}`}
+                </p>
               </div>
             </div>
           </Link>

@@ -54,7 +54,7 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
     if (!link || !email) return
     const subject = encodeURIComponent("I'm sharing a class with you on JungleGym")
     const body = encodeURIComponent(
-      `Hey! I wanted to share this class with you. Click the link below to get free access:\n\n${link}\n\nSign up or log in to JungleGym to redeem it.`
+      `Hey! I wanted to share this class with you. Click the link below for 30 days of free access:\n\n${link}\n\nSign up or log in to JungleGym to redeem it.`
     )
     window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_self')
   }
@@ -73,8 +73,8 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
           <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-xl">
             <h3 className="font-black text-stone-900 text-lg mb-1">Share this class</h3>
             <p className="text-stone-500 text-sm mb-6">
-              Send this to one friend. They get free access — your treat.
-              They&apos;ll need a JungleGym account to redeem.
+              Send this to one friend. They get 30 days of free access — your treat.
+              One person, one redemption.
             </p>
 
             {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
@@ -129,7 +129,7 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
                 </div>
 
                 <p className="text-xs text-stone-400 text-center">
-                  This link can only be redeemed once by one person.
+                  One-time redemption. Your friend gets 30 days of access.
                 </p>
               </div>
             ) : null}

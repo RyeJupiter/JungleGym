@@ -23,12 +23,13 @@ export async function CheckoutContent({ videoId }: { videoId: string }) {
     redirect(`/auth/login?next=/video/${videoId}/checkout`)
   }
 
-  // Already owns it — send back to video
+  // Already owns it (active access only — expired share doesn't count)
   const { data: purchase } = await supabase
     .from('purchases')
     .select('tier')
     .eq('user_id', user.id)
     .eq('video_id', video.id)
+    .or('expires_at.is.null,expires_at.gt.now()')
     .maybeSingle()
 
   if (video.is_free || purchase) {
