@@ -134,11 +134,22 @@ export function ApplicationCard({
 
   return (
     <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
-      {/* ── Compact row ────────────────────────────────────────────────── */}
-      <button
-        type="button"
+      {/* ── Compact row ──────────────────────────────────────────────────
+          Using a div with role=button instead of a real <button> so we
+          can nest real action buttons inside (Approve/Reject) without
+          producing invalid HTML. */}
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setExpanded((v) => !v)}
-        className="w-full text-left hover:bg-stone-50 transition-colors"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setExpanded((v) => !v)
+          }
+        }}
+        aria-expanded={expanded}
+        className="cursor-pointer hover:bg-stone-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-jungle-400"
       >
         <div className="px-5 py-4 flex items-center gap-4">
           <Avatar photoUrl={app.applicant?.photo_url ?? null} displayName={displayName} />
@@ -177,7 +188,7 @@ export function ApplicationCard({
             </span>
           </div>
         </div>
-      </button>
+      </div>
 
       {/* ── Expanded panel ─────────────────────────────────────────────── */}
       {expanded && (
