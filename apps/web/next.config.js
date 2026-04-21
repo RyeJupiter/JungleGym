@@ -12,12 +12,16 @@ const CSP = [
   "default-src 'self'",
   // Inline + eval needed by Next.js runtime. unsafe-inline is the
   // practical default on Next 15 without custom nonces.
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://challenges.cloudflare.com",
+  // cloudflareinsights = Web Analytics beacon injected by CF.
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://challenges.cloudflare.com https://static.cloudflareinsights.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' ${SUPABASE_HOST} ${SUPABASE_WS} https://api.stripe.com https://*.cloudflarestream.com https://customer-*.cloudflarestream.com`,
-  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.cloudflarestream.com https://customer-*.cloudflarestream.com https://challenges.cloudflare.com",
+  // *.cloudflarestream.com also matches customer-XXX.cloudflarestream.com;
+  // a CSP source like customer-*.cloudflarestream.com is invalid per spec
+  // (wildcards must be leftmost) and browsers drop it.
+  `connect-src 'self' ${SUPABASE_HOST} ${SUPABASE_WS} https://api.stripe.com https://*.cloudflarestream.com https://cloudflareinsights.com`,
+  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.cloudflarestream.com https://challenges.cloudflare.com",
   `media-src 'self' blob: ${SUPABASE_HOST} https://*.cloudflarestream.com`,
   "worker-src 'self' blob:",
   "base-uri 'self'",
