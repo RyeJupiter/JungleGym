@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServiceSupabaseClient } from '@/lib/supabase/server'
 import { rateLimit, clientIp } from '@/lib/rateLimit'
 
 export async function POST(req: Request) {
@@ -21,13 +21,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Valid email required' }, { status: 400 })
   }
 
-  const supabase = await createServerSupabaseClient()
-  const { error } = await supabase
+  // Service role — anon insert path tripped PostgREST's read-back check on a
+  // table with no SELECT policy. Inserts don't need user context anyway; the
+  // rate limit above is what gates abuse.
+  const svc = createServiceSupabaseClient()
+  const { error } = await svc
     .from('email_captures')
     .insert({ email, source })
 
   // Ignore duplicate — already signed up is still a success from UX perspective
-  if (error && !error.message.includes('unique')) {
+  if (error && !error.message.includes('unique') && !error.message.includes('duplicate')) {
+    console.error('[email-capture] insert failed:', error)
     return NextResponse.json({ error: 'Failed to save email' }, { status: 500 })
   }
 
