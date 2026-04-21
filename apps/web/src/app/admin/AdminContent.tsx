@@ -1,13 +1,15 @@
 import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 import { AdminsPanel } from '@/components/admin/AdminsPanel'
 import type { SiteAdmin } from '@/components/admin/AdminsPanel'
 import { CreatorsPanel } from '@/components/admin/CreatorsPanel'
 import { MetricsPanel } from '@/components/admin/MetricsPanel'
 import type { MetricsData } from '@/components/admin/MetricsPanel'
+import { OverridesPanel } from '@/components/admin/OverridesPanel'
 import type { UserSearchResult } from '@/app/admin/actions'
 import type { AdminApplication } from '@/components/admin/ApplicationCard'
 import { fetchAdminApplications, countReviewedApplications } from '@/lib/admin-applications'
-import { ADMIN_EMAILS } from '@/lib/admin'
+import { ADMIN_EMAILS, ADMIN_PREVIEW_COOKIE } from '@/lib/admin'
 import Link from 'next/link'
 
 export async function AdminContent({
@@ -247,6 +249,16 @@ export async function AdminContent({
         >
           Metrics
         </Link>
+        <Link
+          href="/admin?tab=overrides"
+          className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+            tab === 'overrides'
+              ? 'bg-white text-stone-900 shadow-sm'
+              : 'text-stone-500 hover:text-stone-700'
+          }`}
+        >
+          Overrides
+        </Link>
         {isSuperAdmin && (
           <Link
             href="/admin?tab=admins"
@@ -301,6 +313,10 @@ export async function AdminContent({
 
       {tab === 'metrics' && metricsData && (
         <MetricsPanel data={metricsData} />
+      )}
+
+      {tab === 'overrides' && (
+        <OverridesPanel previewModeOn={(await cookies()).get(ADMIN_PREVIEW_COOKIE)?.value === '1'} />
       )}
 
       {tab === 'admins' && isSuperAdmin && (
