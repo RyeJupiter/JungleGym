@@ -26,16 +26,34 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not signed in')
-      const { data, error } = await supabase
+
+      // Select-then-insert (not upsert). An UPSERT on conflict triggers the
+      // UPDATE RLS path; video_shares only has SELECT + INSERT policies so
+      // repeat clicks would 400. Share rows are immutable anyway — the
+      // token is set once on creation.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: existing, error: selectErr } = await (supabase as any)
         .from('video_shares')
-        .upsert(
-          { video_id: videoId, owner_user_id: user.id },
-          { onConflict: 'owner_user_id,video_id', ignoreDuplicates: false }
-        )
         .select('token')
-        .single()
-      if (error) throw error
-      setLink(`${window.location.origin}/share/${data.token}`)
+        .eq('owner_user_id', user.id)
+        .eq('video_id', videoId)
+        .maybeSingle()
+      if (selectErr) throw selectErr
+
+      let token: string | null = (existing?.token as string | null) ?? null
+      if (!token) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: inserted, error: insertErr } = await (supabase as any)
+          .from('video_shares')
+          .insert({ video_id: videoId, owner_user_id: user.id })
+          .select('token')
+          .single()
+        if (insertErr) throw insertErr
+        token = inserted?.token ?? null
+      }
+
+      if (!token) throw new Error('Could not generate link')
+      setLink(`${window.location.origin}/share/${token}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Could not generate link')
     } finally {
