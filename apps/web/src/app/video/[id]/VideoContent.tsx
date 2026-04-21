@@ -107,15 +107,13 @@ export async function VideoContent({ videoId }: { videoId: string }) {
     }
   }
 
-  // Caption track — transcripts bucket is public, so getPublicUrl works for
-  // everyone without needing a signed URL.
+  // Caption track — proxied through our own origin (see /captions rewrite
+  // in next.config.js) so the native <track> element loads it as
+  // same-origin. Supabase's direct public URL trips the browser's
+  // cross-origin text-track guard and fails silently.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const vttPath = (video as any).transcript_vtt_path as string | null | undefined
-  let captionsUrl: string | null = null
-  if (vttPath) {
-    const { data } = supabase.storage.from('transcripts').getPublicUrl(vttPath)
-    captionsUrl = data.publicUrl
-  }
+  const captionsUrl = vttPath ? `/captions/${vttPath}` : null
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
