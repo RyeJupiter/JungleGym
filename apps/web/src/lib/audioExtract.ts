@@ -13,10 +13,9 @@
 
 const CHUNK_SECONDS = 900 // 15 minutes
 const AUDIO_BITRATE_KBPS = 48
+const FFMPEG_LOAD_TIMEOUT_MS = 120_000 // 2min — first load downloads 32MB wasm over a cold unpkg link
 const FFMPEG_CORE_VERSION = '0.12.10'
-const FFMPEG_VERSION = '0.12.15'
 const CORE_BASE = `https://unpkg.com/@ffmpeg/core@${FFMPEG_CORE_VERSION}/dist/umd`
-const FFMPEG_BASE = `https://unpkg.com/@ffmpeg/ffmpeg@${FFMPEG_VERSION}/dist/esm`
 
 export type AudioChunk = {
   /** Zero-indexed chunk number; matches filename and time offset in transcript. */
@@ -47,23 +46,43 @@ async function getFFmpeg(onProgress?: (p: ExtractProgress) => void) {
       const { FFmpeg } = await import('@ffmpeg/ffmpeg')
       const { toBlobURL } = await import('@ffmpeg/util')
       const ff = new FFmpeg()
-      // toBlobURL fetches each asset once and returns a blob: URL, which
-      // ffmpeg then instantiates. We fetch from unpkg (pinned versions)
-      // because the 32MB core.wasm exceeds Cloudflare Workers' 25MB
-      // static-asset cap.
-      const [coreURL, wasmURL, workerURL] = await Promise.all([
+      // Only wrap the core files — the library's own worker.js (with its
+      // relative imports of const.js/classes.js/etc.) must be bundled by
+      // Next.js via `new URL('./worker.js', import.meta.url)`, not a
+      // blob: URL, because relative ES-module imports can't resolve
+      // against blob: URLs. Passing classWorkerURL here was the cause
+      // of the previous hang during ffmpeg.load().
+      const [coreURL, wasmURL] = await Promise.all([
         toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, 'text/javascript'),
         toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, 'application/wasm'),
-        toBlobURL(`${FFMPEG_BASE}/worker.js`, 'text/javascript'),
       ])
-      await ff.load({ coreURL, wasmURL, classWorkerURL: workerURL })
+      await withTimeout(
+        ff.load({ coreURL, wasmURL }),
+        FFMPEG_LOAD_TIMEOUT_MS,
+        'ffmpeg.load() timed out',
+      )
       ffmpegInstance = ff
       return ff
-    })()
+    })().catch((err) => {
+      // Clear the cached loading promise so a later extraction attempt
+      // can retry instead of being stuck on a rejected promise forever.
+      ffmpegLoading = null
+      throw err
+    })
   }
 
   await ffmpegLoading
   return ffmpegInstance
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms)
+    p.then(
+      (v) => { clearTimeout(timer); resolve(v) },
+      (e) => { clearTimeout(timer); reject(e) },
+    )
+  })
 }
 
 /**
