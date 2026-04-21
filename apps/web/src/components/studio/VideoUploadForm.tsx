@@ -214,15 +214,18 @@ export function VideoUploadForm({
         throw new Error(err.error ?? 'Save failed')
       }
 
-      // Wait for audio extraction (likely already done since the user took
-      // time filling the form + uploading). Upload the chunks and fire
-      // transcription off — if anything fails, we still navigate away and
-      // the admin Issues panel will surface it.
-      if (audioExtractRef.current) {
-        setProgress('Preparing transcription…')
-        try {
-          const chunks = await audioExtractRef.current
-          if (chunks && chunks.length > 0) {
+      // Kick off audio upload + transcribe API entirely in the background.
+      // The creator should not have to wait on ffmpeg or Groq to get back
+      // to the studio — any failure just means captions don't materialize
+      // and the admin Issues panel surfaces it. We capture everything we
+      // need into local variables so the IIFE can survive this component
+      // unmounting on router.push.
+      const audioPromise = audioExtractRef.current
+      if (audioPromise) {
+        ;(async () => {
+          try {
+            const chunks = await audioPromise
+            if (!chunks || chunks.length === 0) return
             const paths: string[] = []
             for (const chunk of chunks) {
               const path = `audio/${creatorId}/${videoId}/${String(chunk.index).padStart(3, '0')}.webm`
@@ -232,18 +235,17 @@ export function VideoUploadForm({
               if (audioErr) throw audioErr
               paths.push(path)
             }
-            // Fire-and-forget: we don't want transcription latency to block
-            // the creator's return to the studio page.
-            fetch(`/api/transcribe/${videoId}`, {
+            // keepalive lets the POST survive navigation + tab-backgrounding.
+            await fetch(`/api/transcribe/${videoId}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ audioPaths: paths }),
               keepalive: true,
-            }).catch(() => {})
+            })
+          } catch (err) {
+            console.warn('Background transcription setup failed:', err)
           }
-        } catch (err) {
-          console.warn('Transcription setup failed:', err)
-        }
+        })()
       }
 
       router.push('/studio')
