@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { formatPrice, formatDuration } from '@junglegym/shared'
@@ -7,7 +8,7 @@ import { PurchaseButton } from '@/components/video/PurchaseButton'
 import { PurchaseConfirm } from '@/components/video/PurchaseConfirm'
 import { ShareButton } from '@/components/video/ShareButton'
 import { AddToCalendarButton } from '@/components/video/AddToCalendarButton'
-import { checkIsAdmin } from '@/lib/admin'
+import { checkIsAdmin, ADMIN_PREVIEW_COOKIE } from '@/lib/admin'
 
 export async function VideoContent({ videoId }: { videoId: string }) {
   const supabase = await createServerSupabaseClient()
@@ -30,6 +31,12 @@ export async function VideoContent({ videoId }: { videoId: string }) {
 
   const isAdmin = user?.email ? await checkIsAdmin(user.email, supabase) : false
 
+  // Admin "preview all videos" override. The cookie is HttpOnly and only
+  // set by the admin-only server action, but we still gate honoring it on
+  // isAdmin — a non-admin who somehow gets this cookie set gains nothing.
+  const previewCookie = (await cookies()).get(ADMIN_PREVIEW_COOKIE)?.value === '1'
+  const adminPreview = isAdmin && previewCookie
+
   // Check if learner already purchased this (or has active share access)
   const { data: purchase } = user
     ? await supabase
@@ -41,16 +48,22 @@ export async function VideoContent({ videoId }: { videoId: string }) {
         .maybeSingle()
     : { data: null }
 
-  const hasAccess = video.is_free || !!purchase
+  const hasAccess = video.is_free || !!purchase || adminPreview
   const sharedAccess = !!purchase?.expires_at
 
-  // Generate signed URL for private video bucket
+  // Generate signed URL for private video bucket. For admin preview we must
+  // use the service client because storage RLS requires a purchase row or
+  // creator ownership, neither of which the admin has.
   let videoPlaybackUrl: string | null = null
   if (hasAccess && video.video_url) {
     if (video.video_url.startsWith('http')) {
       videoPlaybackUrl = video.video_url
     } else {
-      const { data: signed } = await supabase.storage
+      const signer =
+        adminPreview && !video.is_free && !purchase && video.creator_id !== user?.id
+          ? createServiceSupabaseClient()
+          : supabase
+      const { data: signed } = await signer.storage
         .from('videos')
         .createSignedUrl(video.video_url, 3600)
       videoPlaybackUrl = signed?.signedUrl ?? null
@@ -125,14 +138,22 @@ export async function VideoContent({ videoId }: { videoId: string }) {
         {/* Payment — full width, directly under description */}
         <div className="mb-8">
           {hasAccess ? (
-            <div className="bg-jungle-50 border border-jungle-200 rounded-2xl p-5 text-center">
-              <div className="text-3xl mb-2">✓</div>
-              <p className="font-bold text-jungle-800">
-                {video.is_free
-                  ? 'Free access'
-                  : sharedAccess
-                    ? 'Shared access'
-                    : `Unlocked (${purchase?.tier})`}
+            <div className={`rounded-2xl p-5 text-center ${
+              adminPreview && !purchase && !video.is_free
+                ? 'bg-red-50 border border-red-200'
+                : 'bg-jungle-50 border border-jungle-200'
+            }`}>
+              <div className="text-3xl mb-2">{adminPreview && !purchase && !video.is_free ? '👁️' : '✓'}</div>
+              <p className={`font-bold ${
+                adminPreview && !purchase && !video.is_free ? 'text-red-800' : 'text-jungle-800'
+              }`}>
+                {adminPreview && !purchase && !video.is_free
+                  ? 'Admin preview mode'
+                  : video.is_free
+                    ? 'Free access'
+                    : sharedAccess
+                      ? 'Shared access'
+                      : `Unlocked (${purchase?.tier})`}
               </p>
               {sharedAccess && purchase?.expires_at && (
                 <p className="text-xs text-jungle-700 mt-1">
