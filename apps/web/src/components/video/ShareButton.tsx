@@ -4,15 +4,41 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
-export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLoggedIn: boolean }) {
+type InitialShare = {
+  token: string
+  redeemedAt: string | null
+  redeemerName: string | null
+}
+
+type Props = {
+  videoId: string
+  isLoggedIn: boolean
+  /** Prefetched on the server so the button can reflect its state before any click. */
+  initialShare?: InitialShare | null
+}
+
+/** "Ryan Mac Donald" → "Ryan"; caps length so names like rollerblading handles don't blow the button up. */
+function firstName(name: string | null): string {
+  if (!name) return 'a friend'
+  const first = name.trim().split(/\s+/)[0] ?? 'a friend'
+  return first.length > 18 ? first.slice(0, 16) + '…' : first
+}
+
+export function ShareButton({ videoId, isLoggedIn, initialShare }: Props) {
   const [open, setOpen] = useState(false)
-  const [link, setLink] = useState<string | null>(null)
-  const [redeemedAt, setRedeemedAt] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(initialShare?.token ?? null)
+  const [redeemedAt, setRedeemedAt] = useState<string | null>(initialShare?.redeemedAt ?? null)
+  const [redeemerName, setRedeemerName] = useState<string | null>(initialShare?.redeemerName ?? null)
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createBrowserSupabaseClient()
+
+  const claimed = !!redeemedAt
+  const link = token && typeof window !== 'undefined'
+    ? `${window.location.origin}/share/${token}`
+    : null
 
   async function handleOpen() {
     if (!isLoggedIn) {
@@ -20,17 +46,17 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
       return
     }
     setOpen(true)
-    if (link || redeemedAt) return // already fetched this session
+    // If we already know the state from the server prefetch, nothing to load.
+    if (token || claimed) return
+
     setLoading(true)
     setError(null)
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not signed in')
 
-      // Select-then-insert (not upsert). An UPSERT on conflict triggers the
-      // UPDATE RLS path; video_shares only has SELECT + INSERT policies so
-      // repeat clicks would 400. Share rows are immutable anyway — the
-      // token is set once on creation.
+      // Select-then-insert (not upsert). video_shares only has SELECT + INSERT
+      // RLS policies; an UPSERT would trigger the blocked UPDATE path.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: existing, error: selectErr } = await (supabase as any)
         .from('video_shares')
@@ -40,16 +66,20 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
         .maybeSingle()
       if (selectErr) throw selectErr
 
-      // Already used by a friend — UNIQUE(owner, video) means we can't
-      // issue another one, and it would be misleading to show the same
-      // link (the /share/[token] page will refuse redemption anyway).
       if (existing?.redeemed_by) {
         setRedeemedAt(existing.redeemed_at as string | null)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: redeemerProfile } = await (supabase as any)
+          .from('profiles')
+          .select('display_name')
+          .eq('user_id', existing.redeemed_by)
+          .maybeSingle()
+        setRedeemerName((redeemerProfile?.display_name as string | null) ?? null)
         return
       }
 
-      let token: string | null = (existing?.token as string | null) ?? null
-      if (!token) {
+      let nextToken: string | null = (existing?.token as string | null) ?? null
+      if (!nextToken) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: inserted, error: insertErr } = await (supabase as any)
           .from('video_shares')
@@ -57,14 +87,12 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
           .select('token')
           .single()
         if (insertErr) throw insertErr
-        token = inserted?.token ?? null
+        nextToken = inserted?.token ?? null
       }
 
-      if (!token) throw new Error('Could not generate link')
-      setLink(`${window.location.origin}/share/${token}`)
+      if (!nextToken) throw new Error('Could not generate link')
+      setToken(nextToken)
     } catch (err: unknown) {
-      // Surface the real Supabase error to the console so we can triage
-      // server-side errors that come back as 400 without an obvious cause.
       console.error('[ShareButton] failed to generate link:', err)
       const message =
         err instanceof Error
@@ -89,37 +117,60 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
     <>
       <button
         onClick={handleOpen}
-        className="w-full mt-3 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
+        aria-label={
+          claimed
+            ? `Shared with ${redeemerName ?? 'a friend'}`
+            : 'Share this class with a friend'
+        }
+        className={`w-full mt-3 font-semibold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-jungle-400 ${
+          claimed
+            ? 'bg-jungle-50 hover:bg-jungle-100 text-jungle-800 border border-jungle-200'
+            : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+        }`}
       >
-        🎁 Share with a friend
+        {claimed ? (
+          <>
+            <span aria-hidden>✓</span>
+            <span className="truncate">
+              Shared with {firstName(redeemerName)}
+            </span>
+          </>
+        ) : (
+          <>🎁 Share with a friend</>
+        )}
       </button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-xl">
-            <h3 className="font-black text-stone-900 text-lg mb-1">Share this class</h3>
+            <h3 className="font-black text-stone-900 text-lg mb-1">
+              {claimed ? 'Share claimed' : 'Share this class'}
+            </h3>
             <p className="text-stone-500 text-sm mb-6">
-              Send this to one friend. They get 30 days of free access — your treat.
-              One person, one redemption.
+              {claimed
+                ? "Each class can only be shared once. Your friend got 30 days of access."
+                : 'Send this to one friend. They get 30 days of free access — your treat. One person, one redemption.'}
             </p>
 
             {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
 
             {loading ? (
-              <div className="text-center py-4 text-stone-400 text-sm">Generating link...</div>
-            ) : redeemedAt ? (
-              <div className="bg-stone-50 border border-stone-200 rounded-xl p-5 text-center space-y-2">
+              <div className="text-center py-4 text-stone-400 text-sm">Generating link…</div>
+            ) : claimed ? (
+              <div className="bg-jungle-50 border border-jungle-200 rounded-xl p-5 text-center space-y-1.5">
                 <div className="text-3xl">🎁</div>
-                <p className="font-bold text-stone-900 text-sm">
-                  You&apos;ve already shared this with a friend!
+                <p className="font-bold text-jungle-900 text-sm">
+                  Claimed by {redeemerName ?? 'a friend'}
                 </p>
-                <p className="text-xs text-stone-500">
-                  Claimed on {new Date(redeemedAt).toLocaleDateString(undefined, {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}. Each class can only be shared once.
-                </p>
+                {redeemedAt && (
+                  <p className="text-xs text-jungle-700/80">
+                    on {new Date(redeemedAt).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </p>
+                )}
               </div>
             ) : link ? (
               <div className="space-y-3">
