@@ -262,14 +262,29 @@ After 30 days, `POST /api/cron/purge-deleted-videos` hard-deletes the row + all 
 2. **Other issues** — reads the `admin_issues` table. Write one by importing `recordAdminIssue` from `@/lib/adminIssues` and calling it with `{ kind, severity, title, description?, context? }`. The helper never throws and uses the service client.
 
 Call this from any server-side code when something goes wrong that an admin should see. Currently wired into:
-- Stripe webhook: `charge.dispute.created`, `charge.refunded`, `payout.failed`/`.canceled`, signature failures, and unhandled handler errors.
 
-Places that could emit issues but don't yet (pick up if they start causing quiet failures):
-- `/api/wallet/topup/confirm` on non-duplicate txError
-- `/api/checkout/video/confirm` when PI succeeded but the purchase row insert fails
-- Transcription route, if you want generic-panel parity with the transcript-section
+**Payments (user-paid-but-we-lost-it silent failures):**
+- `/api/checkout/video/confirm` — `kind: purchase_insert_failed` when PI succeeded but the purchases row insert fails
+- `/api/wallet/topup/confirm` — `kind: wallet_topup_insert_failed` when PI succeeded but wallet_transactions insert fails (non-duplicate)
+- `/api/wallet/gift` — `kind: wallet_gift_insert_failed` (debit rolled back) or `wallet_gift_rollback_failed` (higher severity — user lost money)
 
-**Important:** don't emit for expected paths (e.g. `payment_intent.payment_failed` — that's a card decline, not an admin problem).
+**Stripe webhook:**
+- `charge.dispute.created` — error (response deadline in Stripe)
+- `charge.refunded` — info (admin decides about access revocation)
+- `payout.failed` / `.canceled` — error (creator money stuck)
+- Signature verification failure — error (secret drift or probing)
+- Unhandled handler error — error (returns 500 so Stripe retries)
+
+**Live streaming (Cloudflare Stream):**
+- `/api/webhooks/cloudflare-stream` — `cf_stream_webhook_auth` on bad `cf-webhook-auth`; `cf_stream_status_update_failed` when the status update can't persist (viewers see stale state)
+- `/api/stream/provision` — `cf_stream_provision_orphan` when the CF input is created but the DB update fails (billable orphan until cleaned up)
+
+**Places NOT routed (by design):**
+- Expected paths like `payment_intent.payment_failed` (card decline, not an admin problem)
+- Transcription failures — already surface via the dedicated transcript section with their own dismissal state
+- Ghost-tag generation failures in `/api/videos/create` — low-impact; the video saves fine either way
+
+**When adding new issue sources**, be strict about what warrants admin attention. A noisy Issues panel that admins learn to ignore is worse than no panel at all — only emit from paths where an admin actually needs to take a manual action to reconcile state or respond to a deadline.
 
 ---
 

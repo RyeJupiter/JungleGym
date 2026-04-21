@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { recordAdminIssue } from '@/lib/adminIssues'
 
 /**
  * Cloudflare Stream webhook handler.
@@ -24,6 +25,17 @@ export async function POST(request: Request) {
     const cfAuth = request.headers.get('cf-webhook-auth')
     if (cfAuth !== webhookSecret) {
       console.error(`[CF Stream Webhook] Auth failed. Header: ${cfAuth?.slice(0, 10)}...`)
+      await recordAdminIssue({
+        kind: 'cf_stream_webhook_auth',
+        severity: 'error',
+        title: 'Cloudflare Stream webhook auth failed',
+        description: 'Incoming webhook had a wrong or missing cf-webhook-auth header. Secret drift between CF and the Worker, or someone is probing.',
+        context: {
+          headerPrefix: cfAuth?.slice(0, 10) ?? null,
+          eventType,
+          inputId,
+        },
+      })
       return NextResponse.json({ error: 'Invalid signature' }, { status: 403 })
     }
   }
@@ -71,6 +83,24 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error(`[CF Stream Webhook] DB update failed:`, error)
+      // Viewers rely on live_sessions.status to flip between scheduled /
+      // live / completed; a missed update leaves the session stuck in
+      // the wrong state and viewers either don't see the stream or keep
+      // seeing a ghost one after it ended.
+      await recordAdminIssue({
+        kind: 'cf_stream_status_update_failed',
+        severity: 'error',
+        title: 'Live session status out of sync with Cloudflare Stream',
+        description: `Stream event "${eventType}" fired for session ${session.id}, but the live_sessions.status update to "${newStatus}" failed. Viewers may see stale state until fixed.`,
+        context: {
+          sessionId: session.id,
+          inputId,
+          eventType,
+          targetStatus: newStatus,
+          priorStatus: session.status,
+          dbError: error.message,
+        },
+      })
     }
   }
 
