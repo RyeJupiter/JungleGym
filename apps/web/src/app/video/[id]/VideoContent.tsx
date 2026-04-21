@@ -165,7 +165,9 @@ export async function VideoContent({ videoId }: { videoId: string }) {
                 </p>
               )}
               <AddToCalendarButton videoTitle={video.title} videoId={video.id} />
-              {!video.is_free && !sharedAccess && (
+              {/* Share requires a real purchase — not a free video, not a
+                  share-redemption, and not admin-preview bypass. */}
+              {!video.is_free && !sharedAccess && !!purchase && (
                 <ShareButton videoId={video.id} isLoggedIn={!!user} />
               )}
             </div>
