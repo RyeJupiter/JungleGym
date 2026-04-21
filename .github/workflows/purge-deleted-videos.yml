@@ -1,0 +1,42 @@
+name: Purge soft-deleted videos
+
+# Hard-deletes videos that were soft-deleted more than 30 days ago.
+# Hits the /api/cron/purge-deleted-videos route with a Bearer token.
+#
+# Setup (one-time):
+#   1. Generate a shared secret:
+#        openssl rand -hex 32
+#   2. Add it as a GitHub secret named CRON_SECRET
+#   3. Add it as a Worker secret:
+#        CLOUDFLARE_API_KEY=… CLOUDFLARE_EMAIL=… npx wrangler secret put CRON_SECRET --name junglegym
+#   4. The workflow below picks it up from the GH secret.
+
+on:
+  schedule:
+    - cron: '0 4 * * *' # daily at 04:00 UTC (~midnight ET / 9pm PT)
+  workflow_dispatch: {} # manual trigger for testing
+
+jobs:
+  purge:
+    name: Purge soft-deleted videos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call purge endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET is not set in GitHub secrets"
+            exit 1
+          fi
+          response=$(curl -s -w '\n%{http_code}' -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            https://junglegym.academy/api/cron/purge-deleted-videos)
+          status=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          echo "HTTP $status"
+          echo "$body" | head -c 4000
+          if [ "$status" != "200" ]; then
+            echo "::error::Purge request failed with status $status"
+            exit 1
+          fi
