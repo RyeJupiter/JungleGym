@@ -64,7 +64,7 @@ export async function POST(request: Request) {
   if (groqFailed) {
     after(async () => {
       try {
-        const retryTags = await fetchGhostTags(title, description ?? '', tags, 15000)
+        const retryTags = await fetchGhostTags(title, description ?? '', tags, null, 15000)
         if (!retryTags.length) return
         // Use service role — request context is gone, no cookies available
         const admin = createClient(

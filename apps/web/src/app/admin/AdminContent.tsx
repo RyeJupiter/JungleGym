@@ -6,6 +6,8 @@ import { CreatorsPanel } from '@/components/admin/CreatorsPanel'
 import { MetricsPanel } from '@/components/admin/MetricsPanel'
 import type { MetricsData } from '@/components/admin/MetricsPanel'
 import { OverridesPanel } from '@/components/admin/OverridesPanel'
+import { IssuesPanel } from '@/components/admin/IssuesPanel'
+import type { TranscriptIssue } from '@/components/admin/IssuesPanel'
 import type { UserSearchResult } from '@/app/admin/actions'
 import type { AdminApplication } from '@/components/admin/ApplicationCard'
 import { fetchAdminApplications, countReviewedApplications } from '@/lib/admin-applications'
@@ -31,11 +33,22 @@ export async function AdminContent({
     .select('*', { count: 'exact', head: true })
     .eq('status', 'pending')
 
+  // Issues tab badge: failed transcriptions + pending ones stuck for >10min.
+  // Always fetched so the tab count stays accurate on any page load.
+  const stuckCutoff = new Date(Date.now() - 10 * 60 * 1000).toISOString()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { count: failedCount } = await (svcPending as any)
+    .from('videos')
+    .select('*', { count: 'exact', head: true })
+    .or(`transcript_status.eq.failed,and(transcript_status.eq.pending,video_url.not.is.null,created_at.lt.${stuckCutoff})`)
+  const issuesCount = failedCount ?? 0
+
   let pendingApplications: AdminApplication[] = []
   let reviewedCount = 0
   let siteAdmins: SiteAdmin[] = []
   let metricsData: MetricsData | null = null
   let creators: UserSearchResult[] = []
+  let issues: TranscriptIssue[] = []
 
   if (tab === 'creators') {
     const svc = await createServiceSupabaseClient()
@@ -204,6 +217,44 @@ export async function AdminContent({
       creators: creatorRoster,
       allTransactions,
     }
+  } else if (tab === 'issues') {
+    const svc = await createServiceSupabaseClient()
+    // Failed transcriptions OR pending ones stuck >10min (initial extract
+    // probably failed, we never got to call /api/transcribe).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: issueRows } = await (svc as any)
+      .from('videos')
+      .select('id, title, creator_id, transcript_status, transcript_error, transcript_attempts, updated_at, created_at, video_url')
+      .or(`transcript_status.eq.failed,and(transcript_status.eq.pending,video_url.not.is.null,created_at.lt.${stuckCutoff})`)
+      .order('updated_at', { ascending: false })
+      .limit(50)
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const issueCreatorIds = [...new Set<string>(((issueRows ?? []) as any[]).map((v) => v.creator_id))]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let issueProfiles: any[] = []
+    if (issueCreatorIds.length > 0) {
+      const { data } = await svc
+        .from('profiles').select('user_id, display_name, username').in('user_id', issueCreatorIds)
+      issueProfiles = data ?? []
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const issueProfileMap = new Map(issueProfiles.map((p: any) => [p.user_id, p]))
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    issues = ((issueRows ?? []) as any[]).map((v) => {
+      const p = issueProfileMap.get(v.creator_id)
+      return {
+        videoId: v.id,
+        title: v.title,
+        creatorName: p?.display_name ?? null,
+        creatorUsername: p?.username ?? null,
+        status: v.transcript_status === 'failed' ? 'failed' : 'stuck',
+        error: v.transcript_error ?? null,
+        attempts: v.transcript_attempts ?? 0,
+        updatedAt: v.updated_at,
+      } as TranscriptIssue
+    })
   } else if (tab === 'admins' && isSuperAdmin) {
     try {
       const svc = await createServiceSupabaseClient()
@@ -258,6 +309,21 @@ export async function AdminContent({
           }`}
         >
           Overrides
+        </Link>
+        <Link
+          href="/admin?tab=issues"
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+            tab === 'issues'
+              ? 'bg-white text-stone-900 shadow-sm'
+              : 'text-stone-500 hover:text-stone-700'
+          }`}
+        >
+          Issues
+          {issuesCount > 0 && (
+            <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full text-xs leading-none">
+              {issuesCount}
+            </span>
+          )}
         </Link>
         {isSuperAdmin && (
           <Link
@@ -317,6 +383,10 @@ export async function AdminContent({
 
       {tab === 'overrides' && (
         <OverridesPanel previewModeOn={(await cookies()).get(ADMIN_PREVIEW_COOKIE)?.value === '1'} />
+      )}
+
+      {tab === 'issues' && (
+        <IssuesPanel issues={issues} />
       )}
 
       {tab === 'admins' && isSuperAdmin && (

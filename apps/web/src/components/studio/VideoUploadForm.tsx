@@ -9,6 +9,7 @@ import { TagInput } from './TagInput'
 import { VideoThumbnailPicker } from './VideoThumbnailPicker'
 import { PolishButton } from '@/components/PolishButton'
 import { suggestTagsFromTitle } from '@/lib/movementTags'
+import type { AudioChunk } from '@/lib/audioExtract'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 
@@ -79,6 +80,11 @@ export function VideoUploadForm({
   const videoInputRef = useRef<HTMLInputElement>(null)
   const thumbInputRef = useRef<HTMLInputElement>(null)
   const abortRef = useRef<AbortController | null>(null)
+  // Audio extraction runs in the background as soon as the user picks a
+  // file. The promise resolves to chunks ready for upload — or null if
+  // extraction failed (video still uploads normally, transcription is
+  // skipped and will surface on the admin Issues panel).
+  const audioExtractRef = useRef<Promise<AudioChunk[] | null> | null>(null)
   const router = useRouter()
   const supabase = createBrowserSupabaseClient()
 
@@ -100,6 +106,20 @@ export function VideoUploadForm({
     const file = e.target.files?.[0]
     if (!file) return
     setVideoFile(file)
+
+    // Kick off audio extraction immediately so it runs in parallel with
+    // the user filling in title/description/tags. We swallow errors here
+    // and resolve to null — the main upload flow must not depend on this.
+    audioExtractRef.current = (async () => {
+      try {
+        const { extractAudioChunks } = await import('@/lib/audioExtract')
+        return await extractAudioChunks(file)
+      } catch (err) {
+        console.warn('Audio extraction failed:', err)
+        return null
+      }
+    })()
+
     const url = URL.createObjectURL(file)
     const el = document.createElement('video')
     el.preload = 'metadata'
@@ -192,6 +212,38 @@ export function VideoUploadForm({
       if (!saveRes.ok) {
         const err = await saveRes.json().catch(() => ({ error: 'Save failed' }))
         throw new Error(err.error ?? 'Save failed')
+      }
+
+      // Wait for audio extraction (likely already done since the user took
+      // time filling the form + uploading). Upload the chunks and fire
+      // transcription off — if anything fails, we still navigate away and
+      // the admin Issues panel will surface it.
+      if (audioExtractRef.current) {
+        setProgress('Preparing transcription…')
+        try {
+          const chunks = await audioExtractRef.current
+          if (chunks && chunks.length > 0) {
+            const paths: string[] = []
+            for (const chunk of chunks) {
+              const path = `audio/${creatorId}/${videoId}/${String(chunk.index).padStart(3, '0')}.webm`
+              const { error: audioErr } = await supabase.storage
+                .from('transcripts')
+                .upload(path, chunk.blob, { contentType: 'audio/webm', upsert: true })
+              if (audioErr) throw audioErr
+              paths.push(path)
+            }
+            // Fire-and-forget: we don't want transcription latency to block
+            // the creator's return to the studio page.
+            fetch(`/api/transcribe/${videoId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ audioPaths: paths }),
+              keepalive: true,
+            }).catch(() => {})
+          }
+        } catch (err) {
+          console.warn('Transcription setup failed:', err)
+        }
       }
 
       router.push('/studio')
