@@ -2,7 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { SectionConfig, HeroVariant } from './config'
+import type { SectionConfig, HeroVariant, GridVariant, SectionType } from './config'
 import { SECTION_LABELS } from './config'
 
 type Props = {
@@ -19,6 +19,14 @@ const HERO_VARIANTS: { value: HeroVariant; label: string }[] = [
   { value: 'compact', label: 'Compact' },
   { value: 'centered', label: 'Centered' },
 ]
+
+const GRID_VARIANTS: { value: GridVariant; label: string }[] = [
+  { value: 'showcase', label: 'Showcase — 1 big' },
+  { value: 'default', label: 'Grid — roomy' },
+  { value: 'compact', label: 'Compact — dense' },
+]
+
+const GRID_SECTIONS: SectionType[] = ['free_videos', 'paid_videos']
 
 export function SortableSection({
   section,
@@ -98,9 +106,26 @@ export function SortableSection({
             <select
               value={section.variant ?? 'default'}
               onChange={(e) => onVariantChange(e.target.value)}
+              aria-label="Hero layout style"
+              title="Change the hero layout"
               className="text-xs bg-stone-800 border border-stone-600 text-stone-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-jungle-500"
             >
               {HERO_VARIANTS.map((v) => (
+                <option key={v.value} value={v.value}>{v.label}</option>
+              ))}
+            </select>
+          )}
+
+          {/* Grid variant picker (free_videos, paid_videos) */}
+          {GRID_SECTIONS.includes(section.type) && onVariantChange && (
+            <select
+              value={section.variant ?? 'default'}
+              onChange={(e) => onVariantChange(e.target.value)}
+              aria-label="Video grid density"
+              title="Change how the class cards are laid out"
+              className="text-xs bg-stone-800 border border-stone-600 text-stone-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-jungle-500"
+            >
+              {GRID_VARIANTS.map((v) => (
                 <option key={v.value} value={v.value}>{v.label}</option>
               ))}
             </select>

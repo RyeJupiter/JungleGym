@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { formatPrice, formatDuration } from '@junglegym/shared'
 import type { ThemeClasses } from '../themes'
+import type { GridVariant } from '../config'
 
 type VideoCardData = {
   id: string
@@ -20,9 +21,19 @@ type Props = {
   title: string
   theme: ThemeClasses
   badgeClass?: string
+  variant?: GridVariant
 }
 
-export function VideoGridSection({ videos, title, theme, badgeClass }: Props) {
+const GRID_CLASSES: Record<GridVariant, string> = {
+  // 1 card per row until tablets, then 2-up. Cards feel like a featured reel.
+  showcase: 'grid grid-cols-1 sm:grid-cols-2 gap-5',
+  // Unchanged — original default layout.
+  default: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4',
+  // 2 on phones, up to 4 on desktop. Good for creators with lots of classes.
+  compact: 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3',
+}
+
+export function VideoGridSection({ videos, title, theme, badgeClass, variant = 'default' }: Props) {
   if (videos.length === 0) return null
 
   return (
@@ -33,7 +44,7 @@ export function VideoGridSection({ videos, title, theme, badgeClass }: Props) {
           {videos.length}
         </span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className={GRID_CLASSES[variant]}>
         {videos.map((v) => (
           <VideoCard key={v.id} video={v} theme={theme} />
         ))}

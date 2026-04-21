@@ -13,6 +13,14 @@ export type ThemeKey = 'jungle' | 'earth' | 'midnight' | 'dawn' | 'stone'
 
 export type HeroVariant = 'default' | 'compact' | 'centered'
 
+/**
+ * Layout density for video/grid sections.
+ * - showcase: 1–2 columns, big featured cards
+ * - default:  1/2/3 columns (current behavior)
+ * - compact:  2/3/4 columns, denser overview
+ */
+export type GridVariant = 'showcase' | 'default' | 'compact'
+
 export interface SectionConfig {
   id: string
   type: SectionType
