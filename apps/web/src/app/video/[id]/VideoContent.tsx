@@ -51,6 +51,43 @@ export async function VideoContent({ videoId }: { videoId: string }) {
   const hasAccess = video.is_free || !!purchase || adminPreview
   const sharedAccess = !!purchase?.expires_at
 
+  // Pre-fetch the user's own share for this video (if any) so the ShareButton
+  // can render "✓ Shared with [Name]" before any click. video_shares RLS
+  // only returns rows where owner_user_id = auth.uid(), so this is private
+  // to the owner. profiles is publicly readable — no RLS issues there.
+  let initialShare: {
+    token: string
+    redeemedAt: string | null
+    redeemerName: string | null
+  } | null = null
+  if (user && !video.is_free) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: ownShare } = await (supabase as any)
+      .from('video_shares')
+      .select('token, redeemed_by, redeemed_at')
+      .eq('owner_user_id', user.id)
+      .eq('video_id', video.id)
+      .maybeSingle()
+
+    if (ownShare) {
+      let redeemerName: string | null = null
+      if (ownShare.redeemed_by) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: redeemerProfile } = await (supabase as any)
+          .from('profiles')
+          .select('display_name')
+          .eq('user_id', ownShare.redeemed_by)
+          .maybeSingle()
+        redeemerName = (redeemerProfile?.display_name as string | null) ?? null
+      }
+      initialShare = {
+        token: ownShare.token as string,
+        redeemedAt: (ownShare.redeemed_at as string | null) ?? null,
+        redeemerName,
+      }
+    }
+  }
+
   // Generate signed URL for private video bucket. For admin preview we must
   // use the service client because storage RLS requires a purchase row or
   // creator ownership, neither of which the admin has.
@@ -166,7 +203,11 @@ export async function VideoContent({ videoId }: { videoId: string }) {
               )}
               <AddToCalendarButton videoTitle={video.title} videoId={video.id} />
               {!video.is_free && !sharedAccess && (
-                <ShareButton videoId={video.id} isLoggedIn={!!user} />
+                <ShareButton
+                  videoId={video.id}
+                  isLoggedIn={!!user}
+                  initialShare={initialShare}
+                />
               )}
             </div>
           ) : (
