@@ -7,6 +7,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLoggedIn: boolean }) {
   const [open, setOpen] = useState(false)
   const [link, setLink] = useState<string | null>(null)
+  const [redeemedAt, setRedeemedAt] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -20,7 +21,7 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
       return
     }
     setOpen(true)
-    if (link) return // already fetched
+    if (link || redeemedAt) return // already fetched this session
     setLoading(true)
     setError(null)
     try {
@@ -34,11 +35,19 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: existing, error: selectErr } = await (supabase as any)
         .from('video_shares')
-        .select('token')
+        .select('token, redeemed_by, redeemed_at')
         .eq('owner_user_id', user.id)
         .eq('video_id', videoId)
         .maybeSingle()
       if (selectErr) throw selectErr
+
+      // Already used by a friend — UNIQUE(owner, video) means we can't
+      // issue another one, and it would be misleading to show the same
+      // link (the /share/[token] page will refuse redemption anyway).
+      if (existing?.redeemed_by) {
+        setRedeemedAt(existing.redeemed_at as string | null)
+        return
+      }
 
       let token: string | null = (existing?.token as string | null) ?? null
       if (!token) {
@@ -99,6 +108,20 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
 
             {loading ? (
               <div className="text-center py-4 text-stone-400 text-sm">Generating link...</div>
+            ) : redeemedAt ? (
+              <div className="bg-stone-50 border border-stone-200 rounded-xl p-5 text-center space-y-2">
+                <div className="text-3xl">🎁</div>
+                <p className="font-bold text-stone-900 text-sm">
+                  You&apos;ve already shared this with a friend!
+                </p>
+                <p className="text-xs text-stone-500">
+                  Claimed on {new Date(redeemedAt).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}. Each class can only be shared once.
+                </p>
+              </div>
             ) : link ? (
               <div className="space-y-4">
                 {/* Email invite */}
