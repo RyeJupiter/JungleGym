@@ -65,6 +65,22 @@ const nextConfig = {
       },
     ]
   },
+  async rewrites() {
+    // Proxy VTT caption files through our origin so the native <track>
+    // element loads them as same-origin. Supabase public storage serves
+    // the bytes but doesn't return CORS headers in a way the browser
+    // accepts for text tracks, which causes a silent "Unsafe attempt
+    // to load URL" refusal and no CC button. With this rewrite the
+    // browser sees /captions/... as same-origin and the <track> loads.
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrl) return []
+    return [
+      {
+        source: '/captions/:path*',
+        destination: `${supabaseUrl}/storage/v1/object/public/transcripts/:path*`,
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig
