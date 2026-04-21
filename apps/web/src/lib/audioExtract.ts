@@ -5,14 +5,18 @@
 // Output is chunked into 15-minute segments so each chunk fits comfortably
 // under Groq's 25MB per-file limit (15min × 48kbps ≈ 5MB).
 //
-// The 32MB ffmpeg-core.wasm + worker live in /public/ffmpeg/ so they load
-// from our own origin (CSP-safe). Lazy dynamic import keeps the upload
-// page's initial bundle small — ffmpeg only loads after the user picks
-// a file.
+// The 32MB ffmpeg-core.wasm can't ride along in /public/ — Cloudflare
+// Workers rejects static assets >25MB. We pull the pinned versions from
+// unpkg at runtime; toBlobURL wraps them in blob: URLs locally so the
+// browser only hits the CDN once per session (and caches after that).
+// CSP needs `connect-src https://unpkg.com` for the fetch.
 
 const CHUNK_SECONDS = 900 // 15 minutes
 const AUDIO_BITRATE_KBPS = 48
-const BASE_URL = '/ffmpeg'
+const FFMPEG_CORE_VERSION = '0.12.10'
+const FFMPEG_VERSION = '0.12.15'
+const CORE_BASE = `https://unpkg.com/@ffmpeg/core@${FFMPEG_CORE_VERSION}/dist/umd`
+const FFMPEG_BASE = `https://unpkg.com/@ffmpeg/ffmpeg@${FFMPEG_VERSION}/dist/esm`
 
 export type AudioChunk = {
   /** Zero-indexed chunk number; matches filename and time offset in transcript. */
@@ -43,14 +47,14 @@ async function getFFmpeg(onProgress?: (p: ExtractProgress) => void) {
       const { FFmpeg } = await import('@ffmpeg/ffmpeg')
       const { toBlobURL } = await import('@ffmpeg/util')
       const ff = new FFmpeg()
-      // Self-hosted from /public/ffmpeg/. toBlobURL fetches the asset
-      // and returns a blob: URL, which ffmpeg then instantiates. Needed
-      // because the Worker import.meta.url mechanism expects same-origin
-      // and blob: URLs for dynamic module loading.
+      // toBlobURL fetches each asset once and returns a blob: URL, which
+      // ffmpeg then instantiates. We fetch from unpkg (pinned versions)
+      // because the 32MB core.wasm exceeds Cloudflare Workers' 25MB
+      // static-asset cap.
       const [coreURL, wasmURL, workerURL] = await Promise.all([
-        toBlobURL(`${BASE_URL}/ffmpeg-core.js`, 'text/javascript'),
-        toBlobURL(`${BASE_URL}/ffmpeg-core.wasm`, 'application/wasm'),
-        toBlobURL(`${BASE_URL}/worker.js`, 'text/javascript'),
+        toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, 'text/javascript'),
+        toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, 'application/wasm'),
+        toBlobURL(`${FFMPEG_BASE}/worker.js`, 'text/javascript'),
       ])
       await ff.load({ coreURL, wasmURL, classWorkerURL: workerURL })
       ffmpegInstance = ff

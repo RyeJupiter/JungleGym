@@ -20,7 +20,10 @@ const CSP = [
   // *.cloudflarestream.com also matches customer-XXX.cloudflarestream.com;
   // a CSP source like customer-*.cloudflarestream.com is invalid per spec
   // (wildcards must be leftmost) and browsers drop it.
-  `connect-src 'self' ${SUPABASE_HOST} ${SUPABASE_WS} https://api.stripe.com https://*.cloudflarestream.com https://cloudflareinsights.com`,
+  // unpkg = ffmpeg.wasm core + worker (fetched by audioExtract.ts and
+  // wrapped in blob: URLs locally). Can't self-host because the 32MB
+  // core.wasm exceeds CF Workers' 25MB static-asset cap.
+  `connect-src 'self' ${SUPABASE_HOST} ${SUPABASE_WS} https://api.stripe.com https://*.cloudflarestream.com https://cloudflareinsights.com https://unpkg.com`,
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.cloudflarestream.com https://challenges.cloudflare.com",
   `media-src 'self' blob: ${SUPABASE_HOST} https://*.cloudflarestream.com`,
   "worker-src 'self' blob:",
