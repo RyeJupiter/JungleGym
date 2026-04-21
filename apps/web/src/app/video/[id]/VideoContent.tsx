@@ -107,6 +107,16 @@ export async function VideoContent({ videoId }: { videoId: string }) {
     }
   }
 
+  // Caption track — transcripts bucket is public, so getPublicUrl works for
+  // everyone without needing a signed URL.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const vttPath = (video as any).transcript_vtt_path as string | null | undefined
+  let captionsUrl: string | null = null
+  if (vttPath) {
+    const { data } = supabase.storage.from('transcripts').getPublicUrl(vttPath)
+    captionsUrl = data.publicUrl
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
       <Suspense>
@@ -123,7 +133,17 @@ export async function VideoContent({ videoId }: { videoId: string }) {
               playsInline
               className="w-full h-full"
               poster={video.thumbnail_url ?? undefined}
-            />
+            >
+              {captionsUrl && (
+                <track
+                  kind="captions"
+                  label="English"
+                  srcLang="en"
+                  src={captionsUrl}
+                  default
+                />
+              )}
+            </video>
           ) : (
             <p className="text-white/50 text-sm">Video coming soon</p>
           )
