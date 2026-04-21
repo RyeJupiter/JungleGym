@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/supabase/server'
 import { getStripe } from '@/lib/stripe'
+import { recordAdminIssue } from '@/lib/adminIssues'
 
 export async function POST(req: Request) {
   const stripe = getStripe()
@@ -59,6 +60,23 @@ export async function POST(req: Request) {
 
   if (upsertError) {
     console.error('[checkout/video/confirm] upsert failed:', upsertError)
+    // Highest-severity silent failure: Stripe took the buyer's money but
+    // we couldn't record the purchase. An admin needs to reconcile this
+    // manually — grant the video (or refund) + insert the row by hand.
+    await recordAdminIssue({
+      kind: 'purchase_insert_failed',
+      severity: 'error',
+      title: 'Paid video purchase — failed to record purchase row',
+      description: `PaymentIntent ${paymentIntent.id} succeeded ($${(paymentIntent.amount / 100).toFixed(2)}) but the purchases row insert failed: ${upsertError.message}`,
+      context: {
+        paymentIntentId: paymentIntent.id,
+        userId: meta.user_id,
+        videoId: meta.video_id,
+        tier: meta.tier,
+        amount: paymentIntent.amount / 100,
+        dbError: upsertError.message,
+      },
+    })
     return NextResponse.json(
       { error: 'Failed to record purchase' },
       { status: 500 }

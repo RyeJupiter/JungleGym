@@ -558,6 +558,57 @@ export async function removeSiteAdmin(email: string): Promise<{ error?: string }
   }
 }
 
+// ── Dismiss issues from the admin Issues panel (any admin) ───────────────────
+
+/** Hide a transcript-failure / stuck-pending row from the Issues panel. */
+export async function dismissTranscriptIssue(videoId: string): Promise<{ error?: string }> {
+  try {
+    await assertCallerIsAdmin()
+    if (!videoId) return { error: 'videoId required' }
+
+    const svc = await createServiceSupabaseClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (svc as any)
+      .from('videos')
+      .update({ transcript_issue_dismissed_at: new Date().toISOString() })
+      .eq('id', videoId)
+
+    if (error) return { error: error.message }
+    revalidatePath('/admin')
+    return {}
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to dismiss' }
+  }
+}
+
+/** Mark an admin_issues row as dismissed, stamped with the caller's email. */
+export async function dismissAdminIssue(issueId: string): Promise<{ error?: string }> {
+  try {
+    await assertCallerIsAdmin()
+    if (!issueId) return { error: 'issueId required' }
+
+    const supabase = await createServerSupabaseClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const email = user?.email ?? null
+
+    const svc = await createServiceSupabaseClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (svc as any)
+      .from('admin_issues')
+      .update({
+        dismissed_at: new Date().toISOString(),
+        dismissed_by: email,
+      })
+      .eq('id', issueId)
+
+    if (error) return { error: error.message }
+    revalidatePath('/admin')
+    return {}
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to dismiss' }
+  }
+}
+
 // ── Restore a soft-deleted video (any admin) ─────────────────────────────────
 
 export async function restoreDeletedVideo(videoId: string): Promise<{ error?: string }> {

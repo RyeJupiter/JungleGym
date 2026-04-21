@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/supabase/server'
+import { recordAdminIssue } from '@/lib/adminIssues'
 
 /**
  * POST /api/wallet/gift
@@ -90,12 +91,32 @@ export async function POST(req: Request) {
     .single()
 
   if (giftError) {
-    // Rollback wallet debit
-    await svc
+    // Rollback wallet debit. Track whether the rollback itself failed —
+    // if so the user just lost money with no gift to show for it, which
+    // is a much higher-severity issue than the original gift failure.
+    const { error: rollbackError } = await svc
       .from('wallets')
       .update({ balance: currentBalance })
       .eq('user_id', user.id)
     console.error('[wallet/gift] gift insert failed:', giftError)
+    await recordAdminIssue({
+      kind: rollbackError ? 'wallet_gift_rollback_failed' : 'wallet_gift_insert_failed',
+      severity: 'error',
+      title: rollbackError
+        ? 'Wallet gift — debited but NOT gifted AND rollback failed'
+        : 'Wallet gift — insert failed, debit rolled back',
+      description: rollbackError
+        ? `User ${user.id} was debited $${amount.toFixed(2)} but the gift insert failed and the rollback also failed. Manually restore balance: ${currentBalance.toFixed(2)} (was pre-debit).`
+        : `Gift insert failed for user ${user.id}. Wallet debit rolled back — user unaffected but the failure recurred so investigate.`,
+      context: {
+        userId: user.id,
+        sessionId,
+        amount,
+        giftError: giftError.message,
+        rollbackError: rollbackError?.message ?? null,
+        preDebitBalance: currentBalance,
+      },
+    })
     return NextResponse.json({ error: 'Failed to send gift' }, { status: 500 })
   }
 

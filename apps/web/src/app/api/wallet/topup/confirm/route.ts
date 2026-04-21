@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/supabase/server'
 import { getStripe } from '@/lib/stripe'
+import { recordAdminIssue } from '@/lib/adminIssues'
 
 /**
  * POST /api/wallet/topup/confirm
@@ -86,6 +87,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, balance: wallet?.balance ?? 0 })
     }
     console.error('[wallet/topup/confirm] tx insert failed:', txError)
+    await recordAdminIssue({
+      kind: 'wallet_topup_insert_failed',
+      severity: 'error',
+      title: 'Wallet top-up — failed to record transaction',
+      description: `PaymentIntent ${paymentIntentId} succeeded ($${walletAmount.toFixed(2)}) but wallet_transactions insert failed: ${txError.message}`,
+      context: {
+        paymentIntentId,
+        userId: user.id,
+        walletAmount,
+        dbError: txError.message,
+        dbErrorCode: txError.code,
+      },
+    })
     return NextResponse.json({ error: 'Failed to credit wallet' }, { status: 500 })
   }
 

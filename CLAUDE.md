@@ -255,6 +255,37 @@ After 30 days, `POST /api/cron/purge-deleted-videos` hard-deletes the row + all 
 3. Add as Worker secret: `CLOUDFLARE_API_KEY=… CLOUDFLARE_EMAIL=… npx wrangler secret put CRON_SECRET --name junglegym`
 4. Manually trigger the workflow once to confirm it works (GitHub Actions → "Purge soft-deleted videos" → Run workflow)
 
+### Admin issues panel (pattern for future code)
+
+`/admin?tab=issues` shows:
+1. **Transcription issues** — query-based, reads `videos` where `transcript_status IN ('failed', stuck-pending)` AND `transcript_issue_dismissed_at IS NULL`. Retry clears the dismissal so new failures resurface.
+2. **Other issues** — reads the `admin_issues` table. Write one by importing `recordAdminIssue` from `@/lib/adminIssues` and calling it with `{ kind, severity, title, description?, context? }`. The helper never throws and uses the service client.
+
+Call this from any server-side code when something goes wrong that an admin should see. Currently wired into:
+
+**Payments (user-paid-but-we-lost-it silent failures):**
+- `/api/checkout/video/confirm` — `kind: purchase_insert_failed` when PI succeeded but the purchases row insert fails
+- `/api/wallet/topup/confirm` — `kind: wallet_topup_insert_failed` when PI succeeded but wallet_transactions insert fails (non-duplicate)
+- `/api/wallet/gift` — `kind: wallet_gift_insert_failed` (debit rolled back) or `wallet_gift_rollback_failed` (higher severity — user lost money)
+
+**Stripe webhook:**
+- `charge.dispute.created` — error (response deadline in Stripe)
+- `charge.refunded` — info (admin decides about access revocation)
+- `payout.failed` / `.canceled` — error (creator money stuck)
+- Signature verification failure — error (secret drift or probing)
+- Unhandled handler error — error (returns 500 so Stripe retries)
+
+**Live streaming (Cloudflare Stream):**
+- `/api/webhooks/cloudflare-stream` — `cf_stream_webhook_auth` on bad `cf-webhook-auth`; `cf_stream_status_update_failed` when the status update can't persist (viewers see stale state)
+- `/api/stream/provision` — `cf_stream_provision_orphan` when the CF input is created but the DB update fails (billable orphan until cleaned up)
+
+**Places NOT routed (by design):**
+- Expected paths like `payment_intent.payment_failed` (card decline, not an admin problem)
+- Transcription failures — already surface via the dedicated transcript section with their own dismissal state
+- Ghost-tag generation failures in `/api/videos/create` — low-impact; the video saves fine either way
+
+**When adding new issue sources**, be strict about what warrants admin attention. A noisy Issues panel that admins learn to ignore is worse than no panel at all — only emit from paths where an admin actually needs to take a manual action to reconcile state or respond to a deadline.
+
 ---
 
 ## JungleGym + Kinectr Connection
@@ -309,3 +340,4 @@ Davin and Rye work in tandem. To avoid conflicts:
 | 2026-04-21 | Davin | Auto-transcription: closed captions + transcript-powered ghost tags | **Pipeline**: browser extracts audio from uploaded videos via `ffmpeg.wasm` (48kbps mono Opus/WebM, 15-min chunks), uploads to new `transcripts` bucket, fires `POST /api/transcribe/[videoId]`. Route runs Groq Whisper `large-v3-turbo` on each chunk in `after()`, merges segment timestamps (offset by chunk index × 900s), writes WebVTT to `transcripts/vtt/{id}.vtt`, updates videos row, and regenerates ghost tags from the transcript. Captions render via native `<track kind="captions" default>` — always on, no toggle, browsers handle the CC button. **Ghost tag prompt rewritten** to explain the recommendation-algorithm purpose and spell out 7 categories (style, body focus, intensity, skill, session type, mood, equipment) — transcript becomes primary signal when present. **Retry logic**: one automatic retry in-route; failures surface on a new `/admin?tab=issues` panel with a manual Retry button (re-uses audio chunks already in storage). Also catches pending rows stuck >10min (case where browser extraction failed before we ever called the API). **Bumps along the way**: (1) `ffmpeg-core.wasm` is 32MB, CF Workers caps static assets at 25MB → load core.js/.wasm from unpkg at runtime, added `connect-src https://unpkg.com` to CSP. (2) Passing `classWorkerURL` to `ffmpeg.load()` hung forever because the library's worker.js has static relative imports that can't resolve against blob: URLs — dropped the arg and let webpack 5 bundle the library's built-in worker as a same-origin chunk. (3) Audio upload + transcribe trigger moved out of the blocking submit flow into a post-navigation IIFE so creator returns to /studio immediately. (4) Native `<track>` element refused cross-origin VTT from Supabase ("Unsafe attempt to load URL"); added a Next rewrite so `/captions/*` → Supabase storage, making the VTT effectively same-origin. Migration `00027_video_transcripts.sql` adds `transcript_text`, `transcript_vtt_path`, `transcript_status`, `transcript_error`, `transcript_attempts` columns + `transcripts` storage bucket (public read, creator write under `audio/{userId}/...`). Branch: `davin/auto-transcription`. Not backfilling existing videos — creators will reupload. |
 | 2026-04-21 | Davin | Soft-delete for videos (creator delete + 30-day admin undo) | Delete button on `/studio/video/[id]/manage` with a confirmation modal. Writes `deleted_at = now()` and `published = false` so the video disappears immediately from explore/classes/treehouse/library/sitemap/video page/checkout/share — every public `.from('videos')` query got `.is('deleted_at', null)` added. Creator's studio view also filters out deleted. Admins see a new "Recently deleted" section on `/admin?tab=issues` with a Restore button (uses a `restoreDeletedVideo` server action + service client since RLS won't let admins touch creator rows directly). Restore clears `deleted_at` but leaves `published=false` so the creator reviews before republishing. Migration `00028_video_soft_delete.sql` adds the `deleted_at timestamptz` column + a partial index. |
 | 2026-04-21 | Davin | Purge cron + creator-side restore dropdown | Wired up the 30-day hard-delete job that was flagged as follow-up. `POST /api/cron/purge-deleted-videos` (protected by `CRON_SECRET` header) scans for `deleted_at < now() - 30 days`, deletes the video file, thumbnail, audio chunks, and VTT from storage, then deletes the row. Daily trigger via `.github/workflows/purge-deleted-videos.yml` at 04:00 UTC; manually triggerable for testing. **Creator-side restore**: new `DeletedVideosDropdown` component on `/studio` — collapsible "Recently deleted (N)" section below the video list, shows each deleted video with grayscale thumbnail, days-remaining badge, and a Restore button. Uses a direct client-side update since creators own their rows (RLS "videos: creator update" allows it) — no server action needed. **Setup pending**: `CRON_SECRET` needs to be generated and set as both a GitHub repo secret and a Worker secret (one-time — instructions in CLAUDE.md under "Video soft-delete + purge cron"). |
+| 2026-04-21 | Davin | Dismissable admin issues + centralized `admin_issues` table | Per-row × dismiss button on the Issues panel (both the existing transcript failures and a new generic section). Retry clears `transcript_issue_dismissed_at` so a new failure after dismissal resurfaces. New `admin_issues` table (service-role only) with `kind` / `severity` / `title` / `description` / `context` — any server-side code can import `recordAdminIssue` from `@/lib/adminIssues` to surface something for an admin. Wired the Stripe webhook to emit issues for `charge.dispute.created` (error — has a response deadline), `charge.refunded` (info — needs access-revocation decision), `payout.failed`/`.canceled` (error — creator money stuck), signature verification failures (error — secret drift or probing), and unhandled errors inside any case (returns 500 so Stripe retries). Server actions: `dismissTranscriptIssue(videoId)`, `dismissAdminIssue(issueId)` — the latter stamps `dismissed_by` with the admin's email. Migration 00029 adds `videos.transcript_issue_dismissed_at` + the `admin_issues` table. Pattern documented in CLAUDE.md under "Admin issues panel (pattern for future code)" with a list of other places that could emit issues (wallet topup confirm, video purchase confirm) when they start causing quiet failures. |

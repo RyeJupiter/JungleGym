@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { isStreamEnabled, provisionLiveInput, getWhipUrl } from '@/lib/cloudflare-stream'
+import { recordAdminIssue } from '@/lib/adminIssues'
 
 export async function POST(request: Request) {
   // 1. Auth
@@ -53,7 +54,23 @@ export async function POST(request: Request) {
       })
       .eq('id', sessionId)
 
-    if (updateError) throw updateError
+    if (updateError) {
+      // CF Stream input was created but we couldn't persist it. Creator
+      // will retry → second CF input provisioned → billable orphan on
+      // the Cloudflare side until someone cleans it up manually.
+      await recordAdminIssue({
+        kind: 'cf_stream_provision_orphan',
+        severity: 'error',
+        title: 'Cloudflare Stream input provisioned but not saved',
+        description: `CF input ${inputId} was created for session ${sessionId} but the DB update failed: ${updateError.message}. The input is orphaned on Cloudflare — delete it to avoid billing drift.`,
+        context: {
+          sessionId,
+          orphanInputId: inputId,
+          dbError: updateError.message,
+        },
+      })
+      throw updateError
+    }
 
     return NextResponse.json({
       inputId,
