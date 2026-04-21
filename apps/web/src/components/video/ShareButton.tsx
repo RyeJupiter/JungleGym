@@ -64,7 +64,16 @@ export function ShareButton({ videoId, isLoggedIn }: { videoId: string; isLogged
       if (!token) throw new Error('Could not generate link')
       setLink(`${window.location.origin}/share/${token}`)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Could not generate link')
+      // Surface the real Supabase error to the console so we can triage
+      // server-side errors that come back as 400 without an obvious cause.
+      console.error('[ShareButton] failed to generate link:', err)
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'object' && err && 'message' in err
+            ? String((err as { message: unknown }).message)
+            : 'Could not generate link'
+      setError(message)
     } finally {
       setLoading(false)
     }
