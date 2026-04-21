@@ -557,3 +557,29 @@ export async function removeSiteAdmin(email: string): Promise<{ error?: string }
     return { error: err instanceof Error ? err.message : 'Failed to remove admin' }
   }
 }
+
+// ── Restore a soft-deleted video (any admin) ─────────────────────────────────
+
+export async function restoreDeletedVideo(videoId: string): Promise<{ error?: string }> {
+  try {
+    await assertCallerIsAdmin()
+    if (!videoId) return { error: 'videoId required' }
+
+    // Service client bypasses the "creator update" RLS policy — creators
+    // own their videos, admins don't. Clearing deleted_at brings it back
+    // into studio view for the creator; we leave published=false so they
+    // can review before republishing.
+    const svc = await createServiceSupabaseClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (svc as any)
+      .from('videos')
+      .update({ deleted_at: null })
+      .eq('id', videoId)
+
+    if (error) return { error: error.message }
+    revalidatePath('/admin')
+    return {}
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to restore video' }
+  }
+}

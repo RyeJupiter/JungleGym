@@ -18,6 +18,7 @@ export async function VideoContent({ videoId }: { videoId: string }) {
     .select('*')
     .eq('id', videoId)
     .eq('published', true)
+    .is('deleted_at', null)
     .single()
 
   if (!video) notFound()

@@ -2,6 +2,8 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { VideoRow } from '@/components/studio/VideoRow'
 import { PastSessionsDropdown } from '@/components/studio/PastSessionsDropdown'
+import { DeletedVideosDropdown } from '@/components/studio/DeletedVideosDropdown'
+import type { DeletedCreatorVideo } from '@/components/studio/DeletedVideosDropdown'
 import { LocalTime } from '@/components/LocalTime'
 
 export async function StudioSessions({ userId }: { userId: string }) {
@@ -54,28 +56,62 @@ export async function StudioSessions({ userId }: { userId: string }) {
 export async function StudioVideos({ userId }: { userId: string }) {
   const supabase = await createServerSupabaseClient()
 
-  const { data: videos } = await supabase
-    .from('videos')
-    .select('*')
-    .eq('creator_id', userId)
-    .order('created_at', { ascending: false })
+  // Fetch live + soft-deleted (within the 30-day window) in parallel. The
+  // deleted dropdown is the creator's self-service restore UI — separate
+  // from the admin-facing /admin?tab=issues section.
+  const deleteWindowStart = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  const [{ data: videos }, { data: deletedRows }] = await Promise.all([
+    supabase
+      .from('videos')
+      .select('*')
+      .eq('creator_id', userId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from('videos')
+      .select('id, title, thumbnail_url, deleted_at')
+      .eq('creator_id', userId)
+      .not('deleted_at', 'is', null)
+      .gt('deleted_at', deleteWindowStart)
+      .order('deleted_at', { ascending: false }),
+  ])
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const deletedVideos: DeletedCreatorVideo[] = ((deletedRows ?? []) as any[]).map((v) => {
+    const msSince = Date.now() - new Date(v.deleted_at).getTime()
+    const days_remaining = Math.max(0, 30 - Math.floor(msSince / (24 * 60 * 60 * 1000)))
+    return {
+      id: v.id,
+      title: v.title,
+      thumbnail_url: v.thumbnail_url,
+      deleted_at: v.deleted_at,
+      days_remaining,
+    }
+  })
 
   if ((videos ?? []).length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-stone-200 p-10 text-center text-stone-400">
-        <p className="text-4xl mb-3">🎬</p>
-        <p className="font-medium">No videos yet</p>
-        <p className="text-sm mt-1">Upload your first video to start sharing.</p>
-      </div>
+      <>
+        <div className="bg-white rounded-2xl border border-stone-200 p-10 text-center text-stone-400">
+          <p className="text-4xl mb-3">🎬</p>
+          <p className="font-medium">No videos yet</p>
+          <p className="text-sm mt-1">Upload your first video to start sharing.</p>
+        </div>
+        <DeletedVideosDropdown videos={deletedVideos} />
+      </>
     )
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
-      {videos!.map((v, i) => (
-        <VideoRow key={v.id} video={v} index={i} />
-      ))}
-    </div>
+    <>
+      <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+        {videos!.map((v, i) => (
+          <VideoRow key={v.id} video={v} index={i} />
+        ))}
+      </div>
+      <DeletedVideosDropdown videos={deletedVideos} />
+    </>
   )
 }
 

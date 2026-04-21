@@ -11,7 +11,7 @@ type Props = { params: Promise<{ id: string }> }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   const supabase = await createServerSupabaseClient()
-  const { data } = await supabase.from('videos').select('title').eq('id', id).single()
+  const { data } = await supabase.from('videos').select('title').eq('id', id).is('deleted_at', null).single()
   return { title: data?.title ? `Unlock — ${data.title}` : 'Checkout' }
 }
 

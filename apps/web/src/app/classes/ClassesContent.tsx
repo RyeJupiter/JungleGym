@@ -19,6 +19,7 @@ export async function ClassesContent({ q, tag, sort }: { q?: string; tag?: strin
     .from('videos')
     .select('*')
     .eq('published', true)
+    .is('deleted_at', null)
     .limit(30)
 
   if (tag) videoQuery = videoQuery.contains('tags', [tag])

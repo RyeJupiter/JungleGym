@@ -21,6 +21,7 @@ export async function ExploreVideos({ q, tag }: { q?: string; tag?: string }) {
     .from('videos')
     .select('*')
     .eq('published', true)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(6)
 

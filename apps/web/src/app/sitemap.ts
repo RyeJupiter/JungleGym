@@ -23,7 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const supabase = await createServerSupabaseClient()
 
     const [{ data: videos }, { data: profiles }, { data: sessions }] = await Promise.all([
-      supabase.from('videos').select('id, updated_at').eq('published', true),
+      supabase.from('videos').select('id, updated_at').eq('published', true).is('deleted_at', null),
       supabase.from('profiles').select('username, updated_at').not('username', 'is', null),
       supabase.from('live_sessions').select('id, updated_at').in('status', ['scheduled', 'live']),
     ])
