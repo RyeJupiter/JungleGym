@@ -56,6 +56,18 @@ export const SECTION_LABELS: Record<SectionType, string> = {
   bio: 'Movement Story',
 }
 
+// Emoji-icon per section type — used anywhere a section shows its identity
+// (add menu, section control bar). Keep in sync with AddSectionMenu labels.
+export const SECTION_ICONS: Record<SectionType, string> = {
+  hero: '🏡',
+  intro_video: '🎥',
+  live_sessions: '📅',
+  free_videos: '🆓',
+  paid_videos: '💰',
+  photo_gallery: '📸',
+  bio: '🌿',
+}
+
 // Default config — matches the current hardcoded treehouse layout exactly
 export const DEFAULT_TREEHOUSE_CONFIG: TreehouseConfig = {
   version: 1,
