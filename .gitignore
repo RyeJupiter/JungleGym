@@ -53,3 +53,9 @@ yarn-error.log*
 # Testing
 coverage
 .nyc_output
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Supabase CLI local state (per-machine)
+supabase/.temp/
