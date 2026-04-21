@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { dismissTranscriptIssue } from '@/app/admin/actions'
 
 export type TranscriptIssue = {
   videoId: string
@@ -18,6 +19,7 @@ export type TranscriptIssue = {
 export function IssuesPanel({ issues }: { issues: TranscriptIssue[] }) {
   const router = useRouter()
   const [retrying, setRetrying] = useState<Record<string, boolean>>({})
+  const [dismissing, setDismissing] = useState<Record<string, boolean>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   async function handleRetry(videoId: string) {
@@ -50,22 +52,26 @@ export function IssuesPanel({ issues }: { issues: TranscriptIssue[] }) {
     }
   }
 
-  if (issues.length === 0) {
-    return (
-      <section>
-        <h2 className="text-lg font-bold text-stone-900 mb-4">Issues</h2>
-        <div className="bg-white rounded-2xl border border-stone-200 p-8 text-center">
-          <p className="text-3xl mb-2">✨</p>
-          <p className="text-sm text-stone-500">No open issues</p>
-        </div>
-      </section>
-    )
+  async function handleDismiss(videoId: string) {
+    setDismissing((d) => ({ ...d, [videoId]: true }))
+    const result = await dismissTranscriptIssue(videoId)
+    if (result.error) {
+      setErrors((e) => ({ ...e, [videoId]: result.error! }))
+      setDismissing((d) => ({ ...d, [videoId]: false }))
+      return
+    }
+    router.refresh()
   }
+
+  // Empty state is owned by the parent (AdminContent) so it can render
+  // a single consolidated "no issues" panel covering both this section
+  // and GenericIssuesPanel.
+  if (issues.length === 0) return null
 
   return (
     <section>
       <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
-        Issues
+        Transcription issues
         <span className="text-xs font-semibold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
           {issues.length}
         </span>
@@ -127,13 +133,26 @@ export function IssuesPanel({ issues }: { issues: TranscriptIssue[] }) {
                   )}
                 </div>
 
-                <button
-                  onClick={() => handleRetry(issue.videoId)}
-                  disabled={retrying[issue.videoId]}
-                  className="shrink-0 text-sm font-semibold px-3 py-1.5 rounded-lg bg-jungle-600 hover:bg-jungle-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {retrying[issue.videoId] ? 'Retrying…' : 'Retry'}
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => handleRetry(issue.videoId)}
+                    disabled={retrying[issue.videoId] || dismissing[issue.videoId]}
+                    className="text-sm font-semibold px-3 py-1.5 rounded-lg bg-jungle-600 hover:bg-jungle-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {retrying[issue.videoId] ? 'Retrying…' : 'Retry'}
+                  </button>
+                  <button
+                    onClick={() => handleDismiss(issue.videoId)}
+                    disabled={dismissing[issue.videoId] || retrying[issue.videoId]}
+                    aria-label="Dismiss"
+                    title="Dismiss (hide until this video's transcript state changes)"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-700 transition-colors disabled:opacity-50"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M6 18L18 6" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </li>
           ))}

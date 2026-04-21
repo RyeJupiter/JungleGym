@@ -69,7 +69,10 @@ export async function POST(
   }
 
   // Mark processing right away so duplicate triggers (e.g. double-click
-  // on admin retry) don't fan out into parallel Groq calls.
+  // on admin retry) don't fan out into parallel Groq calls. Also clear
+  // transcript_issue_dismissed_at so that if this retry fails again, the
+  // new failure resurfaces on the admin Issues panel instead of staying
+  // hidden by a prior dismissal.
   const admin = createServiceSupabaseClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: lockRow } = await (admin as any)
@@ -77,6 +80,7 @@ export async function POST(
     .update({
       transcript_status: 'processing',
       transcript_error: null,
+      transcript_issue_dismissed_at: null,
     })
     .eq('id', videoId)
     .select('transcript_attempts')

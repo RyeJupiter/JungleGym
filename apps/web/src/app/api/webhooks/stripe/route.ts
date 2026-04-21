@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { createServiceSupabaseClient } from '@/lib/supabase/server'
+import { recordAdminIssue } from '@/lib/adminIssues'
 import type Stripe from 'stripe'
 
 export async function POST(req: Request) {
@@ -18,6 +19,14 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Webhook signature verification failed'
+    // Repeated signature failures usually mean the webhook secret drifted
+    // or an attacker is probing — either way an admin wants to see it.
+    await recordAdminIssue({
+      kind: 'stripe_webhook_signature',
+      severity: 'error',
+      title: 'Stripe webhook signature verification failed',
+      description: msg,
+    })
     return NextResponse.json({ error: msg }, { status: 400 })
   }
 
@@ -38,6 +47,7 @@ export async function POST(req: Request) {
 
   // ── event routing ────────────────────────────────────────────────────────────
 
+  try {
   switch (event.type) {
 
     // ── One-time checkout completed (video purchase OR initial membership) ────
@@ -240,6 +250,25 @@ export async function POST(req: Request) {
           .update({ stripe_payment_intent_id: `DISPUTED:${piId}` })
           .eq('stripe_payment_intent_id', piId)
       }
+      // Chargebacks need a human — respond in Stripe within the deadline
+      // or we lose the funds + pay a $15 fee.
+      await recordAdminIssue({
+        kind: 'stripe_dispute',
+        severity: 'error',
+        title: 'Stripe dispute opened',
+        description: `Reason: ${dispute.reason}. Amount: $${(dispute.amount / 100).toFixed(2)}.`,
+        context: {
+          disputeId: dispute.id,
+          paymentIntentId: piId,
+          amount: dispute.amount / 100,
+          currency: dispute.currency,
+          reason: dispute.reason,
+          status: dispute.status,
+          dueBy: dispute.evidence_details?.due_by
+            ? new Date(dispute.evidence_details.due_by * 1000).toISOString()
+            : null,
+        },
+      })
       break
     }
 
@@ -256,6 +285,46 @@ export async function POST(req: Request) {
           .update({ stripe_payment_intent_id: `REFUNDED:${piId}` })
           .eq('stripe_payment_intent_id', piId)
       }
+      // Info severity — refunds are usually intentional, but an admin
+      // still needs to decide whether to revoke the buyer's access.
+      await recordAdminIssue({
+        kind: 'stripe_refund',
+        severity: 'info',
+        title: 'Stripe refund issued',
+        description: `$${(charge.amount_refunded / 100).toFixed(2)} refunded. Review whether to revoke the buyer's access.`,
+        context: {
+          chargeId: charge.id,
+          paymentIntentId: piId,
+          amountRefunded: charge.amount_refunded / 100,
+          currency: charge.currency,
+        },
+      })
+      break
+    }
+
+    // ── Creator payout failures (Stripe Connect) ─────────────────────────────
+    case 'payout.failed':
+    case 'payout.canceled': {
+      const payout = event.data.object as Stripe.Payout
+      // event.account is the Connected Account ID when the event is
+      // forwarded from a creator's connected account.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const connectedAccountId = (event as any).account as string | undefined
+      await recordAdminIssue({
+        kind: 'payout_failed',
+        severity: 'error',
+        title: `Creator payout ${payout.status}`,
+        description: `$${(payout.amount / 100).toFixed(2)} payout ${payout.status}. Reason: ${payout.failure_message ?? payout.failure_code ?? 'unknown'}.`,
+        context: {
+          payoutId: payout.id,
+          connectedAccountId,
+          amount: payout.amount / 100,
+          currency: payout.currency,
+          status: payout.status,
+          failureCode: payout.failure_code,
+          failureMessage: payout.failure_message,
+        },
+      })
       break
     }
 
@@ -275,6 +344,23 @@ export async function POST(req: Request) {
     default:
       // Unhandled event — return 200 so Stripe doesn't retry
       break
+  }
+  } catch (err) {
+    // Any case threw while processing — record for admin attention and
+    // return 500 so Stripe retries (we'd rather have a duplicate issue
+    // than a permanently dropped event).
+    const msg = err instanceof Error ? err.message : String(err)
+    await recordAdminIssue({
+      kind: 'webhook_handler_error',
+      severity: 'error',
+      title: `Stripe webhook handler failed (${event.type})`,
+      description: msg.slice(0, 500),
+      context: {
+        eventId: event.id,
+        eventType: event.type,
+      },
+    })
+    return NextResponse.json({ error: 'Handler error' }, { status: 500 })
   }
 
   return NextResponse.json({ received: true })

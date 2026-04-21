@@ -8,6 +8,8 @@ import type { MetricsData } from '@/components/admin/MetricsPanel'
 import { OverridesPanel } from '@/components/admin/OverridesPanel'
 import { IssuesPanel } from '@/components/admin/IssuesPanel'
 import type { TranscriptIssue } from '@/components/admin/IssuesPanel'
+import { GenericIssuesPanel } from '@/components/admin/GenericIssuesPanel'
+import type { AdminIssue } from '@/components/admin/GenericIssuesPanel'
 import { RecentlyDeletedPanel } from '@/components/admin/RecentlyDeletedPanel'
 import type { DeletedVideo } from '@/components/admin/RecentlyDeletedPanel'
 import type { UserSearchResult } from '@/app/admin/actions'
@@ -35,15 +37,26 @@ export async function AdminContent({
     .select('*', { count: 'exact', head: true })
     .eq('status', 'pending')
 
-  // Issues tab badge: failed transcriptions + pending ones stuck for >10min.
-  // Always fetched so the tab count stays accurate on any page load.
+  // Issues tab badge: failed transcriptions + stuck pending + generic
+  // admin_issues. Everything ignores rows with dismissed_at/
+  // transcript_issue_dismissed_at already set. Always fetched so the
+  // count stays accurate on any page load.
   const stuckCutoff = new Date(Date.now() - 10 * 60 * 1000).toISOString()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { count: failedCount } = await (svcPending as any)
-    .from('videos')
-    .select('*', { count: 'exact', head: true })
-    .or(`transcript_status.eq.failed,and(transcript_status.eq.pending,video_url.not.is.null,created_at.lt.${stuckCutoff})`)
-  const issuesCount = failedCount ?? 0
+  const [{ count: transcriptIssueCount }, { count: adminIssueCount }] = await Promise.all([
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (svcPending as any)
+      .from('videos')
+      .select('*', { count: 'exact', head: true })
+      .is('transcript_issue_dismissed_at', null)
+      .or(`transcript_status.eq.failed,and(transcript_status.eq.pending,video_url.not.is.null,created_at.lt.${stuckCutoff})`),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (svcPending as any)
+      .from('admin_issues')
+      .select('*', { count: 'exact', head: true })
+      .is('dismissed_at', null),
+  ])
+  const issuesCount = (transcriptIssueCount ?? 0) + (adminIssueCount ?? 0)
 
   let pendingApplications: AdminApplication[] = []
   let reviewedCount = 0
@@ -51,6 +64,7 @@ export async function AdminContent({
   let metricsData: MetricsData | null = null
   let creators: UserSearchResult[] = []
   let issues: TranscriptIssue[] = []
+  let adminIssues: AdminIssue[] = []
   let deletedVideos: DeletedVideo[] = []
 
   if (tab === 'creators') {
@@ -223,11 +237,14 @@ export async function AdminContent({
   } else if (tab === 'issues') {
     const svc = await createServiceSupabaseClient()
     // Failed transcriptions OR pending ones stuck >10min (initial extract
-    // probably failed, we never got to call /api/transcribe).
+    // probably failed, we never got to call /api/transcribe). Skip any
+    // rows an admin already dismissed — a retry clears the dismissal so
+    // new failures after dismissal resurface.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: issueRows } = await (svc as any)
       .from('videos')
       .select('id, title, creator_id, transcript_status, transcript_error, transcript_attempts, updated_at, created_at, video_url')
+      .is('transcript_issue_dismissed_at', null)
       .or(`transcript_status.eq.failed,and(transcript_status.eq.pending,video_url.not.is.null,created_at.lt.${stuckCutoff})`)
       .order('updated_at', { ascending: false })
       .limit(50)
@@ -258,6 +275,27 @@ export async function AdminContent({
         updatedAt: v.updated_at,
       } as TranscriptIssue
     })
+
+    // Generic admin issues (Stripe disputes, webhook errors, payout
+    // failures, etc.) — written by recordAdminIssue from anywhere.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: adminIssueRows } = await (svc as any)
+      .from('admin_issues')
+      .select('id, kind, severity, title, description, context, created_at')
+      .is('dismissed_at', null)
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    adminIssues = ((adminIssueRows ?? []) as any[]).map((r) => ({
+      id: r.id,
+      kind: r.kind,
+      severity: r.severity,
+      title: r.title,
+      description: r.description,
+      context: r.context ?? {},
+      createdAt: r.created_at,
+    }))
 
     // Recently deleted videos (within the 30-day restore window).
     const deleteWindowStart = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -429,7 +467,17 @@ export async function AdminContent({
 
       {tab === 'issues' && (
         <>
+          {issues.length === 0 && adminIssues.length === 0 && (
+            <section>
+              <h2 className="text-lg font-bold text-stone-900 mb-4">Issues</h2>
+              <div className="bg-white rounded-2xl border border-stone-200 p-8 text-center">
+                <p className="text-3xl mb-2">✨</p>
+                <p className="text-sm text-stone-500">No open issues</p>
+              </div>
+            </section>
+          )}
           <IssuesPanel issues={issues} />
+          <GenericIssuesPanel issues={adminIssues} />
           <RecentlyDeletedPanel videos={deletedVideos} />
         </>
       )}
