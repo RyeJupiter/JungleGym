@@ -25,6 +25,7 @@ export async function TreehouseContent({ username }: { username: string }) {
         .select('id, title, description, thumbnail_url, duration_seconds, is_free, price_supported, price_community, price_abundance, tags, view_count, created_at')
         .eq('creator_id', profile.user_id)
         .eq('published', true)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false }),
       supabase
         .from('live_sessions')

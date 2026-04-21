@@ -12,6 +12,7 @@ export async function VideoManageContent({ videoId }: { videoId: string }) {
     .select('*')
     .eq('id', videoId)
     .eq('creator_id', user.id)
+    .is('deleted_at', null)
     .single()
 
   if (!video) notFound()

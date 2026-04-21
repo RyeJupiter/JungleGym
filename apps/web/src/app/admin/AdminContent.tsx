@@ -8,6 +8,8 @@ import type { MetricsData } from '@/components/admin/MetricsPanel'
 import { OverridesPanel } from '@/components/admin/OverridesPanel'
 import { IssuesPanel } from '@/components/admin/IssuesPanel'
 import type { TranscriptIssue } from '@/components/admin/IssuesPanel'
+import { RecentlyDeletedPanel } from '@/components/admin/RecentlyDeletedPanel'
+import type { DeletedVideo } from '@/components/admin/RecentlyDeletedPanel'
 import type { UserSearchResult } from '@/app/admin/actions'
 import type { AdminApplication } from '@/components/admin/ApplicationCard'
 import { fetchAdminApplications, countReviewedApplications } from '@/lib/admin-applications'
@@ -49,6 +51,7 @@ export async function AdminContent({
   let metricsData: MetricsData | null = null
   let creators: UserSearchResult[] = []
   let issues: TranscriptIssue[] = []
+  let deletedVideos: DeletedVideo[] = []
 
   if (tab === 'creators') {
     const svc = await createServiceSupabaseClient()
@@ -255,6 +258,45 @@ export async function AdminContent({
         updatedAt: v.updated_at,
       } as TranscriptIssue
     })
+
+    // Recently deleted videos (within the 30-day restore window).
+    const deleteWindowStart = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: deletedRows } = await (svc as any)
+      .from('videos')
+      .select('id, title, creator_id, deleted_at')
+      .not('deleted_at', 'is', null)
+      .gt('deleted_at', deleteWindowStart)
+      .order('deleted_at', { ascending: false })
+      .limit(100)
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const deletedCreatorIds = [...new Set<string>(((deletedRows ?? []) as any[]).map((v) => v.creator_id))]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let deletedProfiles: any[] = []
+    if (deletedCreatorIds.length > 0) {
+      const { data } = await svc
+        .from('profiles').select('user_id, display_name, username').in('user_id', deletedCreatorIds)
+      deletedProfiles = data ?? []
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const deletedProfileMap = new Map(deletedProfiles.map((p: any) => [p.user_id, p]))
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    deletedVideos = ((deletedRows ?? []) as any[]).map((v) => {
+      const p = deletedProfileMap.get(v.creator_id)
+      const deletedMs = new Date(v.deleted_at).getTime()
+      const msSince = Date.now() - deletedMs
+      const daysRemaining = Math.max(0, 30 - Math.floor(msSince / (24 * 60 * 60 * 1000)))
+      return {
+        videoId: v.id,
+        title: v.title,
+        creatorName: p?.display_name ?? null,
+        creatorUsername: p?.username ?? null,
+        deletedAt: v.deleted_at,
+        daysRemaining,
+      } as DeletedVideo
+    })
   } else if (tab === 'admins' && isSuperAdmin) {
     try {
       const svc = await createServiceSupabaseClient()
@@ -386,7 +428,10 @@ export async function AdminContent({
       )}
 
       {tab === 'issues' && (
-        <IssuesPanel issues={issues} />
+        <>
+          <IssuesPanel issues={issues} />
+          <RecentlyDeletedPanel videos={deletedVideos} />
+        </>
       )}
 
       {tab === 'admins' && isSuperAdmin && (

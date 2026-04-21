@@ -16,6 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .from('videos')
     .select('title, description, thumbnail_url, tags')
     .eq('id', id)
+    .is('deleted_at', null)
     .single()
 
   if (!data) return { title: 'Video' }
@@ -61,6 +62,7 @@ export default async function VideoPage({ params }: Props) {
     .from('videos')
     .select('title, description, thumbnail_url, duration_seconds, created_at, creator_id')
     .eq('id', id)
+    .is('deleted_at', null)
     .maybeSingle()
 
   let creatorName: string | null = null

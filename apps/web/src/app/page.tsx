@@ -131,6 +131,7 @@ export default async function HomePage() {
       .from('videos')
       .select('id, title, thumbnail_url')
       .eq('id', WELCOME_VIDEO_ID)
+      .is('deleted_at', null)
       .single(),
     PINNED_SESSION_IDS.length
       ? supabase

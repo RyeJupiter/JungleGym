@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { formatPrice } from '@junglegym/shared'
 import { VideoEditForm } from './VideoEditForm'
@@ -62,6 +63,10 @@ export function VideoManagePage({ video, videoPublicUrl, metrics, transactions }
   const [published, setPublished] = useState(video.published)
   const [toggling, setToggling] = useState(false)
   const [tab, setTab] = useState<Tab>('metrics')
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const router = useRouter()
   const supabase = createBrowserSupabaseClient()
 
   async function togglePublish() {
@@ -70,6 +75,26 @@ export function VideoManagePage({ video, videoPublicUrl, metrics, transactions }
     const { error } = await supabase.from('videos').update({ published: next }).eq('id', video.id)
     if (!error) setPublished(next)
     setToggling(false)
+  }
+
+  async function handleDelete() {
+    setDeleting(true)
+    setDeleteError(null)
+    // Soft delete — sets deleted_at + unpublishes. A scheduled purge
+    // job (TODO) hard-deletes rows + storage objects after 30 days.
+    // Within that window admins can restore from /admin?tab=issues.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+      .from('videos')
+      .update({ deleted_at: new Date().toISOString(), published: false })
+      .eq('id', video.id)
+    if (error) {
+      setDeleteError(error.message)
+      setDeleting(false)
+      return
+    }
+    router.push('/studio')
+    router.refresh()
   }
 
   return (
@@ -197,10 +222,74 @@ export function VideoManagePage({ video, videoPublicUrl, metrics, transactions }
 
       {/* Settings tab */}
       {tab === 'settings' && (
-        <VideoEditForm
-          video={video}
-          videoPublicUrl={videoPublicUrl}
-        />
+        <>
+          <VideoEditForm
+            video={video}
+            videoPublicUrl={videoPublicUrl}
+          />
+
+          {/* Danger zone */}
+          <div className="mt-10 rounded-2xl border border-red-200 bg-red-50/50 p-5 sm:p-6">
+            <h3 className="text-sm font-bold text-red-800 uppercase tracking-wide mb-1">
+              Danger zone
+            </h3>
+            <p className="text-sm text-red-700/80 mb-4">
+              Delete this video. It will be hidden from the platform immediately.
+              An admin can restore it within 30 days; after that it&apos;s gone for good.
+            </p>
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(true)}
+              className="text-sm font-semibold px-4 py-2 rounded-lg bg-white border border-red-300 text-red-700 hover:bg-red-100 transition-colors"
+            >
+              Delete video
+            </button>
+          </div>
+        </>
+      )}
+
+      {deleteOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-sm px-4"
+          onClick={() => !deleting && setDeleteOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-black text-stone-900 mb-2">
+              Delete &quot;{video.title}&quot;?
+            </h3>
+            <p className="text-sm text-stone-600 mb-5">
+              This hides the video from the platform immediately. An admin
+              can restore it within 30 days; after that the video, its
+              transcript, and its thumbnail are permanently deleted.
+            </p>
+            {deleteError && (
+              <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2 mb-4">
+                {deleteError}
+              </p>
+            )}
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteOpen(false)}
+                disabled={deleting}
+                className="text-sm font-semibold px-4 py-2 rounded-lg text-stone-600 hover:bg-stone-100 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="text-sm font-semibold px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50"
+              >
+                {deleting ? 'Deleting…' : 'Delete video'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -58,6 +58,7 @@ export async function StudioVideos({ userId }: { userId: string }) {
     .from('videos')
     .select('*')
     .eq('creator_id', userId)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   if ((videos ?? []).length === 0) {

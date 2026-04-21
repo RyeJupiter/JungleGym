@@ -51,6 +51,7 @@ async function lookupShare(token: string, viewerId: string | null): Promise<Shar
     .from('videos')
     .select('id, title, description, thumbnail_url, duration_seconds, creator_id')
     .eq('id', share.video_id)
+    .is('deleted_at', null)
     .single()
 
   if (!video) return null

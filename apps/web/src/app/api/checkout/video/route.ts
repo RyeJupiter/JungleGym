@@ -44,6 +44,7 @@ export async function POST(req: Request) {
     .select('id, title, thumbnail_url, price_supported, price_community, price_abundance, creator_id')
     .eq('id', videoId)
     .eq('published', true)
+    .is('deleted_at', null)
     .single()
 
   if (!video) {

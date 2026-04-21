@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
     .from('videos')
     .select('price_supported, price_community, price_abundance, title, creator_id')
     .eq('id', videoId)
+    .is('deleted_at', null)
     .single()
 
   if (!video) return NextResponse.json({ error: 'Video not found' }, { status: 404 })
