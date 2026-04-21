@@ -131,6 +131,13 @@ export async function VideoContent({ videoId }: { videoId: string }) {
               controls
               controlsList="nodownload"
               playsInline
+              // Required for cross-origin <track> (VTT lives on Supabase
+              // storage; document is on junglegym.academy). Without it
+              // the browser silently refuses to load the track, so no
+              // CC button appears. Supabase storage responds with
+              // Access-Control-Allow-Origin: *, so the video itself
+              // continues to load normally in CORS mode.
+              crossOrigin="anonymous"
               className="w-full h-full"
               poster={video.thumbnail_url ?? undefined}
             >
