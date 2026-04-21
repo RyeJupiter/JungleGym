@@ -248,6 +248,8 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
                 }
                 onVariantChange={
                   section.type === 'hero'
+                    || section.type === 'free_videos'
+                    || section.type === 'paid_videos'
                     ? (v) => updateSection(section.id, { variant: v })
                     : undefined
                 }

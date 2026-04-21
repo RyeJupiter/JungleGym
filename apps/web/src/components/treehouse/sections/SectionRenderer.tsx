@@ -1,4 +1,4 @@
-import type { SectionConfig, HeroVariant } from '../config'
+import type { SectionConfig, HeroVariant, GridVariant } from '../config'
 import type { ThemeClasses } from '../themes'
 import { withBannerOverrides } from '../themes'
 import { HeroSection } from './HeroSection'
@@ -117,6 +117,7 @@ export function SectionRenderer({
             videos={data.freeVideos}
             title="Free classes"
             theme={theme}
+            variant={(section.variant as GridVariant) ?? 'default'}
           />
         </div>
       )
@@ -129,6 +130,7 @@ export function SectionRenderer({
             title="Paid classes"
             theme={theme}
             badgeClass="bg-earth-600 text-earth-100"
+            variant={(section.variant as GridVariant) ?? 'default'}
           />
         </div>
       )

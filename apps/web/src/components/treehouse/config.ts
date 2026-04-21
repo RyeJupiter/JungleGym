@@ -13,6 +13,14 @@ export type ThemeKey = 'jungle' | 'earth' | 'midnight' | 'dawn' | 'stone'
 
 export type HeroVariant = 'default' | 'compact' | 'centered'
 
+/**
+ * Layout density for video/grid sections.
+ * - showcase: 1–2 columns, big featured cards
+ * - default:  1/2/3 columns (current behavior)
+ * - compact:  2/3/4 columns, denser overview
+ */
+export type GridVariant = 'showcase' | 'default' | 'compact'
+
 export interface SectionConfig {
   id: string
   type: SectionType
@@ -46,6 +54,18 @@ export const SECTION_LABELS: Record<SectionType, string> = {
   paid_videos: 'Paid Videos',
   photo_gallery: 'Photo Gallery',
   bio: 'Movement Story',
+}
+
+// Emoji-icon per section type — used anywhere a section shows its identity
+// (add menu, section control bar). Keep in sync with AddSectionMenu labels.
+export const SECTION_ICONS: Record<SectionType, string> = {
+  hero: '🏡',
+  intro_video: '🎥',
+  live_sessions: '📅',
+  free_videos: '🆓',
+  paid_videos: '💰',
+  photo_gallery: '📸',
+  bio: '🌿',
 }
 
 // Default config — matches the current hardcoded treehouse layout exactly
