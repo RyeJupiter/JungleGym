@@ -104,9 +104,12 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
   }, [])
 
   // ── Photo change ──
+  // Mirror handleFieldChange: write to the ref too, since handleSave reads
+  // from profileEditsRef.current. Without this, photo uploads silently no-op.
   const handlePhotoChange = useCallback((file: File | null, previewUrl: string | null) => {
     setPhotoFile(file)
-    setProfileEdits((prev) => ({ ...prev, photo_url: previewUrl ?? '' }))
+    profileEditsRef.current = { ...profileEditsRef.current, photo_url: previewUrl ?? '' }
+    setProfileEdits(profileEditsRef.current)
   }, [])
 
   // ── Section data edits ──
