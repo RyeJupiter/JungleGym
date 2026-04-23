@@ -69,7 +69,8 @@ export default function WelcomePage() {
           </p>
           <p className="mt-5">
             You&rsquo;re not a content creator here. You&rsquo;re a movement guide. A lead
-            monkey. The difference matters.
+            monkey. Everything downstream — the rates, the ownership, the way the money
+            moves — follows from that.
           </p>
         </div>
 
