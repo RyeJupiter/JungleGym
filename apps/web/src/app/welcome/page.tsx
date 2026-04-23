@@ -22,14 +22,14 @@ export default function WelcomePage() {
       <section className="relative bg-jungle-800 overflow-hidden">
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-14 sm:pb-20 text-center">
           <div className="flex flex-col items-center mb-8 sm:mb-10">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/emperor-tamarin.jpg"
-              alt="Emperor tamarin — Saguinus imperator"
-              className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover shadow-md border-4 border-jungle-600"
-            />
+            <div
+              aria-hidden="true"
+              className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-jungle-700 shadow-md border-4 border-jungle-600 flex items-center justify-center text-6xl sm:text-7xl leading-none select-none"
+            >
+              🐒
+            </div>
             <p className="text-xs text-jungle-400 mt-3 italic">
-              Emperor tamarin · <em>Saguinus imperator</em> · public domain
+              A lead monkey, in their element.
             </p>
           </div>
 

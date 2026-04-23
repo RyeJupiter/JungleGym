@@ -19,13 +19,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Download static assets
-        run: |
-          curl -L -A "Mozilla/5.0" \
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/CagedTamarin.jpg/400px-CagedTamarin.jpg" \
-            -o apps/web/public/emperor-tamarin.jpg
-          file apps/web/public/emperor-tamarin.jpg
-
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
