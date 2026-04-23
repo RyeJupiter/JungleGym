@@ -139,6 +139,106 @@ export async function getLiveInputStatus(
   }
 }
 
+// ── Direct Creator Upload (VOD) ──────────────────────────────
+
+export type DirectUploadResult = {
+  /** One-time URL the client POSTs the video file to (multipart/form-data, field "file"). */
+  uploadURL: string
+  /** Stream video UID — reserve this; use for playback once readyToStream. */
+  uid: string
+}
+
+/**
+ * Mint a one-time Direct Creator Upload URL. The client POSTs the raw file
+ * to `uploadURL` — no auth header needed, the URL itself carries the token
+ * and expires after use. Handles any format CF supports (.mov, .mp4, .mkv,
+ * HEVC, etc.) up to the per-upload size limit.
+ */
+export async function createDirectUpload(opts: {
+  maxDurationSeconds: number
+  creator?: string
+  meta?: Record<string, string>
+}): Promise<DirectUploadResult> {
+  const { token, accountId } = getConfig()
+  if (!token || !accountId) {
+    throw new Error('Cloudflare Stream is not configured.')
+  }
+
+  const res = await fetch(
+    `${CF_API_BASE}/accounts/${accountId}/stream/direct_upload`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        maxDurationSeconds: opts.maxDurationSeconds,
+        creator: opts.creator,
+        meta: opts.meta,
+        // Omit allowedOrigins — one-time URL is already single-use, and
+        // restricting origins breaks local dev without ceremony.
+      }),
+    }
+  )
+
+  const data = await res.json()
+  if (!data.success) {
+    throw new Error(data.errors?.[0]?.message ?? 'Failed to create direct upload')
+  }
+
+  return {
+    uploadURL: data.result.uploadURL,
+    uid: data.result.uid,
+  }
+}
+
+export type VideoStatus = {
+  /** Upload/processing pipeline state. Poll until readyToStream is true. */
+  state: 'pendingupload' | 'downloading' | 'queued' | 'inprogress' | 'ready' | 'error'
+  readyToStream: boolean
+  errorMessage?: string
+  duration?: number
+  thumbnail?: string
+}
+
+export async function getVideoStatus(uid: string): Promise<VideoStatus | null> {
+  const { token, accountId } = getConfig()
+  if (!token || !accountId) return null
+
+  const res = await fetch(
+    `${CF_API_BASE}/accounts/${accountId}/stream/${uid}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  )
+
+  const data = await res.json()
+  if (!data.success) return null
+
+  const r = data.result
+  return {
+    state: r.status?.state ?? 'pendingupload',
+    readyToStream: !!r.readyToStream,
+    errorMessage: r.status?.errorReasonText,
+    duration: r.duration,
+    thumbnail: r.thumbnail,
+  }
+}
+
+export async function deleteStreamVideo(uid: string): Promise<boolean> {
+  const { token, accountId } = getConfig()
+  if (!token || !accountId) return false
+
+  const res = await fetch(
+    `${CF_API_BASE}/accounts/${accountId}/stream/${uid}`,
+    {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  )
+
+  return res.ok
+}
+
 // ── List recordings for a live input ─────────────────────────
 
 export type Recording = {

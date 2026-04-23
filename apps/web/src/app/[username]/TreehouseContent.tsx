@@ -88,6 +88,7 @@ export async function TreehouseContent({ username }: { username: string }) {
     sessions: upcomingSessions,
     isOwnProfile,
     viewerRole,
+    streamCustomerCode: process.env.CLOUDFLARE_STREAM_CUSTOMER_CODE ?? null,
   }
 
   return <TreehouseShell config={config} data={data} />

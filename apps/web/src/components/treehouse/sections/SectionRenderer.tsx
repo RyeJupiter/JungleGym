@@ -36,6 +36,9 @@ export type TreehouseData = {
   /** Role of the currently signed-in viewer. Gates heavy editor features
    *  (intro video, generous photo gallery) to creators to save storage. */
   viewerRole: ViewerRole
+  /** Cloudflare Stream customer code, needed to construct iframe/HLS URLs.
+   *  Passed from server — env var not available in client components. */
+  streamCustomerCode: string | null
 }
 
 // Learners get a slim editor: no intro video, photo gallery capped.
@@ -147,12 +150,15 @@ export function SectionRenderer({
       return (
         <div className={`max-w-5xl mx-auto px-4 sm:px-6 ${opacity}`}>
           <IntroVideoSection
-            videoUrl={(section.data?.url as string) ?? undefined}
+            sectionId={section.id}
+            streamUid={(section.data?.streamUid as string) ?? undefined}
+            legacyUrl={(section.data?.url as string) ?? undefined}
+            customerCode={data.streamCustomerCode ?? undefined}
             theme={theme}
             editing={editing}
-            userId={data.profile.user_id}
-            onVideoUploaded={(url) => onSectionDataChange?.(section.id, { url })}
-            onVideoRemoved={() => onSectionDataChange?.(section.id, {})}
+            onStreamUidChange={(uid) =>
+              onSectionDataChange?.(section.id, uid ? { streamUid: uid } : {})
+            }
           />
         </div>
       )
