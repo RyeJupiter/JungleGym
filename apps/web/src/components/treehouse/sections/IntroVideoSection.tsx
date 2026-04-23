@@ -345,7 +345,7 @@ function describe(state: UploadState): { label: string; ratio: number | null } {
     case 'minting':
       return { label: 'Starting upload…', ratio: null }
     case 'uploading':
-      return { label: 'Uploading to Cloudflare…', ratio: state.progress }
+      return { label: 'Uploading to your treehouse…', ratio: state.progress }
     case 'processing':
       return { label: 'Processing video…', ratio: null }
     default:
