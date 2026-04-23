@@ -152,12 +152,19 @@ export function SectionRenderer({
           <IntroVideoSection
             sectionId={section.id}
             streamUid={(section.data?.streamUid as string) ?? undefined}
+            width={(section.data?.width as number) ?? undefined}
+            height={(section.data?.height as number) ?? undefined}
             legacyUrl={(section.data?.url as string) ?? undefined}
             customerCode={data.streamCustomerCode ?? undefined}
             theme={theme}
             editing={editing}
-            onStreamUidChange={(uid) =>
-              onSectionDataChange?.(section.id, uid ? { streamUid: uid } : {})
+            onStreamUidChange={(uid, dims) =>
+              onSectionDataChange?.(
+                section.id,
+                uid
+                  ? { streamUid: uid, ...(dims ? { width: dims.width, height: dims.height } : {}) }
+                  : {},
+              )
             }
           />
         </div>

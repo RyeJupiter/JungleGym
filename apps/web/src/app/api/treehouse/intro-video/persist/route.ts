@@ -26,6 +26,10 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null)
   const sectionId = body?.sectionId
   const streamUid: string | null = body?.streamUid ?? null
+  // Optional video dimensions — used so the renderer can lay out portrait
+  // and landscape videos with the right aspect ratio instead of black-boxing.
+  const width = typeof body?.width === 'number' && body.width > 0 ? body.width : null
+  const height = typeof body?.height === 'number' && body.height > 0 ? body.height : null
   if (typeof sectionId !== 'string') {
     return NextResponse.json({ error: 'sectionId is required' }, { status: 400 })
   }
@@ -60,21 +64,25 @@ export async function POST(request: Request) {
   const idx = sections.findIndex((s) => s.id === sectionId && s.type === 'intro_video')
   let previousUid: string | null = null
 
+  const nextData: Record<string, unknown> | null = streamUid
+    ? { streamUid, ...(width && height ? { width, height } : {}) }
+    : null
+
   if (idx >= 0) {
     const prev = sections[idx].data as { streamUid?: string } | undefined
     previousUid = prev?.streamUid ?? null
     sections[idx] = {
       ...sections[idx],
-      data: streamUid ? { streamUid } : {},
+      data: nextData ?? {},
     }
-  } else if (streamUid) {
+  } else if (nextData) {
     // Section didn't exist in the saved config yet — add it. Visible by
     // default so the creator sees their video without a second action.
     sections.push({
       id: sectionId,
       type: 'intro_video',
       visible: true,
-      data: { streamUid },
+      data: nextData,
     })
   }
   // If streamUid is null AND section doesn't exist, there's nothing to do.

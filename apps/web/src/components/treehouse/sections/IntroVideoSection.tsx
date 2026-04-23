@@ -25,13 +25,19 @@ type Props = {
   sectionId: string
   /** New CF Stream upload. */
   streamUid?: string
+  /** Source video dimensions — used to lay out portrait vs. landscape. */
+  width?: number
+  height?: number
   /** Legacy Supabase storage URL — pre-CF-Stream migration. */
   legacyUrl?: string
   /** CF customer code for building iframe/HLS URLs. Passed from server. */
   customerCode?: string
   theme: ThemeClasses
   editing?: boolean
-  onStreamUidChange?: (uid: string | null) => void
+  onStreamUidChange?: (
+    uid: string | null,
+    dims?: { width: number; height: number } | null,
+  ) => void
 }
 
 type UploadState =
@@ -44,6 +50,8 @@ type UploadState =
 export function IntroVideoSection({
   sectionId,
   streamUid,
+  width,
+  height,
   legacyUrl,
   customerCode,
   theme,
@@ -104,6 +112,12 @@ export function IntroVideoSection({
     xhrRef.current?.abort()
     setState({ kind: 'minting' })
 
+    // Read native video dimensions locally before upload so the layout
+    // can honor portrait orientation. Best-effort — some phone codecs
+    // (HEVC on older browsers) can't decode metadata client-side; null
+    // there just means we default to aspect-video on render.
+    const dims = await readVideoDimensions(file)
+
     try {
       // 1) Mint a direct-upload URL.
       const mintRes = await fetch('/api/treehouse/intro-video/upload-url', { method: 'POST' })
@@ -141,14 +155,18 @@ export function IntroVideoSection({
       const persistRes = await fetch('/api/treehouse/intro-video/persist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sectionId, streamUid: uid }),
+        body: JSON.stringify({
+          sectionId,
+          streamUid: uid,
+          ...(dims ? { width: dims.width, height: dims.height } : {}),
+        }),
       })
       if (!persistRes.ok) {
         const err = await persistRes.json().catch(() => ({}))
         throw new Error(err.error ?? 'Saved to Cloudflare but could not update profile')
       }
 
-      onStreamUidChange?.(uid)
+      onStreamUidChange?.(uid, dims)
 
       // 4) Wait for CF to finish transcoding.
       setState({ kind: 'processing', uid })
@@ -172,18 +190,31 @@ export function IntroVideoSection({
       ? `https://customer-${customerCode}.cloudflarestream.com/${streamUid}/iframe`
       : null
 
+  // Portrait videos get centered in a narrower column; landscape fills the
+  // section. `aspectRatio` CSS sets the container shape so the iframe inside
+  // matches the source and CF doesn't letter/pillarbox.
+  const hasDims = !!(width && height)
+  const isPortrait = hasDims && height! > width!
+  const aspectRatio = hasDims ? `${width} / ${height}` : '16 / 9'
+  const frameWrapperClass = isPortrait ? 'max-w-[420px] mx-auto' : ''
+
   // ── View mode — just show the video.
   if (!editing) {
     if (iframeSrc) {
       return (
         <section className="mb-12">
-          <div className={`aspect-video w-full rounded-xl border ${theme.cardBorder} overflow-hidden bg-black`}>
-            <iframe
-              src={iframeSrc}
-              className="w-full h-full"
-              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
-              allowFullScreen
-            />
+          <div className={frameWrapperClass}>
+            <div
+              className={`w-full rounded-xl border ${theme.cardBorder} overflow-hidden bg-black`}
+              style={{ aspectRatio }}
+            >
+              <iframe
+                src={iframeSrc}
+                className="w-full h-full"
+                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
           </div>
         </section>
       )
@@ -221,9 +252,12 @@ export function IntroVideoSection({
       />
 
       {(iframeSrc || legacyUrl) && !busy ? (
-        <div className="relative">
+        <div className={`relative ${frameWrapperClass}`}>
           {iframeSrc ? (
-            <div className={`aspect-video w-full rounded-xl border ${theme.cardBorder} overflow-hidden bg-black`}>
+            <div
+              className={`w-full rounded-xl border ${theme.cardBorder} overflow-hidden bg-black`}
+              style={{ aspectRatio }}
+            >
               <iframe
                 src={iframeSrc}
                 className="w-full h-full"
@@ -317,4 +351,34 @@ function describe(state: UploadState): { label: string; ratio: number | null } {
     default:
       return { label: '', ratio: null }
   }
+}
+
+/**
+ * Read a video file's intrinsic dimensions via a hidden <video> element.
+ * Resolves null if the browser can't decode the metadata (rare — usually
+ * means an unsupported codec like raw HEVC on an older browser). Callers
+ * should treat null as "unknown" and fall back to a default layout.
+ */
+function readVideoDimensions(file: File): Promise<{ width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file)
+    const vid = document.createElement('video')
+    vid.preload = 'metadata'
+    vid.muted = true
+    const cleanup = () => URL.revokeObjectURL(url)
+    vid.onloadedmetadata = () => {
+      cleanup()
+      const { videoWidth, videoHeight } = vid
+      if (videoWidth > 0 && videoHeight > 0) {
+        resolve({ width: videoWidth, height: videoHeight })
+      } else {
+        resolve(null)
+      }
+    }
+    vid.onerror = () => {
+      cleanup()
+      resolve(null)
+    }
+    vid.src = url
+  })
 }
