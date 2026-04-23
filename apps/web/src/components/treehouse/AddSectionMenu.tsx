@@ -2,29 +2,38 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { SectionConfig, SectionType } from './config'
+import type { ViewerRole } from './sections/SectionRenderer'
 import { SECTION_LABELS, SECTION_ICONS, SINGLETON_SECTIONS, createSection } from './config'
 
 type Props = {
   currentSections: SectionConfig[]
+  viewerRole: ViewerRole
   onAdd: (section: SectionConfig) => void
 }
 
 type AddOption = {
   type: SectionType
   description: string
+  /** If present, only viewers with this role can add the section. */
+  creatorOnly?: boolean
 }
 
 // Hero is a singleton and always present — it's not in the add menu.
 const ADD_OPTIONS: AddOption[] = [
   { type: 'bio',           description: 'Share how you came to movement and why it matters to you' },
-  { type: 'intro_video',   description: 'Upload a short clip to introduce yourself' },
+  { type: 'intro_video',   description: 'Upload a short clip to introduce yourself', creatorOnly: true },
   { type: 'photo_gallery', description: 'Showcase photos of your practice' },
   { type: 'live_sessions', description: 'Show upcoming live sessions' },
   { type: 'free_videos',   description: 'A grid of your free classes' },
   { type: 'paid_videos',   description: 'A grid of your paid classes' },
 ]
 
-export function AddSectionMenu({ currentSections, onAdd }: Props) {
+export function AddSectionMenu({ currentSections, viewerRole, onAdd }: Props) {
+  // Learners don't get video uploads — intro-video bandwidth is reserved for
+  // creators whose profile is their storefront.
+  const visibleOptions = ADD_OPTIONS.filter(
+    (opt) => !opt.creatorOnly || viewerRole === 'creator',
+  )
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -78,7 +87,7 @@ export function AddSectionMenu({ currentSections, onAdd }: Props) {
             <p className="text-stone-500 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5">
               Add a section
             </p>
-            {ADD_OPTIONS.map((opt) => {
+            {visibleOptions.map((opt) => {
               const disabled = isDisabled(opt.type)
               return (
                 <button

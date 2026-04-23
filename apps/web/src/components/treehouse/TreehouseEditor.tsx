@@ -277,6 +277,7 @@ export function TreehouseEditor({ initialConfig, data }: Props) {
 
       <AddSectionMenu
         currentSections={config.sections}
+        viewerRole={data.viewerRole}
         onAdd={addSection}
       />
     </div>

@@ -9,6 +9,8 @@ import { PhotoGallerySection } from './PhotoGallerySection'
 import { BioSection } from './BioSection'
 import type { GalleryImage } from './PhotoGallerySection'
 
+export type ViewerRole = 'creator' | 'learner' | null
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type TreehouseData = {
   profile: {
@@ -31,7 +33,13 @@ export type TreehouseData = {
   allVideos: VideoData[]
   sessions: SessionData[]
   isOwnProfile: boolean
+  /** Role of the currently signed-in viewer. Gates heavy editor features
+   *  (intro video, generous photo gallery) to creators to save storage. */
+  viewerRole: ViewerRole
 }
+
+// Learners get a slim editor: no intro video, photo gallery capped.
+export const LEARNER_GALLERY_CAP = 4
 
 type VideoData = {
   id: string
@@ -157,6 +165,7 @@ export function SectionRenderer({
             theme={theme}
             editing={editing}
             userId={data.profile.user_id}
+            maxImages={data.viewerRole === 'creator' ? undefined : LEARNER_GALLERY_CAP}
             onImagesChange={(images) => onSectionDataChange?.(section.id, { images })}
           />
         </div>

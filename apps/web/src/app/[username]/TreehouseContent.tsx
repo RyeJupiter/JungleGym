@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { resolveConfig } from '@/components/treehouse/config'
+import type { ViewerRole } from '@/components/treehouse/sections/SectionRenderer'
 import { TreehouseShell } from './TreehouseShell'
 
 export async function TreehouseContent({ username }: { username: string }) {
@@ -49,6 +50,20 @@ export async function TreehouseContent({ username }: { username: string }) {
   }).slice(0, 4)
   const isOwnProfile = authUser?.id === profile.user_id
 
+  // Viewer role gates heavy editor features (intro video, large gallery).
+  // Only queried when we'll actually use it — viewing someone else's treehouse
+  // doesn't need it, and an anonymous viewer can't edit anything.
+  let viewerRole: ViewerRole = null
+  if (isOwnProfile && authUser) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: userRow } = await (supabase as any)
+      .from('users')
+      .select('role')
+      .eq('id', authUser.id)
+      .maybeSingle()
+    viewerRole = (userRow?.role as ViewerRole) ?? 'learner'
+  }
+
   const config = resolveConfig(profile.treehouse_config)
 
   const data = {
@@ -72,6 +87,7 @@ export async function TreehouseContent({ username }: { username: string }) {
     allVideos,
     sessions: upcomingSessions,
     isOwnProfile,
+    viewerRole,
   }
 
   return <TreehouseShell config={config} data={data} />

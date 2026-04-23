@@ -12,6 +12,8 @@ type Props = {
   theme: ThemeClasses
   editing?: boolean
   userId?: string
+  /** Max images allowed. Omit for unlimited (creators). */
+  maxImages?: number
   onImagesChange?: (images: GalleryImage[]) => void
 }
 
@@ -20,18 +22,29 @@ export function PhotoGallerySection({
   theme,
   editing = false,
   userId,
+  maxImages,
   onImagesChange,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [converting, setConverting] = useState(false)
+
+  const atCap = maxImages != null && images.length >= maxImages
+  const remainingSlots = maxImages != null
+    ? Math.max(0, maxImages - images.length)
+    : Infinity
 
   async function handleUpload(files: FileList) {
     if (!userId) return
     const supabase = createBrowserSupabaseClient()
     const newImages: GalleryImage[] = [...images]
 
+    // Cap how many of the picked files we actually process — prevents a
+    // learner from multi-selecting past their limit.
+    const picked = Array.from(files).slice(0, remainingSlots)
+    if (picked.length === 0) return
+
     setConverting(true)
-    for (const file of Array.from(files)) {
+    for (const file of picked) {
       const converted = await convertHeicIfNeeded(file)
       const ready = await compressImage(converted, { maxWidth: 2400, maxHeight: 2400, quality: 0.88 })
       const ext = ready.name.split('.').pop() ?? 'jpg'
@@ -121,15 +134,26 @@ export function PhotoGallerySection({
           </div>
         ))}
 
-        {/* Add photo button */}
-        <button
-          onClick={() => fileRef.current?.click()}
-          className={`aspect-square rounded-xl border-2 border-dashed ${theme.cardBorder} ${theme.textMuted} flex flex-col items-center justify-center gap-1 hover:${theme.cardHoverBorder} transition-colors`}
-        >
-          <span className="text-2xl">+</span>
-          <span className="text-xs font-medium">Add photos</span>
-        </button>
+        {/* Add photo button — hidden at cap so the slot doesn't linger as a
+            dangling empty tile. */}
+        {!atCap && (
+          <button
+            onClick={() => fileRef.current?.click()}
+            className={`aspect-square rounded-xl border-2 border-dashed ${theme.cardBorder} ${theme.textMuted} flex flex-col items-center justify-center gap-1 hover:${theme.cardHoverBorder} transition-colors`}
+          >
+            <span className="text-2xl">+</span>
+            <span className="text-xs font-medium">Add photos</span>
+          </button>
+        )}
       </div>
+
+      {maxImages != null && (
+        <p className={`${theme.textMuted} text-xs mt-3`}>
+          {atCap
+            ? `Gallery full (${images.length}/${maxImages}). Remove a photo to add more, or become a creator for a bigger gallery.`
+            : `${images.length}/${maxImages} photos used.`}
+        </p>
+      )}
     </section>
   )
 }
