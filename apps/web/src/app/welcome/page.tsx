@@ -22,14 +22,16 @@ export default function WelcomePage() {
       <section className="relative bg-jungle-800 overflow-hidden">
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-14 sm:pb-20 text-center">
           <div className="flex flex-col items-center mb-8 sm:mb-10">
-            <div
-              aria-hidden="true"
-              className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-jungle-700 shadow-md border-4 border-jungle-600 flex items-center justify-center text-6xl sm:text-7xl leading-none select-none"
-            >
-              🐒
+            <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-amber-50 shadow-md border-4 border-jungle-600 overflow-hidden flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/emperor-tamarin.jpg"
+                alt="Head of an emperor tamarin (Saguinus imperator) — 1907 illustration by E. A. Goeldi"
+                className="w-full h-full object-cover mix-blend-multiply"
+              />
             </div>
             <p className="text-xs text-jungle-400 mt-3 italic">
-              A lead monkey, in their element.
+              Emperor tamarin · <em>Saguinus imperator</em> · Goeldi, 1907
             </p>
           </div>
 
