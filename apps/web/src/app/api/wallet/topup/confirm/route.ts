@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server'
 import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/supabase/server'
 import { getStripe } from '@/lib/stripe'
 import { recordAdminIssue } from '@/lib/adminIssues'
+import { calculateTopUpTotal } from '@junglegym/shared'
 
 /**
  * POST /api/wallet/topup/confirm
  *
  * Called after Stripe payment succeeds client-side.
  * Verifies the PaymentIntent, then credits the user's wallet.
- * Idempotent — unique index on wallet_transactions.description prevents double-credit.
+ * Idempotent — unique index uq_wallet_tx_pi on stripe_payment_intent_id prevents double-credit.
  */
 export async function POST(req: Request) {
   const stripe = getStripe()
@@ -46,6 +47,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid wallet amount' }, { status: 400 })
   }
 
+  // Defense in depth: verify the PaymentIntent's actual amount matches what
+  // we'd charge for this wallet_amount today. Catches code-side bugs where
+  // metadata drifted from the intent's amount, and any future tampering of
+  // the create-side route (where amount is set from the request body).
+  const expected = calculateTopUpTotal(walletAmount)
+  const expectedCents = Math.round(expected.chargeTotal * 100)
+  if (paymentIntent.amount !== expectedCents) {
+    await recordAdminIssue({
+      kind: 'wallet_topup_amount_mismatch',
+      severity: 'error',
+      title: 'Wallet top-up — PI amount does not match server-side calc',
+      description: `PaymentIntent ${paymentIntentId} has amount ${paymentIntent.amount}¢ but wallet_amount=$${walletAmount.toFixed(2)} should charge ${expectedCents}¢. Refusing to credit.`,
+      context: {
+        paymentIntentId,
+        userId: user.id,
+        walletAmount,
+        piAmountCents: paymentIntent.amount,
+        expectedCents,
+      },
+    })
+    return NextResponse.json({ error: 'Payment amount mismatch' }, { status: 400 })
+  }
+
   const svc = createServiceSupabaseClient()
 
   // Upsert wallet (create if first top-up)
@@ -66,14 +90,17 @@ export async function POST(req: Request) {
   const currentBalance = currentWallet?.balance ?? 0
   const newBalance = Math.round((currentBalance + walletAmount) * 100) / 100
 
-  // Insert transaction FIRST — unique index on description prevents double-credit.
-  // If the webhook already credited this PI, the insert fails and we skip the balance update.
-  const { error: txError } = await svc.from('wallet_transactions').insert({
+  // Insert transaction FIRST — uq_wallet_tx_pi (unique on stripe_payment_intent_id)
+  // prevents double-credit. If the webhook already credited this PI, the insert
+  // fails and we skip the balance update.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: txError } = await (svc as any).from('wallet_transactions').insert({
     user_id: user.id,
     type: 'topup' as const,
     amount: walletAmount,
     balance_after: newBalance,
     description: `topup:${paymentIntentId}`,
+    stripe_payment_intent_id: paymentIntentId,
   })
 
   if (txError) {

@@ -49,10 +49,22 @@ type StaticStats = {
   paidVideos: number
 }
 
+// Fee revenue entries — each scoped to a single fee event so the panel can
+// filter by date range. Source records the originating flow.
+export type FeeEvent = {
+  source: 'wallet_topup' | 'pull_payout'
+  amount: number
+  createdAt: string
+}
+
 export type MetricsData = {
   stats: StaticStats
   creators: CreatorRosterEntry[]
   allTransactions: UnifiedTransaction[]
+  feeEvents: FeeEvent[]
+  // Point-in-time figure — not range-filtered. Sum of unsettled gifts
+  // owed by JungleGym to creators (cash held in Stripe waiting on a Transfer).
+  unsettledCreatorObligation: number
 }
 
 import { CreatorPayoutsSection } from './CreatorPayoutsSection'
@@ -96,7 +108,7 @@ function fmt(n: number) {
 }
 
 export function MetricsPanel({ data }: { data: MetricsData }) {
-  const { stats, creators, allTransactions } = data
+  const { stats, creators, allTransactions, feeEvents, unsettledCreatorObligation } = data
   const [range, setRange] = useState<DateRange>('all')
 
   const filteredTransactions = useMemo(() => {
@@ -104,6 +116,12 @@ export function MetricsPanel({ data }: { data: MetricsData }) {
     if (start === null) return allTransactions
     return allTransactions.filter((t) => new Date(t.createdAt).getTime() >= start)
   }, [allTransactions, range])
+
+  const filteredFeeEvents = useMemo(() => {
+    const start = rangeStart(range)
+    if (start === null) return feeEvents
+    return feeEvents.filter((f) => new Date(f.createdAt).getTime() >= start)
+  }, [feeEvents, range])
 
   const moneyStats = useMemo(() => {
     let creatorRevenue = 0
@@ -118,6 +136,18 @@ export function MetricsPanel({ data }: { data: MetricsData }) {
     }
     return { creatorRevenue, platformRevenue, grossRevenue, purchaseCount }
   }, [filteredTransactions])
+
+  const feeBreakdown = useMemo(() => {
+    let walletTopupFees = 0
+    let pullPayoutFees = 0
+    for (const f of filteredFeeEvents) {
+      if (f.source === 'wallet_topup') walletTopupFees += f.amount
+      else if (f.source === 'pull_payout') pullPayoutFees += f.amount
+    }
+    const purchaseFees = moneyStats.platformRevenue
+    const total = walletTopupFees + pullPayoutFees + purchaseFees
+    return { walletTopupFees, pullPayoutFees, purchaseFees, total }
+  }, [filteredFeeEvents, moneyStats.platformRevenue])
 
   const payouts: CreatorPayout[] = useMemo(() => {
     const videoByCreator = new Map<string, number>()
@@ -197,6 +227,54 @@ export function MetricsPanel({ data }: { data: MetricsData }) {
             value={fmt(moneyStats.grossRevenue)}
             sub={`${RANGE_SUBTITLES[range]} · purchases + gifts`}
           />
+        </div>
+      </section>
+
+      {/* ── JungleGym finances ──────────────────────────────────────────── */}
+      <section>
+        <h2 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">
+          JungleGym finances
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <StatCard
+            label="Owed to creators"
+            value={fmt(unsettledCreatorObligation)}
+            sub="unsettled gifts · point-in-time"
+          />
+          <StatCard
+            label="Total fees collected"
+            value={fmt(feeBreakdown.total)}
+            sub={`${RANGE_SUBTITLES[range]} · JungleGym revenue`}
+          />
+          <StatCard
+            label="Net (collected − owed)"
+            value={fmt(feeBreakdown.total - unsettledCreatorObligation)}
+            sub="rough JungleGym margin"
+          />
+        </div>
+
+        <div className="bg-white border border-stone-200 rounded-2xl mt-3 overflow-hidden">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider px-5 pt-4 pb-2">
+            Fee breakdown · {RANGE_SUBTITLES[range]}
+          </p>
+          <dl className="divide-y divide-stone-100">
+            <div className="flex items-center justify-between px-5 py-3 text-sm">
+              <dt className="text-stone-700">Wallet top-up fees <span className="text-stone-400 text-xs">(7%)</span></dt>
+              <dd className="font-medium text-stone-900">{fmt(feeBreakdown.walletTopupFees)}</dd>
+            </div>
+            <div className="flex items-center justify-between px-5 py-3 text-sm">
+              <dt className="text-stone-700">Video purchase platform fees <span className="text-stone-400 text-xs">(20%)</span></dt>
+              <dd className="font-medium text-stone-900">{fmt(feeBreakdown.purchaseFees)}</dd>
+            </div>
+            <div className="flex items-center justify-between px-5 py-3 text-sm">
+              <dt className="text-stone-700">Pull-payout fees <span className="text-stone-400 text-xs">(2.5%)</span></dt>
+              <dd className="font-medium text-stone-900">{fmt(feeBreakdown.pullPayoutFees)}</dd>
+            </div>
+            <div className="flex items-center justify-between px-5 py-3 text-sm bg-stone-50">
+              <dt className="font-semibold text-stone-900">Total revenue</dt>
+              <dd className="font-bold text-stone-900">{fmt(feeBreakdown.total)}</dd>
+            </div>
+          </dl>
         </div>
       </section>
 

@@ -222,6 +222,52 @@ export async function AdminContent({
     const allTransactions = [...purchaseTransactions, ...giftTransactions]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
+    // Fee revenue + creator obligation. Topup fees are computed from the
+    // wallet_transactions amount × WALLET_TOPUP_FEE_PCT — we don't store the
+    // fee inline on the row. Pull-payout fees come straight off creator_payouts.
+    const { WALLET_TOPUP_FEE_PCT } = await import('@junglegym/shared')
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: topupTxs } = await (svcMetrics as any)
+      .from('wallet_transactions')
+      .select('amount, created_at')
+      .eq('type', 'topup')
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: payoutRows } = await (svcMetrics as any)
+      .from('creator_payouts')
+      .select('fee, mode, created_at')
+      .eq('mode', 'pull')
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: unsettledRows } = await (svcMetrics as any)
+      .from('gifts')
+      .select('creator_amount')
+      .is('settled_at', null)
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const feeEvents: Array<{ source: 'wallet_topup' | 'pull_payout'; amount: number; createdAt: string }> = [
+      ...((topupTxs ?? []) as any[]).map((t) => ({
+        source: 'wallet_topup' as const,
+        // Top-up fee = walletAmount × 7%. The amount column on
+        // wallet_transactions for type=topup is the walletAmount credited.
+        amount: Math.round((Number(t.amount) * (WALLET_TOPUP_FEE_PCT / 100)) * 100) / 100,
+        createdAt: t.created_at,
+      })),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...((payoutRows ?? []) as any[]).map((p) => ({
+        source: 'pull_payout' as const,
+        amount: Number(p.fee),
+        createdAt: p.created_at,
+      })),
+    ]
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const unsettledCreatorObligation = ((unsettledRows ?? []) as any[]).reduce(
+      (sum, r) => Math.round((sum + Number(r.creator_amount)) * 100) / 100,
+      0
+    )
+
     metricsData = {
       stats: {
         totalUsers: users.length,
@@ -233,6 +279,8 @@ export async function AdminContent({
       },
       creators: creatorRoster,
       allTransactions,
+      feeEvents,
+      unsettledCreatorObligation,
     }
   } else if (tab === 'issues') {
     const svc = await createServiceSupabaseClient()

@@ -56,7 +56,7 @@ export function WalletSection({ initialBalance }: { initialBalance: number }) {
       <div>
         <h2 className="font-bold text-stone-900">Wallet</h2>
         <p className="text-sm text-stone-400 mt-0.5">
-          Pre-load funds to send instant gifts during live sessions.
+          Pre-load funds to send instant gifts during live sessions. Gifts you <em>receive</em> are tracked separately in your studio under <strong>Gifts received</strong>.
         </p>
       </div>
 

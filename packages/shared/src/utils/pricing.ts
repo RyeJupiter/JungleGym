@@ -87,6 +87,43 @@ export function calculateGiftTotal(basePrice: number, tipPct: number): {
   return { platformAmount, total }
 }
 
+// ── Creator gift payout fees ────────────────────────────────────────────────
+// Carved from the creator's unsettled gift balance at settlement time.
+//
+// Scheduled = monthly cron (default cadence, free to creator). The 7% wallet
+//   top-up fee + 20% platform fee on session gifts already cover JungleGym's
+//   Stripe processing costs on the way IN; the platform→connected Transfer
+//   is free at Stripe layer; nothing left to charge.
+// Pull     = creator-initiated withdraw (faster, small convenience fee).
+export const PAYOUT_MIN_AMOUNT = 10              // dollars; payouts below this don't trigger
+export const PAYOUT_SCHEDULED_FEE_PCT = 0        // monthly auto-payout is free to creators
+export const PAYOUT_SCHEDULED_FEE_FLAT = 0
+export const PAYOUT_PULL_FEE_PCT = 2.5           // percent of gross
+export const PAYOUT_PULL_RATE_LIMIT_DAYS = 7     // cooldown between consecutive pulls
+
+export function calculateScheduledPayout(grossUnsettled: number): {
+  fee: number
+  amountPaid: number
+} {
+  if (grossUnsettled < PAYOUT_MIN_AMOUNT) {
+    return { fee: 0, amountPaid: 0 }
+  }
+  // No fee on scheduled — creator gets the full unsettled gross.
+  return { fee: 0, amountPaid: grossUnsettled }
+}
+
+export function calculatePullPayout(grossUnsettled: number): {
+  fee: number
+  amountPaid: number
+} {
+  if (grossUnsettled < PAYOUT_MIN_AMOUNT) {
+    return { fee: 0, amountPaid: 0 }
+  }
+  const fee = Math.round(grossUnsettled * (PAYOUT_PULL_FEE_PCT / 100) * 100) / 100
+  const amountPaid = Math.round((grossUnsettled - fee) * 100) / 100
+  return { fee, amountPaid }
+}
+
 export function calculatePriceBreakdown(total: number): {
   creatorAmount: number
   platformFee: number

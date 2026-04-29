@@ -319,6 +319,21 @@ export function StudioSessionsSkeleton({ count = 2 }: { count?: number }) {
   )
 }
 
+export function GiftsReceivedSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-4">
+      <div className="flex items-end justify-between gap-4">
+        <Skeleton className="h-10 w-40 rounded" />
+        <Skeleton className="h-10 w-32 rounded-lg" />
+      </div>
+      <div className="grid grid-cols-2 gap-4 pt-2">
+        <Skeleton className="h-12 rounded" />
+        <Skeleton className="h-12 rounded" />
+      </div>
+    </div>
+  )
+}
+
 /* ─── Settings Form ─────────────────────────────────────────── */
 
 export function SettingsFormSkeleton() {
