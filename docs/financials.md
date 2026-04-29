@@ -146,11 +146,66 @@ At this scale Cloudflare Stream costs become non-trivial. With ~50 active creato
 **At scenario C with realistic streaming, Cloudflare bumps total costs to ~$456/mo.** Need ~285 video sales OR equivalent revenue mix to cover. Suddenly more aggressive.
 
 ### Scenario D — 200 active paid creators
-Fixed Connect cost alone: **$400/mo**.
-Cloudflare Stream at this scale (assume 200 creators × 8 hours/mo × 30 viewers): **$2,880/mo delivery**.
-Plus Supabase Pro overage, R2 storage growth, etc.: **estimated total ~$3,500/mo costs.**
 
-Need ~$3,500/mo revenue. At an average mix of $2 net per video sale and $1 net per top-up: 1,200 sales/mo + 1,000 top-ups/mo. Achievable, but margin is thin compared to costs at this stage. **This is where negotiated Stripe pricing and CF Stream volume discounts start to matter.**
+Where does the ~$3,500/mo come from? **Almost all of it is Cloudflare Stream delivery on the status-quo architecture.** Here's the line-by-line:
+
+#### Status-quo costs (don't follow recommendation 4 — keep recorded video on CF Stream)
+
+| Line item | Math | Monthly |
+|---|---|---|
+| Stripe Connect Express monthly active | $2 × 200 creators | **$400** |
+| **CF Stream delivery** — assume each creator does 8 hours/mo of content (live + recorded) consumed by ~30 viewers each | (200 × 8 × 60 × 30) min ÷ 1,000 × $1 = 2.88M min ÷ 1,000 | **$2,880** |
+| CF Stream storage — each creator has ~6 hours of video stored (treehouse intros + recorded sessions) | (200 × 6 × 60) min ÷ 1,000 × $5 | **$360** |
+| Supabase Pro + DB/bandwidth overage at this scale | $25 base + ~$50 overage | **$75** |
+| R2 storage (thumbnails, transcript chunks, VTT) | ~500 GB × $0.015 | **$8** |
+| CF Workers + base infra | $5 base + minimal CPU | **$10** |
+| Domain + misc | | **$2** |
+| Email service (Resend at this scale) | ~50k tx emails/mo on Resend Pro | **$20** |
+| Disputes (assume 0.3% of $40k gross) | ~8 × $15 | **$120** |
+| **TOTAL — status quo** | | **~$3,875** |
+
+So the real number is closer to ~$3,800, not $3,500. Streaming is ~84% of it. Connect is ~10%. Everything else is rounding error.
+
+#### What it looks like AFTER recommendation 4 (migrate recorded video to R2 + HLS)
+
+CF Stream stays for live sessions only. Recorded video gets served from R2 with free egress.
+
+| Line item | Math | Monthly |
+|---|---|---|
+| Stripe Connect Express | unchanged | $400 |
+| **CF Stream delivery — live only** — assume 2 hours/mo live per creator × 50 viewers | (200 × 2 × 60 × 50) min ÷ 1,000 × $1 = 1.2M min ÷ 1,000 | **$1,200** |
+| CF Stream storage — minimal (live recordings auto-pruned or moved to R2) | ~200 × 1 hour × 60 ÷ 1,000 × $5 | **$60** |
+| **R2 storage — recorded video** — 200 creators × ~10 videos × 500MB = 1TB | 1,000 GB × $0.015 | **$15** |
+| **R2 egress — recorded video delivery** | $0 (always free) | **$0** |
+| Supabase Pro + overage | unchanged | $75 |
+| CF Workers + base | unchanged | $10 |
+| Domain + misc | | $2 |
+| Email service | | $20 |
+| Disputes | | $120 |
+| **TOTAL — with R2 migration** | | **~$1,902** |
+
+That's a **~$2,000/mo savings at scale**, almost all of it on streaming costs. R2's free egress is the entire reason this migration is the highest-ROI infra optimization in the doc.
+
+#### Sensitivity — what really moves the number
+
+| Variable | Cheap version | Expensive version |
+|---|---|---|
+| Avg viewers per stream | 10 → $400 delivery | 100 → $4,000 delivery |
+| Hours of content per creator | 4hrs → $1,400 delivery | 16hrs → $5,760 delivery |
+| % live vs recorded | All recorded → almost free | All live → ~$3,000 delivery |
+
+The big takeaways:
+- **Live streaming is the cost driver, not "scale" itself.** A platform with 200 creators publishing recorded video has very low infra costs. A platform with 200 creators doing nightly live sessions to 50+ viewers each costs real money.
+- **Migrating recorded video to R2 is the single biggest cost lever** we have at scale — better than negotiated Stripe rates, better than anything else.
+- Connect's $2/mo per creator is real but not catastrophic — at 200 creators it's $400/mo, ~10% of total cost. We can absorb it with normal video purchase margin.
+
+#### Revenue needed to break even — with R2 migration
+
+~$1,900/mo. At an average mix of:
+- 200 creators × avg 5 video sales / mo × $2 net / sale = $2,000 — comfortably covers
+- Plus top-up revenue, plus pull-payout fees → comfortable margin
+
+**At 200 creators with the R2 migration done, the platform should be solidly profitable.** Without it, we're scratching break-even and the streaming bill becomes the existential thing.
 
 ---
 
