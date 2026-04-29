@@ -31,11 +31,13 @@ These three are the only revenue streams. Everything else is pass-through.
 | Cost | Rate | Notes |
 |---|---|---|
 | Stripe inbound (card charge) | 2.9% + $0.30 | Per top-up + per video purchase. Deducted from gross before settlement (or from `application_fee_amount` for destination charges). |
-| Cloudflare Stream — delivery | $1 per 1,000 minutes delivered | Live sessions + intro videos hosted on CF Stream |
-| Cloudflare Stream — storage | $5 per 1,000 minutes stored / month | Treehouse intro videos + recorded streams |
-| Cloudflare R2 — storage | $0.015 / GB-month | Video files, thumbnails, audio chunks, VTT |
+| Cloudflare Stream — delivery | $1 per 1,000 minutes delivered | Live sessions + treehouse intro video playback |
+| Cloudflare Stream — storage | $5 per 1,000 minutes stored / month | Only treehouse intro videos — live sessions are not stored, so this line is tiny |
+| Cloudflare R2 — storage | $0.015 / GB-month | Currently audio chunks + VTT (transcripts bucket); could expand |
 | Cloudflare R2 — egress | $0 | Free egress is the whole reason we're on R2 |
-| Supabase — database/storage above tier | varies | Pro tier $25/mo includes generous limits |
+| **Supabase Storage — storage** | $0.021 / GB-month above 100GB included | Creator-uploaded paid videos, thumbnails — the main video catalog |
+| **Supabase Storage — egress** | $0.09 / GB above 250GB included | Bandwidth on the paid video catalog. The actual scale-cost concern, not CF Stream storage. |
+| Supabase — database / DB bandwidth | varies | Pro tier $25/mo base; overage modest at our query volume |
 | Groq API | ~$0 at our scale | Free tier covers transcription + ghost tags well past current volume |
 
 ### Fixed costs (per month, regardless of volume)
@@ -147,65 +149,64 @@ At this scale Cloudflare Stream costs become non-trivial. With ~50 active creato
 
 ### Scenario D — 200 active paid creators
 
-Where does the ~$3,500/mo come from? **Almost all of it is Cloudflare Stream delivery on the status-quo architecture.** Here's the line-by-line:
+> **Architecture note up front (clarified 2026-04-29)**: live session recordings are **not stored** by JungleGym — they're ephemeral. Creator-uploaded paid videos live on **Supabase Storage**, not CF Stream. CF Stream is used only for (a) live ingest+delivery during sessions and (b) short treehouse intro videos. This changes which costs matter at scale.
 
-#### Status-quo costs (don't follow recommendation 4 — keep recorded video on CF Stream)
+#### The real line-by-line cost at 200 creators
+
+Assumes the streaming-tier system from section 5a is in place (otherwise the live-streaming line is uncapped — see "without tier limits" below).
 
 | Line item | Math | Monthly |
 |---|---|---|
 | Stripe Connect Express monthly active | $2 × 200 creators | **$400** |
-| **CF Stream delivery** — assume each creator does 8 hours/mo of content (live + recorded) consumed by ~30 viewers each | (200 × 8 × 60 × 30) min ÷ 1,000 × $1 = 2.88M min ÷ 1,000 | **$2,880** |
-| CF Stream storage — each creator has ~6 hours of video stored (treehouse intros + recorded sessions) | (200 × 6 × 60) min ÷ 1,000 × $5 | **$360** |
-| Supabase Pro + DB/bandwidth overage at this scale | $25 base + ~$50 overage | **$75** |
-| R2 storage (thumbnails, transcript chunks, VTT) | ~500 GB × $0.015 | **$8** |
+| **CF Stream delivery — live sessions only** — say avg 4 hrs/mo per creator × 30 viewers (most creators are Sprout/Seedling, light streaming) | (200 × 4 × 60 × 30) min ÷ 1,000 × $1 = 1.44M min ÷ 1,000 | **$1,440** |
+| CF Stream storage — treehouse intro videos only (~60s × 200 creators) | ~200 min ÷ 1,000 × $5 | **$1** |
+| Supabase Storage — paid video catalog | ~400 GB × $0.021 (Pro tier overage) | **$6** |
+| Supabase bandwidth — paid video egress (sales + previews) | ~500 GB egress, 250 GB included → 250 × $0.09 | **$23** |
+| Supabase Pro base + DB | $25 + minimal overage | **$30** |
 | CF Workers + base infra | $5 base + minimal CPU | **$10** |
 | Domain + misc | | **$2** |
 | Email service (Resend at this scale) | ~50k tx emails/mo on Resend Pro | **$20** |
 | Disputes (assume 0.3% of $40k gross) | ~8 × $15 | **$120** |
-| **TOTAL — status quo** | | **~$3,875** |
+| **TOTAL** | | **~$2,052** |
 
-So the real number is closer to ~$3,800, not $3,500. Streaming is ~84% of it. Connect is ~10%. Everything else is rounding error.
+That's significantly under my earlier $3,500 estimate. The big delta: I was assuming recorded videos were on CF Stream and racking up massive delivery + storage charges. They're on Supabase, and Supabase's bandwidth at this scale is ~$23/mo, not the hundreds I implied.
 
-#### What it looks like AFTER recommendation 4 (migrate recorded video to R2 + HLS)
+**Live streaming delivery is still the dominant variable cost** (~70% of the bill), but the streaming-tier system caps it at predictable values per creator.
 
-CF Stream stays for live sessions only. Recorded video gets served from R2 with free egress.
+#### Without the streaming-tier system (the worst-case spiral)
+
+If we don't ship section 5a's tier limits, a single enthusiastic non-monetizing creator can shift the math dramatically. Worst-case projection assuming 20 creators each stream 40 hrs/mo to 50 viewers without the tier system:
 
 | Line item | Math | Monthly |
 |---|---|---|
-| Stripe Connect Express | unchanged | $400 |
-| **CF Stream delivery — live only** — assume 2 hours/mo live per creator × 50 viewers | (200 × 2 × 60 × 50) min ÷ 1,000 × $1 = 1.2M min ÷ 1,000 | **$1,200** |
-| CF Stream storage — minimal (live recordings auto-pruned or moved to R2) | ~200 × 1 hour × 60 ÷ 1,000 × $5 | **$60** |
-| **R2 storage — recorded video** — 200 creators × ~10 videos × 500MB = 1TB | 1,000 GB × $0.015 | **$15** |
-| **R2 egress — recorded video delivery** | $0 (always free) | **$0** |
-| Supabase Pro + overage | unchanged | $75 |
-| CF Workers + base | unchanged | $10 |
-| Domain + misc | | $2 |
-| Email service | | $20 |
-| Disputes | | $120 |
-| **TOTAL — with R2 migration** | | **~$1,902** |
+| CF Stream delivery — uncapped pathological case | (20 × 40 × 60 × 50) ÷ 1,000 × $1 | **$2,400** for those 20 alone |
+| Plus the rest of the 180 creators streaming reasonably | as above | $1,440 |
+| Plus all other costs | as above | $612 |
+| **TOTAL — worst case without tiers** | | **~$4,452** |
 
-That's a **~$2,000/mo savings at scale**, almost all of it on streaming costs. R2's free egress is the entire reason this migration is the highest-ROI infra optimization in the doc.
+Tier system caps this risk asymmetry; without it, a few users can outpace their entire revenue contribution.
 
-#### Sensitivity — what really moves the number
+#### Sensitivity — what moves the number most
 
 | Variable | Cheap version | Expensive version |
 |---|---|---|
-| Avg viewers per stream | 10 → $400 delivery | 100 → $4,000 delivery |
-| Hours of content per creator | 4hrs → $1,400 delivery | 16hrs → $5,760 delivery |
-| % live vs recorded | All recorded → almost free | All live → ~$3,000 delivery |
+| Avg viewers per live stream | 10 → $480 delivery | 100 → $4,800 delivery |
+| Avg live hours per creator | 1hr → $360 delivery | 8hrs → $2,880 delivery |
+| Storage on Supabase vs R2 | Supabase: $29 storage+egress | R2: $6 (savings exist but small) |
 
 The big takeaways:
-- **Live streaming is the cost driver, not "scale" itself.** A platform with 200 creators publishing recorded video has very low infra costs. A platform with 200 creators doing nightly live sessions to 50+ viewers each costs real money.
-- **Migrating recorded video to R2 is the single biggest cost lever** we have at scale — better than negotiated Stripe rates, better than anything else.
-- Connect's $2/mo per creator is real but not catastrophic — at 200 creators it's $400/mo, ~10% of total cost. We can absorb it with normal video purchase margin.
+- **Live streaming is the only thing that scales steeply.** Recorded video delivery via Supabase Storage is comparatively cheap; CF Stream delivery is volume × viewers × hourly minutes.
+- **Streaming-tier limits (section 5a) are the highest-impact cost lever we have.** Without them the math is unbounded; with them the cost is predictable per creator.
+- Connect's $2/mo per creator is ~20% of total cost at this scale. Real but not catastrophic.
+- **R2 migration of paid video catalog from Supabase Storage** is now a smaller win — saves ~$23/mo at this scale (just bandwidth elimination). Still worth doing eventually for the free-egress headroom, but not the existential lever I made it out to be.
 
-#### Revenue needed to break even — with R2 migration
+#### Revenue needed to break even — with tier system in place
 
-~$1,900/mo. At an average mix of:
+~$2,000/mo. At an average mix of:
 - 200 creators × avg 5 video sales / mo × $2 net / sale = $2,000 — comfortably covers
 - Plus top-up revenue, plus pull-payout fees → comfortable margin
 
-**At 200 creators with the R2 migration done, the platform should be solidly profitable.** Without it, we're scratching break-even and the streaming bill becomes the existential thing.
+**At 200 creators with the streaming tier system shipped, the platform should be solidly profitable.** Without it, the per-creator cost ceiling is uncapped and a few outliers can outpace their revenue contribution.
 
 ---
 
@@ -219,7 +220,7 @@ Ordered by impact-to-effort ratio (highest first).
 3. **Implement the platform fee-sweep cron** (option 3 in `payment-infra.md`). This isn't about saving money — it's about correctly tracking what's JungleGym revenue vs what's owed to creators, which is critical for accurate financial reporting (and 1099s eventually).
 
 ### 🟡 Medium effort — when growth justifies
-4. **CF Stream → CF R2 + HLS for recorded videos** (not live streams). CF Stream is great but priced for live; once a video is recorded and just being served on-demand, R2-hosted MP4 + a player is dramatically cheaper at scale. Maybe 100x cheaper per delivered minute. Worth migrating once Stream delivery costs cross ~$200/mo.
+4. **Migrate paid video catalog from Supabase Storage → CF R2.** R2 has free egress; Supabase charges $0.09/GB above 250GB. Storage rates are similar ($0.015 R2 vs $0.021 Supabase). At low scale this is ~$0/mo difference; at 200-creator scale, ~$23/mo savings; at 1000-creator scale, hundreds per month. Worth migrating once Supabase bandwidth bills cross ~$50/mo, or when we want predictable cost-of-egress for accounting. Implementation: rewrite the upload path to PUT to R2, generate signed URLs for purchaser playback (R2 supports presigned URLs natively), backfill existing videos in a one-shot job.
 5. **Cache aggressively at Cloudflare edge.** Video metadata, thumbnails, treehouse pages — all currently SSR'd. Adding stale-while-revalidate caching at the worker level reduces Worker CPU + Supabase reads dramatically. Free engineering win.
 6. **Tiered live-streaming hour limits per creator** (see section 5a below for full design). Caps the worst-case streaming bill from low-earning creators while letting high-earners scale freely. Single biggest control on cost runaway risk.
 7. **Gift session platform fee** — currently 0%. If wallet-funded gifts grow significantly, charging even 5% on gifts would create a third real revenue stream. Trade-off is making the gift flow feel less generous; on-brand for JungleGym? Probably skip unless we need to.
