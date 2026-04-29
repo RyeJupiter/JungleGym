@@ -115,7 +115,7 @@ export async function GiftsReceivedSection({ userId }: { userId: string }) {
           <div>
             <p className="text-xs text-stone-500">Monthly auto-payout</p>
             <p className="text-sm font-medium text-stone-800">
-              Free · 1st of each month
+              Free at JungleGym · 1st of each month
             </p>
           </div>
           <div>
@@ -128,6 +128,9 @@ export async function GiftsReceivedSection({ userId }: { userId: string }) {
 
         <p className="text-xs text-stone-500 mt-4 leading-relaxed">
           Wallet balance is for sending gifts to creators. Gifts you receive are tracked here separately and paid out monthly to your bank.
+        </p>
+        <p className="text-xs text-stone-400 mt-1 leading-relaxed">
+          Stripe takes a standard bank-payout fee (~0.25% + $0.25) on every payout, in addition to any JungleGym fee.
         </p>
       </div>
 

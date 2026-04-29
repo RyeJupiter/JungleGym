@@ -93,6 +93,9 @@ export function WithdrawButton({
             <p className="text-xs text-stone-500 mb-4">
               Or wait for the free monthly auto-payout on the 1st.
             </p>
+            <p className="text-[11px] text-stone-400 -mt-2 mb-4 leading-snug">
+              Stripe also takes a standard bank-payout fee (~0.25% + $0.25) on top of JungleGym&apos;s fee. Same on monthly payouts.
+            </p>
             {error && (
               <p className="text-sm text-red-600 mb-3">{error}</p>
             )}
