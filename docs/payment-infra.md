@@ -35,7 +35,7 @@ What's **not** happening:
 
 ---
 
-## Stripe fees (verify against [stripe.com/pricing](https://stripe.com/pricing) before committing to numbers)
+## Stripe fees (confirmed against [stripe.com/connect/pricing](https://stripe.com/connect/pricing) — re-verify if a year passes)
 
 | Item | Fee | Who pays |
 |---|---|---|
@@ -43,8 +43,8 @@ What's **not** happening:
 | International card surcharge | +1.5% | JungleGym |
 | Currency conversion | +1% | JungleGym |
 | Disputes / chargebacks | $15 | JungleGym (refunded if dispute won) |
-| Stripe Connect Express — monthly active account | $2/mo per connected account that received a payout that month | JungleGym |
-| Standard ACH payout (connected account → bank) | Free | Connected account |
+| **Stripe Connect Express — monthly active account** | **$2/mo per active connected account** | **JungleGym** |
+| **Connected → bank payout** | **0.25% + $0.25 per payout** | **Connected account** (deducted from creator's balance) |
 | Instant payout (connected account → debit card) | 1.5% (min $0.50) | Connected account |
 | Platform → connected account Transfer | Free | — |
 
@@ -66,14 +66,21 @@ The 7% top-up fee covers Stripe's inbound processing with ~3% net margin. Sendin
 1. **Wallet top-up fee (7%)** — buyer pays at top-up time
 2. **Pull-payout fee (2.5%)** — creator pays only if they want their money before the 1st of next month
 
-Sending a gift, receiving a gift, and the monthly auto-payout are all free.
+Sending a gift, receiving a gift, and the monthly auto-payout are all free **at the JungleGym layer**.
+
+> **Stripe layer fees that creators see — pass-through, not JungleGym revenue:**
+> - **0.25% + $0.25** per connected→bank payout (deducted from the creator's balance by Stripe)
+> - This applies to BOTH the free monthly auto-payout and the pull payout. Disclosed in the studio UI.
+>
+> **Stripe layer fee that JungleGym pays:**
+> - **$2/mo per active connected creator** (Connect Express). Active = received any payout that month. At our scale this is amortized across the 7% top-up margin; at higher scale (50+ paid creators/month) it's a real expense to track. Sensitive to whether creators get monthly payouts vs holding balance for pulls.
 
 ### Where the money lives — and why payout schedule matters
 
 Three separate balance layers, each with different rules:
 
 1. **JungleGym Stripe platform balance** — receives every top-up after Stripe takes its cut. Has a "pending" sub-balance (new charges, typically 2–7 days for cards) and "available" sub-balance. Only available funds can be Transferred to creators or paid out to JungleGym's bank.
-2. **Creator's connected Stripe account balance** — receives our Transfers. Stripe automatically pays this out to the creator's bank on the connected account's own schedule (daily by default, free for standard ACH).
+2. **Creator's connected Stripe account balance** — receives our Transfers. Stripe automatically pays this out to the creator's bank on the connected account's own schedule (daily by default). **Stripe charges 0.25% + $0.25 on this payout, deducted from the creator's balance.** Per Stripe Connect pricing, no longer free.
 3. **JungleGym's bank account** — populated by Stripe's automatic platform-balance payout schedule (daily T+2 by default).
 
 > **Recommended platform setting: manual payouts to JungleGym bank.**
@@ -132,6 +139,41 @@ Per-gift destination charges aren't possible (top-up settled the funds long ago)
 | On-demand pull | **2.5% of gross** | Small convenience charge for off-cycle withdrawals |
 | Min payout threshold | **$10** | Prevents tiny payouts |
 | Pull rate limit | **7 days** | Protects against accidental double-clicks |
+
+---
+
+## Is this the best setup we can build right now?
+
+Honest answer: **mostly yes, with two refinements possible.** Card processing is the dominant cost we can't escape, and the architecture around it is already pretty tight.
+
+**What's structurally optimal:**
+- The wallet model amortizes Stripe's 2.9% + $0.30 across many gifts. A naive "fresh charge per gift" architecture would lose 9%+ on a $5 gift; the wallet drops effective fees to <1% on equivalent volume. This is the single biggest leverage point and we already have it.
+- Destination charges with `transfer_data` for video purchases route the 80/20 split atomically — no intermediate balance to babysit, no separate Transfer call. Industry-standard for Connect platforms.
+- The fee-sweep cron architecture (option 3) keeps creator-obligation buffer in Stripe so no Transfer can ever fail for liquidity. Cleaner than auto-payout.
+- Our 7% top-up fee covers Stripe's inbound 2.9% + $0.30 with ~3% margin (see math table above). Tight but real.
+
+**Where there's room:**
+
+1. **UI nudge toward larger top-ups.** The fixed $0.30 inbound fee hits small top-ups disproportionately:
+
+   | Top-up | Stripe takes | JungleGym net | Net margin |
+   |---|---|---|---|
+   | $5 | $0.45 | -$0.10 | **negative** |
+   | $10 | $0.59 | $0.11 | 1.1% |
+   | $25 | $1.08 | $0.67 | 2.5% |
+   | $50 | $1.85 | $1.65 | 3.1% |
+   | $100 | $3.40 | $3.60 | 3.4% |
+
+   At **$5 top-ups we lose money** after Stripe. Easy fix: bump the UI default suggestion from $5/$10 → $25/$50, and consider raising the wallet top-up minimum from $1 to $5 or $10. Doesn't break anything but improves unit economics on small users.
+
+2. **The $2/mo Connect Express fee is unavoidable** as long as we use Express. Switching to Connect Custom would save the $2/mo but force JungleGym to manage onboarding, identity verification, and tax forms ourselves — adds engineering burden out of proportion to the savings until we have hundreds of paid creators per month.
+
+**What we're NOT doing (and shouldn't, at this scale):**
+- ACH Direct Debit for top-ups (capped at $5 vs 2.9% + $0.30) — would save money but adds 3-5 day settlement and microdeposit verification, killing the impulse-gift use case
+- Stripe Issuing cards for creators (avoids the connected→bank fee entirely) — too complex and creators don't want a special card
+- Negotiated platform pricing with Stripe — typically requires $1M+/yr volume; revisit when we get there
+
+**Break-even check at low scale:** Yes, we can break even, but barely. If we have 20 active creators paid out monthly = $40/mo Connect cost. To cover that with the 7% top-up fee we need ~$1,200/mo in top-ups (at avg $25 top-up size). Achievable but not abundant. **The path to comfortable margin is volume, not fee tuning.**
 
 ---
 
