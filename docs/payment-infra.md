@@ -48,9 +48,25 @@ What's **not** happening:
 | Instant payout (connected account → debit card) | 1.5% (min $0.50) | Connected account |
 | Platform → connected account Transfer | Free | — |
 
-**What this means for our flows:**
-- A $25 wallet top-up costs us `$25 × 2.9% + $0.30 = $1.025` at minimum. Our 7% top-up fee = $1.75 → leaves ~$0.72 margin per top-up to cover gift settlement costs and Connect monthly fees.
-- Transfers from platform → connected account are **free** at Stripe layer, so the only friction in batched gift payouts is the Connect monthly active fee ($2/mo per creator who gets paid that month).
+**What this means for our flows — does the 7% top-up fee actually cover Stripe?**
+
+Walking through the math, since this is load-bearing:
+
+| Top-up | User pays (incl. 7%) | Stripe takes (2.9% + $0.30) | Wallet credit | **JungleGym net** | Margin |
+|---|---|---|---|---|---|
+| $25  | $26.75  | $1.08  | $25.00  | **$0.67** | 2.5% |
+| $100 | $107.00 | $3.40  | $100.00 | **$3.60** | 3.4% |
+| $500 | $535.00 | $15.82 | $500.00 | **$19.18** | 3.6% |
+
+The 7% top-up fee covers Stripe's inbound processing with ~3% net margin. Sending a gift from wallet has **no additional fee** (no platform cut, no Stripe touch — it's just a DB row). The Stripe Transfer at payout time is **$0**. So the only frictional cost between top-up and creator payout is Stripe's original card-processing fee, already amortized at top-up time.
+
+**Pull-payout fee (2.5%)** is pure convenience markup — the creator is paying for "off-cycle" access to their balance, not for Stripe overhead. Goes straight to JungleGym revenue.
+
+**Net summary**: JungleGym only sees fee revenue from two sources on the gift flow:
+1. **Wallet top-up fee (7%)** — buyer pays at top-up time
+2. **Pull-payout fee (2.5%)** — creator pays only if they want their money before the 1st of next month
+
+Sending a gift, receiving a gift, and the monthly auto-payout are all free.
 
 ### Where the money lives — and why payout schedule matters
 
@@ -129,20 +145,44 @@ So "keep gift balance in Stripe but sweep fees out" is conceptually a JungleGym-
 
 **Three workable architectures**:
 
-1. **Auto-payout, full sweep daily** *(default Stripe behavior)*
-   Stripe pays out the entire available platform balance to JungleGym's bank every day. Simple, hands-off. The risk: if a creator transfer fires when the platform balance is briefly low (mid-payout window), it'd fail with `insufficient_funds_in_balance`. In practice the pending-balance buffer (2–7 days of new charges that haven't cleared yet) almost always covers this; if it doesn't, our cron logs an admin issue and we fix manually.
+1. **Auto-payout, full sweep daily** *(default Stripe behavior — REJECTED)*
+   Stripe pays out the entire available platform balance to JungleGym's bank every day. Simple, hands-off. Risk: if a creator transfer fires when the platform balance is briefly low (mid-payout window), it'd fail with `insufficient_funds_in_balance`. We'd be relying on the pending-balance buffer + new top-ups to cover.
 
-2. **Manual platform payouts** *(set in Stripe Dashboard → Settings → Payouts)*
-   All cash sits in Stripe indefinitely. JungleGym manually triggers a payout when ops needs cash. Pro: liquidity for creator transfers is never an issue. Con: requires human discipline; cash sits idle. **Trade-off note**: the cash isn't actually "earning interest" inside Stripe either way, so the only argument for sitting on it is liquidity.
+2. **Manual platform payouts** *(set in Stripe Dashboard — REJECTED)*
+   All cash sits in Stripe indefinitely. Requires human discipline; cash sits idle without a sweep mechanism.
 
-3. **Manual schedule + automated fee-sweep cron** *(future build)*
-   Set the platform to manual payouts, then write a weekly cron that:
-   - Computes "fees collected since last sweep" = topup fees + purchase platform fees + pull-payout fees
-   - Calls `stripe.payouts.create({ amount, currency: 'usd' })` for that amount → JungleGym bank
-   - Records the sweep in a `platform_fee_sweeps` table for audit
-   This keeps a working creator-obligation buffer in Stripe at all times while still moving fee revenue out on a regular cadence. **Estimated effort**: ~one afternoon. Not built — **add as a follow-up TODO if (1) ever causes liquidity problems** or if Rye specifically wants this segregation for accounting clarity.
+3. **Manual schedule + automated fee-sweep cron — CHOSEN, TO BE BUILT**
+   Platform is set to Manual payouts in Stripe Dashboard, then a weekly cron handles the sweep automatically. This is the architecture Davis is committing to, deliberately, so:
+   - Creator-obligation funds (unsettled gift balance) always have a Stripe-side buffer ready for instant Transfers
+   - JungleGym's fee revenue still flows out on a predictable cadence
+   - Accounting story is clean: payouts to JungleGym bank correspond exactly to fees earned, not to "everything that happened to be available"
 
-**Recommendation**: start with **(1) auto-payout daily**. If we see balance issues, escalate to (3). Don't pre-build (3); the pending-balance buffer should make (1) bullet-proof for our scale.
+   **Build spec (queued — not yet written, do this after the current PR merges):**
+   - New cron route `POST /api/cron/sweep-platform-fees`
+     - Bearer auth on `CRON_SECRET` (same pattern as the other crons)
+     - Computes `feesSince(lastSweep)` = topup fees + purchase platform fees + pull-payout fees + any session-gift platform fees (currently $0 but defensive)
+     - Calls `stripe.payouts.create({ amount, currency: 'usd' })` against the platform account → JungleGym's bank
+     - Idempotency key: `fee-sweep:{ISO-week}` so re-runs in the same week don't double-sweep
+   - New table `platform_fee_sweeps`:
+     ```sql
+     CREATE TABLE public.platform_fee_sweeps (
+       id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+       stripe_payout_id TEXT NOT NULL UNIQUE,
+       amount          NUMERIC(10, 2) NOT NULL,
+       window_start    TIMESTAMPTZ NOT NULL,
+       window_end      TIMESTAMPTZ NOT NULL,
+       breakdown       JSONB NOT NULL,         -- { walletTopup, purchase, pullPayout }
+       status          TEXT NOT NULL DEFAULT 'pending'
+         CHECK (status IN ('pending', 'paid', 'failed', 'reversed')),
+       created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+     );
+     ```
+   - New webhook cases: `payout.paid` for the platform account → status='paid'; `payout.failed/canceled` already handled but currently treated as creator-payout failures — split logic to differentiate by destination (connected vs platform)
+   - GH Actions workflow `.github/workflows/sweep-platform-fees.yml` — weekly trigger, e.g. `0 5 * * 1` (Monday 05:00 UTC)
+   - Admin UI: a small "Recent fee sweeps" panel on `/admin?tab=metrics` with sweep date / amount / status / breakdown
+   - **Pre-build prerequisite**: Rye must flip platform payout schedule to Manual in the Stripe Dashboard. Otherwise Stripe is auto-paying alongside our cron — chaos.
+
+   **Estimated effort**: ~one afternoon, including the migration, webhook split, and admin UI.
 
 > **Visibility into all this** is now wired into the admin Metrics tab:
 > - "Owed to creators" — sum of unsettled gifts (point-in-time)
@@ -277,8 +317,9 @@ These are checks the wallet routes should make before crediting balances or send
 |---|---|---|
 | Apply migration `00030` to live DB | Davis | Just needs a free moment |
 | Configure Stripe webhook endpoint to send the new events (`charge.succeeded`, `transfer.reversed`, `payout.paid`, `radar.early_fraud_warning.created`) | Davis | Needs Rye to share Stripe Dashboard access |
-| **Set platform payout schedule to Manual** (so top-up cash stays in Stripe instead of auto-flowing to JungleGym bank — see "Where the money lives" above) | Rye | Stripe Dashboard config; needs a cash-flow review |
-| Confirm Stripe Connect Express monthly active fee | Rye | Verify current Stripe pricing page; payout fee math may need a tweak |
+| **Set platform payout schedule to Manual** | Rye | Required before the fee-sweep cron can be safely run |
+| **Build platform fee-sweep cron** (option 3 above) — `POST /api/cron/sweep-platform-fees`, `platform_fee_sweeps` table, weekly GH Actions workflow, admin "Recent fee sweeps" panel | Davis | Blocked on Rye flipping platform payout schedule to Manual; build queued for post-merge of current PR |
+| Confirm Stripe Connect Express monthly active fee | Rye | Verify current Stripe pricing page; just informational at this point since payouts are free for creators either way |
 | Set up transactional email provider (Resend recommended) | Davis | Tracked in `docs/external-services-todo.md`; replaces the `payoutEmail.ts` stub |
 | Manually trigger the payout workflow once on a test creator before letting the cron run unattended | Davis | After migration applied + webhook events configured |
 | Tests — top-up amount tampering, double-credit retry, transfer reversal, partial settlement | Davis | Lower priority; manual smoke covers the critical paths for now |
