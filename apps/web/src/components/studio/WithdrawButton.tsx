@@ -82,7 +82,7 @@ export function WithdrawButton({
                 <dd className="text-stone-900 font-medium">${available.toFixed(2)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-stone-500">Fee (5%)</dt>
+                <dt className="text-stone-500">Fee (2.5%)</dt>
                 <dd className="text-stone-700">−${pullFee.toFixed(2)}</dd>
               </div>
               <div className="flex justify-between border-t border-stone-200 pt-2">
@@ -91,7 +91,7 @@ export function WithdrawButton({
               </div>
             </dl>
             <p className="text-xs text-stone-500 mb-4">
-              Or wait for the monthly payout — Stripe&apos;s standard 2.9% + $0.30 processing fee instead of 5%.
+              Or wait for the free monthly auto-payout on the 1st.
             </p>
             {error && (
               <p className="text-sm text-red-600 mb-3">{error}</p>

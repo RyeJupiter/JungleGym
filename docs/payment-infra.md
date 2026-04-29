@@ -98,27 +98,59 @@ Per-gift destination charges aren't possible (top-up settled the funds long ago)
 - Cron runs the 1st of each month at 04:00 UTC (`.github/workflows/payout-creator-gifts.yml`)
 - For each creator with `unsettled_gift_balance >= PAYOUT_MIN_AMOUNT`:
   - Sum their unsettled `gifts.creator_amount` rows
-  - Carve a **scheduled-payout fee of 2.9% + $0.30** — mirrors Stripe's standard inbound card processing fee
+  - **Free to creator** — no fee is carved. The 7% wallet top-up fee + the platform fee on session gifts already cover JungleGym's Stripe processing costs on the way IN; the platform→connected Transfer is $0 at Stripe layer; nothing left to charge.
   - Create one `stripe.transfers.create({ amount, destination })` per creator with idempotency key `payout:scheduled:{creatorId}:{YYYY-MM}`
   - Mark every gift in the batch with `settled_at = now()` + `transfer_id = tr_…`
 - Threshold prevents tiny payouts. Set to **$10 minimum** — anything below rolls to next month.
 
-> **Why 2.9% + $0.30 when the Stripe Transfer itself is free?**
-> The fee on the actual platform→connected-account Transfer is $0 at Stripe layer. But the gift money originated from a wallet top-up that paid 2.9% + $0.30 to Stripe on the way IN. The 7% top-up fee partially amortizes that (small JungleGym margin per top-up), but at higher gift volumes the inbound cost compounds. Charging 2.9% + $0.30 on the auto-payout effectively passes that processing cost on to the creator on the way OUT — keeping JungleGym's per-flow margin near zero, which is the goal for the "default cadence" tier.
-
 #### Option C — on-demand pull (creator-initiated) — IMPLEMENTED
 - Studio "Withdraw" button on the Gifts received section. Creator can request anytime their unsettled balance ≥ minimum.
-- Fee: **5% flat** — slightly higher than scheduled to nudge most creators toward the monthly cadence.
+- Fee: **2.5% flat** — small convenience charge that nudges most creators toward the free monthly cadence.
 - Same flow: bundle unsettled gifts → create Transfer with `payout:pull:{creatorId}:{Date.now()}` idempotency → mark settled.
 - Rate limit: **1 pull per 7 days per creator** (enforced by checking the most recent `mode='pull'` row in `creator_payouts`).
 
 #### Fee numbers — current values (live in `packages/shared/src/utils/pricing.ts`)
 | Mode | Fee | Rationale |
 |---|---|---|
-| Scheduled monthly | **2.9% + $0.30** | Mirrors Stripe's inbound card fee; effectively recoups processing cost paid at top-up time |
-| On-demand pull | **5% of gross** | Higher to nudge creators toward the free monthly cadence |
-| Min payout threshold | **$10** | Prevents tiny payouts where the flat $0.30 dominates |
-| Pull rate limit | **7 days** | Protects against accidental double-clicks burning fee budget |
+| Scheduled monthly | **Free** | All Stripe overhead is already covered by the 7% top-up fee and 20% platform fee on session gifts |
+| On-demand pull | **2.5% of gross** | Small convenience charge for off-cycle withdrawals |
+| Min payout threshold | **$10** | Prevents tiny payouts |
+| Pull rate limit | **7 days** | Protects against accidental double-clicks |
+
+---
+
+## Auto-sweeping fees to JungleGym's bank account
+
+**Question that came up**: can we keep the gift-balance funds inside Stripe and only auto-transfer JungleGym's fee revenue to the bank?
+
+**Reality check**: Stripe doesn't actually segment the platform balance by purpose. Top-up cash, video purchase platform fees, and pull-payout fees all land in **one** number called the "platform balance." The "$X owed to creators" lives only in our DB (sum of `gifts.creator_amount WHERE settled_at IS NULL`). Stripe has no idea which dollars are "creator obligations" vs "JungleGym revenue" — it's all one pool.
+
+So "keep gift balance in Stripe but sweep fees out" is conceptually a JungleGym-side accounting choice, not a Stripe-side feature.
+
+**Three workable architectures**:
+
+1. **Auto-payout, full sweep daily** *(default Stripe behavior)*
+   Stripe pays out the entire available platform balance to JungleGym's bank every day. Simple, hands-off. The risk: if a creator transfer fires when the platform balance is briefly low (mid-payout window), it'd fail with `insufficient_funds_in_balance`. In practice the pending-balance buffer (2–7 days of new charges that haven't cleared yet) almost always covers this; if it doesn't, our cron logs an admin issue and we fix manually.
+
+2. **Manual platform payouts** *(set in Stripe Dashboard → Settings → Payouts)*
+   All cash sits in Stripe indefinitely. JungleGym manually triggers a payout when ops needs cash. Pro: liquidity for creator transfers is never an issue. Con: requires human discipline; cash sits idle. **Trade-off note**: the cash isn't actually "earning interest" inside Stripe either way, so the only argument for sitting on it is liquidity.
+
+3. **Manual schedule + automated fee-sweep cron** *(future build)*
+   Set the platform to manual payouts, then write a weekly cron that:
+   - Computes "fees collected since last sweep" = topup fees + purchase platform fees + pull-payout fees
+   - Calls `stripe.payouts.create({ amount, currency: 'usd' })` for that amount → JungleGym bank
+   - Records the sweep in a `platform_fee_sweeps` table for audit
+   This keeps a working creator-obligation buffer in Stripe at all times while still moving fee revenue out on a regular cadence. **Estimated effort**: ~one afternoon. Not built — **add as a follow-up TODO if (1) ever causes liquidity problems** or if Rye specifically wants this segregation for accounting clarity.
+
+**Recommendation**: start with **(1) auto-payout daily**. If we see balance issues, escalate to (3). Don't pre-build (3); the pending-balance buffer should make (1) bullet-proof for our scale.
+
+> **Visibility into all this** is now wired into the admin Metrics tab:
+> - "Owed to creators" — sum of unsettled gifts (point-in-time)
+> - "Total fees collected" — sum of (topup fees + purchase platform fees + pull-payout fees), range-filtered
+> - "Net (collected − owed)" — rough JungleGym margin
+> - Plus a per-source fee breakdown table
+
+---
 
 ---
 

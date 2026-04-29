@@ -90,15 +90,15 @@ export function calculateGiftTotal(basePrice: number, tipPct: number): {
 // ── Creator gift payout fees ────────────────────────────────────────────────
 // Carved from the creator's unsettled gift balance at settlement time.
 //
-// Scheduled = monthly cron (default cadence, fee mirrors Stripe's inbound
-//   card processing — 2.9% + $0.30. The fee on the actual platform→connected
-//   Transfer is $0 at Stripe layer; this charge compensates for what we ate
-//   on the way IN when the gift-giver's wallet was topped up.
-// Pull     = creator-initiated withdraw (faster, slightly higher fee).
+// Scheduled = monthly cron (default cadence, free to creator). The 7% wallet
+//   top-up fee + 20% platform fee on session gifts already cover JungleGym's
+//   Stripe processing costs on the way IN; the platform→connected Transfer
+//   is free at Stripe layer; nothing left to charge.
+// Pull     = creator-initiated withdraw (faster, small convenience fee).
 export const PAYOUT_MIN_AMOUNT = 10              // dollars; payouts below this don't trigger
-export const PAYOUT_SCHEDULED_FEE_PCT = 2.9      // percent of gross
-export const PAYOUT_SCHEDULED_FEE_FLAT = 0.30    // flat dollars added on top
-export const PAYOUT_PULL_FEE_PCT = 5             // percent of gross
+export const PAYOUT_SCHEDULED_FEE_PCT = 0        // monthly auto-payout is free to creators
+export const PAYOUT_SCHEDULED_FEE_FLAT = 0
+export const PAYOUT_PULL_FEE_PCT = 2.5           // percent of gross
 export const PAYOUT_PULL_RATE_LIMIT_DAYS = 7     // cooldown between consecutive pulls
 
 export function calculateScheduledPayout(grossUnsettled: number): {
@@ -108,11 +108,8 @@ export function calculateScheduledPayout(grossUnsettled: number): {
   if (grossUnsettled < PAYOUT_MIN_AMOUNT) {
     return { fee: 0, amountPaid: 0 }
   }
-  const fee = Math.round(
-    (grossUnsettled * (PAYOUT_SCHEDULED_FEE_PCT / 100) + PAYOUT_SCHEDULED_FEE_FLAT) * 100
-  ) / 100
-  const amountPaid = Math.round((grossUnsettled - fee) * 100) / 100
-  return { fee, amountPaid }
+  // No fee on scheduled — creator gets the full unsettled gross.
+  return { fee: 0, amountPaid: grossUnsettled }
 }
 
 export function calculatePullPayout(grossUnsettled: number): {

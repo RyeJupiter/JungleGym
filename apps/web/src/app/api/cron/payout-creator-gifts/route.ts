@@ -198,17 +198,20 @@ export async function POST(request: Request) {
         continue
       }
 
-      // Settlement-fee per gift, weighted by share of gross. Best-effort —
-      // failure here doesn't block the payout, but means the per-gift fee
-      // breakdown is missing for accounting.
-      for (const gift of gifts) {
-        const giftAmount = typeof gift.creator_amount === 'string' ? Number(gift.creator_amount) : gift.creator_amount
-        const giftFee = Math.round((fee * (giftAmount / gross)) * 100) / 100
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (svc as any)
-          .from('gifts')
-          .update({ settlement_fee: giftFee })
-          .eq('id', gift.id)
+      // Settlement-fee per gift, weighted by share of gross. Skip the loop
+      // entirely when the batch fee is 0 (the default for scheduled payouts) —
+      // settlement_fee defaults to NULL and that's the correct representation
+      // of "no fee was carved." Best-effort otherwise.
+      if (fee > 0) {
+        for (const gift of gifts) {
+          const giftAmount = typeof gift.creator_amount === 'string' ? Number(gift.creator_amount) : gift.creator_amount
+          const giftFee = Math.round((fee * (giftAmount / gross)) * 100) / 100
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (svc as any)
+            .from('gifts')
+            .update({ settlement_fee: giftFee })
+            .eq('id', gift.id)
+        }
       }
 
       // Best-effort notification — must not block or fail the cron.
