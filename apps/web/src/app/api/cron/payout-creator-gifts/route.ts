@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServiceSupabaseClient } from '@/lib/supabase/server'
 import { getStripe } from '@/lib/stripe'
 import { recordAdminIssue } from '@/lib/adminIssues'
+import { sendPayoutNotification } from '@/lib/notifications/payoutEmail'
 import { calculateScheduledPayout, PAYOUT_MIN_AMOUNT } from '@junglegym/shared'
 
 // Monthly cron — pays out unsettled gift balances to connected creators via
@@ -84,14 +85,20 @@ export async function POST(request: Request) {
       continue
     }
 
-    // Look up the creator's connected account. Live streaming is gated on
-    // onboarding complete, so this should always be true when there are
-    // unsettled gifts — but guard defensively.
+    // Look up the creator's connected account + display info for the email.
+    // Live streaming is gated on onboarding complete, so this should always
+    // be true when there are unsettled gifts — but guard defensively.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: profile } = await (svc as any)
       .from('profiles')
-      .select('stripe_account_id, stripe_onboarding_complete')
+      .select('stripe_account_id, stripe_onboarding_complete, display_name')
       .eq('user_id', creatorId)
+      .maybeSingle()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: userRow } = await (svc as any)
+      .from('users')
+      .select('email')
+      .eq('id', creatorId)
       .maybeSingle()
 
     if (!profile?.stripe_account_id || !profile?.stripe_onboarding_complete) {
@@ -202,6 +209,22 @@ export async function POST(request: Request) {
           .from('gifts')
           .update({ settlement_fee: giftFee })
           .eq('id', gift.id)
+      }
+
+      // Best-effort notification — must not block or fail the cron.
+      if (userRow?.email) {
+        await sendPayoutNotification({
+          creatorEmail: userRow.email,
+          creatorName: profile?.display_name ?? 'creator',
+          amountPaid,
+          fee,
+          grossAmount: gross,
+          giftCount: gifts.length,
+          mode: 'scheduled',
+          transferId: transfer.id,
+        }).catch((err) => {
+          console.error('[payout cron] notification failed', err)
+        })
       }
 
       results.push({

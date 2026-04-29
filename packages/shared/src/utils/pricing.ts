@@ -89,12 +89,17 @@ export function calculateGiftTotal(basePrice: number, tipPct: number): {
 
 // ── Creator gift payout fees ────────────────────────────────────────────────
 // Carved from the creator's unsettled gift balance at settlement time.
-// Scheduled = monthly cron (default cadence, low fee).
-// Pull = creator-initiated withdraw (faster, slightly higher fee).
-export const PAYOUT_MIN_AMOUNT = 10           // dollars; payouts below this don't trigger
-export const PAYOUT_SCHEDULED_FEE = 2         // flat dollars carved from the gross
-export const PAYOUT_PULL_FEE_PCT = 5          // percent of gross
-export const PAYOUT_PULL_RATE_LIMIT_DAYS = 7  // cooldown between consecutive pulls
+//
+// Scheduled = monthly cron (default cadence, fee mirrors Stripe's inbound
+//   card processing — 2.9% + $0.30. The fee on the actual platform→connected
+//   Transfer is $0 at Stripe layer; this charge compensates for what we ate
+//   on the way IN when the gift-giver's wallet was topped up.
+// Pull     = creator-initiated withdraw (faster, slightly higher fee).
+export const PAYOUT_MIN_AMOUNT = 10              // dollars; payouts below this don't trigger
+export const PAYOUT_SCHEDULED_FEE_PCT = 2.9      // percent of gross
+export const PAYOUT_SCHEDULED_FEE_FLAT = 0.30    // flat dollars added on top
+export const PAYOUT_PULL_FEE_PCT = 5             // percent of gross
+export const PAYOUT_PULL_RATE_LIMIT_DAYS = 7     // cooldown between consecutive pulls
 
 export function calculateScheduledPayout(grossUnsettled: number): {
   fee: number
@@ -103,7 +108,9 @@ export function calculateScheduledPayout(grossUnsettled: number): {
   if (grossUnsettled < PAYOUT_MIN_AMOUNT) {
     return { fee: 0, amountPaid: 0 }
   }
-  const fee = PAYOUT_SCHEDULED_FEE
+  const fee = Math.round(
+    (grossUnsettled * (PAYOUT_SCHEDULED_FEE_PCT / 100) + PAYOUT_SCHEDULED_FEE_FLAT) * 100
+  ) / 100
   const amountPaid = Math.round((grossUnsettled - fee) * 100) / 100
   return { fee, amountPaid }
 }

@@ -3,7 +3,8 @@ import {
   PAYOUT_MIN_AMOUNT,
   PAYOUT_PULL_FEE_PCT,
   PAYOUT_PULL_RATE_LIMIT_DAYS,
-  PAYOUT_SCHEDULED_FEE,
+  PAYOUT_SCHEDULED_FEE_FLAT,
+  PAYOUT_SCHEDULED_FEE_PCT,
   calculatePullPayout,
 } from '@junglegym/shared'
 import { WithdrawButton } from './WithdrawButton'
@@ -116,7 +117,7 @@ export async function GiftsReceivedSection({ userId }: { userId: string }) {
           <div>
             <p className="text-xs text-stone-500">Monthly auto-payout</p>
             <p className="text-sm font-medium text-stone-800">
-              Free after a flat ${PAYOUT_SCHEDULED_FEE} fee · 1st of each month
+              {PAYOUT_SCHEDULED_FEE_PCT}% + ${PAYOUT_SCHEDULED_FEE_FLAT.toFixed(2)} processing fee · 1st of each month
             </p>
           </div>
           <div>

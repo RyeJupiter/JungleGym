@@ -91,7 +91,7 @@ export function WithdrawButton({
               </div>
             </dl>
             <p className="text-xs text-stone-500 mb-4">
-              Or wait for the free monthly payout — you&apos;ll only pay a flat $2 fee.
+              Or wait for the monthly payout — Stripe&apos;s standard 2.9% + $0.30 processing fee instead of 5%.
             </p>
             {error && (
               <p className="text-sm text-red-600 mb-3">{error}</p>

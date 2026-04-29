@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServerSupabaseClient, createServiceSupabaseClient } from '@/lib/supabase/server'
 import { getStripe } from '@/lib/stripe'
 import { recordAdminIssue } from '@/lib/adminIssues'
+import { sendPayoutNotification } from '@/lib/notifications/payoutEmail'
 import {
   calculatePullPayout,
   PAYOUT_MIN_AMOUNT,
@@ -55,12 +56,19 @@ export async function POST(req: Request) {
     )
   }
 
-  // Verify Stripe Connect onboarding state
+  // Verify Stripe Connect onboarding state + grab email/display_name for
+  // the post-payout notification.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (svc as any)
     .from('profiles')
-    .select('stripe_account_id, stripe_onboarding_complete')
+    .select('stripe_account_id, stripe_onboarding_complete, display_name')
     .eq('user_id', user.id)
+    .maybeSingle()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: userRow } = await (svc as any)
+    .from('users')
+    .select('email')
+    .eq('id', user.id)
     .maybeSingle()
 
   if (!profile?.stripe_account_id || !profile?.stripe_onboarding_complete) {
@@ -201,6 +209,22 @@ export async function POST(req: Request) {
       .from('gifts')
       .update({ settlement_fee: giftFee })
       .eq('id', gift.id)
+  }
+
+  // Best-effort notification — must not block the response.
+  if (userRow?.email) {
+    await sendPayoutNotification({
+      creatorEmail: userRow.email,
+      creatorName: profile?.display_name ?? 'creator',
+      amountPaid,
+      fee,
+      grossAmount: gross,
+      giftCount: gifts.length,
+      mode: 'pull',
+      transferId,
+    }).catch((err) => {
+      console.error('[payouts/withdraw] notification failed', err)
+    })
   }
 
   return NextResponse.json({

@@ -52,6 +52,24 @@ What's **not** happening:
 - A $25 wallet top-up costs us `$25 × 2.9% + $0.30 = $1.025` at minimum. Our 7% top-up fee = $1.75 → leaves ~$0.72 margin per top-up to cover gift settlement costs and Connect monthly fees.
 - Transfers from platform → connected account are **free** at Stripe layer, so the only friction in batched gift payouts is the Connect monthly active fee ($2/mo per creator who gets paid that month).
 
+### Where the money lives — and why payout schedule matters
+
+Three separate balance layers, each with different rules:
+
+1. **JungleGym Stripe platform balance** — receives every top-up after Stripe takes its cut. Has a "pending" sub-balance (new charges, typically 2–7 days for cards) and "available" sub-balance. Only available funds can be Transferred to creators or paid out to JungleGym's bank.
+2. **Creator's connected Stripe account balance** — receives our Transfers. Stripe automatically pays this out to the creator's bank on the connected account's own schedule (daily by default, free for standard ACH).
+3. **JungleGym's bank account** — populated by Stripe's automatic platform-balance payout schedule (daily T+2 by default).
+
+> **Recommended platform setting: manual payouts to JungleGym bank.**
+>
+> If Stripe is auto-paying-out platform balance to the JungleGym bank every day, then by the time a creator triggers a payout the cash may already have left Stripe — we'd need either a working capital buffer in the bank account, or to pull funds back into Stripe (slow + manual).
+>
+> Setting the platform account's payout schedule to **Manual** (Stripe Dashboard → Settings → Payouts) keeps top-up cash sitting in Stripe's available balance, ready to be transferred to creators **for free** at cron or pull time. JungleGym then manually pays itself out whenever cash is needed for ops.
+>
+> Tradeoff: someone has to remember to do the manual payout. Worth it for the simpler accounting story.
+>
+> **TODO**: Rye to flip platform payout schedule to Manual once he reviews the cash flow implications. Listed in the open-questions section.
+
 ---
 
 ## Design decision: gift earnings live separate from the wallet
@@ -76,27 +94,31 @@ Per-gift destination charges aren't possible (top-up settled the funds long ago)
 
 **Both modes carve a fee from the creator's payout.** The fee covers Stripe overhead so JungleGym doesn't subsidize it.
 
-#### Option B — scheduled monthly payout (default)
-- Cron runs the 1st of each month at, say, 04:00 UTC.
-- For each creator with `unsettled_gift_balance > min_payout_threshold`:
+#### Option B — scheduled monthly payout (default) — IMPLEMENTED
+- Cron runs the 1st of each month at 04:00 UTC (`.github/workflows/payout-creator-gifts.yml`)
+- For each creator with `unsettled_gift_balance >= PAYOUT_MIN_AMOUNT`:
   - Sum their unsettled `gifts.creator_amount` rows
-  - Subtract a small **scheduled-payout fee** (target: just cover the $2 Connect monthly active fee — e.g. flat $2 deducted, or 2% capped)
-  - Create one `stripe.transfers.create({ amount, destination })` per creator
+  - Carve a **scheduled-payout fee of 2.9% + $0.30** — mirrors Stripe's standard inbound card processing fee
+  - Create one `stripe.transfers.create({ amount, destination })` per creator with idempotency key `payout:scheduled:{creatorId}:{YYYY-MM}`
   - Mark every gift in the batch with `settled_at = now()` + `transfer_id = tr_…`
-- Threshold prevents tiny payouts where the $2 active fee dominates. Suggest **$10 minimum** — anything below rolls to next month.
+- Threshold prevents tiny payouts. Set to **$10 minimum** — anything below rolls to next month.
 
-#### Option C — on-demand pull (creator-initiated)
-- Studio "Withdraw $X" button. Creator can request anytime their unsettled balance ≥ minimum.
-- Carve a **larger pull fee** to discourage frequent small withdrawals — e.g. 5% (still well below Stripe's 1.5% instant-payout fee on the creator side, but enough to nudge people toward the free monthly).
-- Same flow: bundle unsettled gifts → create Transfer → mark settled with transfer_id.
-- Hard rate limit: 1 pull per 7 days per creator (TBD — protects against accidental double-clicks turning into fee waste).
+> **Why 2.9% + $0.30 when the Stripe Transfer itself is free?**
+> The fee on the actual platform→connected-account Transfer is $0 at Stripe layer. But the gift money originated from a wallet top-up that paid 2.9% + $0.30 to Stripe on the way IN. The 7% top-up fee partially amortizes that (small JungleGym margin per top-up), but at higher gift volumes the inbound cost compounds. Charging 2.9% + $0.30 on the auto-payout effectively passes that processing cost on to the creator on the way OUT — keeping JungleGym's per-flow margin near zero, which is the goal for the "default cadence" tier.
 
-#### Fee numbers — to be decided with Rye
+#### Option C — on-demand pull (creator-initiated) — IMPLEMENTED
+- Studio "Withdraw" button on the Gifts received section. Creator can request anytime their unsettled balance ≥ minimum.
+- Fee: **5% flat** — slightly higher than scheduled to nudge most creators toward the monthly cadence.
+- Same flow: bundle unsettled gifts → create Transfer with `payout:pull:{creatorId}:{Date.now()}` idempotency → mark settled.
+- Rate limit: **1 pull per 7 days per creator** (enforced by checking the most recent `mode='pull'` row in `creator_payouts`).
+
+#### Fee numbers — current values (live in `packages/shared/src/utils/pricing.ts`)
 | Mode | Fee | Rationale |
 |---|---|---|
-| Scheduled monthly | flat **$2** (or 2% capped at $5) | Covers Connect monthly active fee, near zero JungleGym margin |
-| On-demand pull | **5%** of payout | Covers Connect fee + nudges creators toward the free monthly cadence |
-| Min payout threshold | **$10** | Prevents tiny payouts where fee % dominates |
+| Scheduled monthly | **2.9% + $0.30** | Mirrors Stripe's inbound card fee; effectively recoups processing cost paid at top-up time |
+| On-demand pull | **5% of gross** | Higher to nudge creators toward the free monthly cadence |
+| Min payout threshold | **$10** | Prevents tiny payouts where the flat $0.30 dominates |
+| Pull rate limit | **7 days** | Protects against accidental double-clicks burning fee budget |
 
 ---
 
@@ -204,24 +226,39 @@ These are checks the wallet routes should make before crediting balances or send
 
 ---
 
-## Implementation order
+## Implementation status
 
-1. **Schema migrations** (`00030_stripe_audit.sql`, `00031_gift_settlement.sql`, `00032_creator_payouts.sql`)
-2. **`stripe_events` write at top of webhook handler** + idempotency check
-3. **Backfill `wallet_transactions.stripe_payment_intent_id` from `description`** then add the unique index
-4. **New webhook cases**: `charge.succeeded`, `transfer.*`, `payout.paid`, `radar.early_fraud_warning.created`
-5. **Settlement cron** — `/api/cron/payout-creator-gifts` triggered by GH Actions monthly, protected by `CRON_SECRET`
-6. **Pull endpoint** — `POST /api/payouts/withdraw` (auth: creator self-service)
-7. **Studio UI** — withdraw button + scheduled-payout history table
-8. **Tests** — top-up amount tampering, double-credit retry, transfer reversal, partial settlement
+### ✅ Shipped (PR `davis/creator-gift-payouts`)
+1. ~~Schema migrations~~ — landed in single migration `00030_payment_audit_and_settlement.sql` (stripe_events, wallet_transactions provenance + backfill, gifts settlement columns, creator_payouts)
+2. ~~`stripe_events` write at top of webhook handler~~ + idempotency check via PK collision
+3. ~~Backfill `wallet_transactions.stripe_payment_intent_id` from `description`~~ — done in same migration before enforcing the unique index
+4. ~~New webhook cases~~ — `charge.succeeded`, `transfer.reversed`, `payout.paid`, `radar.early_fraud_warning.created`
+5. ~~Settlement cron~~ — `/api/cron/payout-creator-gifts` + `.github/workflows/payout-creator-gifts.yml`
+6. ~~Pull endpoint~~ — `POST /api/payouts/withdraw` with rate limit + min threshold
+7. ~~Studio UI~~ — `GiftsReceivedSection` + `WithdrawButton` on `/studio`
+8. ~~Top-up confirm hardening~~ — `paymentIntent.amount` sanity check against fresh server-side calc
+9. ~~Email notification scaffolding~~ — `lib/notifications/payoutEmail.ts` stub wired into both payout paths (currently logs only — no provider configured yet)
+
+### ⏳ Pending (needs Rye / external setup)
+
+| TODO | Owner | Blocker |
+|---|---|---|
+| Apply migration `00030` to live DB | Davis | Just needs a free moment |
+| Configure Stripe webhook endpoint to send the new events (`charge.succeeded`, `transfer.reversed`, `payout.paid`, `radar.early_fraud_warning.created`) | Davis | Needs Rye to share Stripe Dashboard access |
+| **Set platform payout schedule to Manual** (so top-up cash stays in Stripe instead of auto-flowing to JungleGym bank — see "Where the money lives" above) | Rye | Stripe Dashboard config; needs a cash-flow review |
+| Confirm Stripe Connect Express monthly active fee | Rye | Verify current Stripe pricing page; payout fee math may need a tweak |
+| Set up transactional email provider (Resend recommended) | Davis | Tracked in `docs/external-services-todo.md`; replaces the `payoutEmail.ts` stub |
+| Manually trigger the payout workflow once on a test creator before letting the cron run unattended | Davis | After migration applied + webhook events configured |
+| Tests — top-up amount tampering, double-credit retry, transfer reversal, partial settlement | Davis | Lower priority; manual smoke covers the critical paths for now |
 
 ---
 
 ## Open questions for Rye
 
-- [ ] Confirm Stripe fee table (esp. Connect Express monthly active fee — verify on current pricing page)
-- [ ] Sign off on fee structure: $2 flat scheduled / 5% pull / $10 min threshold
-- [ ] Where does the carved fee land — JungleGym platform balance or a dedicated `platform_fees` ledger?
-- [ ] Pull rate limit — 1 per 7d? 1 per 30d? unlimited but min-balance enforced?
-- [ ] What happens if a creator has unsettled gifts but isn't Stripe-onboarded? Block gifts, queue indefinitely, or auto-prompt them on receive?
-- [ ] Notify creators on payout — email? Realtime toast? Both?
+- [x] ~~Sign off on fee structure: $2 flat scheduled / 5% pull / $10 min threshold~~ — **Updated**: scheduled fee changed to **2.9% + $0.30** to mirror Stripe's inbound card processing fee (recoups the cost JungleGym ate at top-up time). Pull stays at 5%, min stays at $10, rate limit stays at 7 days.
+- [x] ~~Pull rate limit — 1 per 7d?~~ — confirmed 7d.
+- [x] ~~What happens if a creator has unsettled gifts but isn't Stripe-onboarded?~~ — **non-issue**: live streaming is gated on Connect onboarding, so creators can't receive gifts before they can be paid out. No queueing logic needed.
+- [x] ~~Notify creators on payout — email? Realtime toast?~~ — **email** chosen; scaffolded but not yet sending until provider is configured.
+- [ ] **Confirm Stripe Connect Express monthly active fee** (verify on current pricing page)
+- [ ] Where does the carved fee land — JungleGym platform balance or a dedicated `platform_fees` ledger? (Currently it just stays in the platform balance as the difference between gross and amount_paid; explicit ledger is overkill until accounting needs it)
+- [ ] **Approve switching platform payout schedule to Manual** (see "Where the money lives" — biggest cash-flow architecture decision)
