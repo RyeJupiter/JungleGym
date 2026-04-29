@@ -61,6 +61,8 @@ These three are the only revenue streams. Everything else is pass-through.
 
 Walked through with real numbers, end-to-end.
 
+> **What's included in these tables:** **Stripe fees only.** The "JungleGym net" column is the gross fee we charged minus what Stripe took on that single transaction. It does **not** subtract a per-transaction allocation of Cloudflare, Supabase, or Connect monthly fees — those scale by volume / time, not per transaction, so they're tracked separately in section 2 and amortized in the break-even projections in section 4. Think of these tables as "the floor below which we couldn't break even no matter how cheap our infra was" — they show whether each transaction type is structurally viable on its own.
+
 ### Wallet top-up (buyer-side)
 
 JungleGym net = (top-up fee charged) − (Stripe inbound fee). The fixed $0.30 dominates at small sizes.
@@ -192,7 +194,78 @@ These are deducted by Stripe directly from the creator's connected balance. Jung
 
 ---
 
-## 7. Open questions / things we don't know yet
+## 7. Admin financial review panel — build plan
+
+The current `/admin?tab=metrics` shows transaction-level data and creator earnings. What's missing: **user-level behavior metrics** — the data that tells us whether the wallet model is actually working, where the float sits, and where to invest growth effort.
+
+### Section A — Platform health summary cards
+Single row of stat cards at the top:
+
+| Card | Computation |
+|---|---|
+| **Wallet float held** | `SUM(wallets.balance)` — total dollars JungleGym is custodying right now |
+| **Active wallet holders** | `COUNT(*) FROM wallets WHERE balance > 0` |
+| **ARPU (last 30d)** | total fees collected (last 30d) ÷ unique paying users (last 30d) |
+| **Repeat-buyer rate** | % of users with ≥2 purchases ever |
+| **MAU paying** | unique users who paid (top-up or video) in last 30d |
+
+### Section B — Buyer behavior
+Aggregates from `wallet_transactions` + `purchases`:
+
+| Card / Chart | Computation |
+|---|---|
+| **Avg top-up amount** | `AVG(amount)` from `wallet_transactions WHERE type='topup'` |
+| **Median top-up amount** | percentile_cont(0.5) — better than avg for skewed distributions |
+| **Top-up size distribution** | histogram: $1–10 / $10–25 / $25–50 / $50–100 / $100+ |
+| **Avg wallet balance** | `AVG(balance) FROM wallets WHERE balance > 0` |
+| **Median wallet balance** | percentile_cont(0.5) |
+| **Avg lifetime spend / buyer** | total $ spent (purchases + gifts sent) ÷ unique buyers |
+| **Wallet utilization rate** | $ gifted ÷ $ topped-up — what % of wallet money actually flows to creators? |
+| **Time from top-up → first gift** | for users who top up specifically to gift; useful UX signal |
+
+### Section C — Creator earnings
+Already partially in `CreatorPayoutsSection`. Extend with:
+
+| Card / Chart | Computation |
+|---|---|
+| **Avg earnings / paid creator (30d)** | `SUM(creator_amount) ÷ DISTINCT creator_id` over range |
+| **Median earnings / paid creator** | percentile_cont(0.5) |
+| **Earnings distribution** | bar chart — who earned $0–10 / $10–50 / $50–200 / $200+ |
+| **Top 10 creators by earnings** | already exists, just confirm it's surfaced |
+| **% of revenue from top 10%** | concentration signal — power-law check |
+| **Avg payout size — scheduled vs pull** | from `creator_payouts` grouped by `mode` |
+
+### Section D — Cost ratio (advanced)
+Once we have actual Cloudflare + Supabase usage data:
+
+| Card | Computation |
+|---|---|
+| **Effective Stripe cost / gross revenue** | sum of Stripe fees ÷ gross revenue |
+| **Effective infra cost / gross revenue** | (CF + Supabase + Connect) ÷ gross revenue |
+| **Net margin** | gross revenue − all costs |
+
+Section D is blocked on actually pulling Cloudflare and Supabase billing into our DB — could be a manual monthly-snapshot job (a `monthly_cost_snapshots` table that an admin fills in). Don't over-engineer.
+
+### Implementation notes
+- All this lives on the existing `/admin?tab=metrics` page, just below the existing sections. Reuse `MetricsPanel` and extend `MetricsData`.
+- No new tables needed for sections A–C; everything is computable from existing rows. A few queries will need `percentile_cont` (Postgres native) and date-range filters.
+- Big queries (e.g. lifetime spend per user across all transaction types) should be materialized into a view or computed in a server-side `RPC` to avoid pulling all rows into the client.
+- Charts can use a small library like `recharts` (React-native, ~30KB) or stick with simple HTML bars for histograms — match what's already loaded.
+- Date-range selector that's already on the panel applies to behavior cards but NOT point-in-time numbers (wallet float, balance held).
+
+### Build order
+1. Add Postgres view or RPC for the heavy aggregates (per-user lifetime spend, per-creator lifetime earnings)
+2. Extend `MetricsData` payload + admin route data fetch
+3. Add Section A cards (highest-value, simplest)
+4. Add Section B aggregates + size-distribution histogram
+5. Add Section C extensions
+6. Defer Section D until we have a way to pull infra billing into our system
+
+**Estimated effort**: half-day for sections A–C combined, scoped tightly. Section D is open-ended.
+
+---
+
+## 8. Open questions / things we don't know yet
 
 - [ ] **Actual current Cloudflare bill** — do we have a baseline? Need Davis to check the CF Dashboard (with Davin's approval per CLAUDE.md rules)
 - [ ] **Actual current Supabase usage** vs Pro tier limits
