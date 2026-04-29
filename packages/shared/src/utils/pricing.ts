@@ -87,6 +87,39 @@ export function calculateGiftTotal(basePrice: number, tipPct: number): {
   return { platformAmount, total }
 }
 
+// ── Creator gift payout fees ────────────────────────────────────────────────
+// Carved from the creator's unsettled gift balance at settlement time.
+// Scheduled = monthly cron (default cadence, low fee).
+// Pull = creator-initiated withdraw (faster, slightly higher fee).
+export const PAYOUT_MIN_AMOUNT = 10           // dollars; payouts below this don't trigger
+export const PAYOUT_SCHEDULED_FEE = 2         // flat dollars carved from the gross
+export const PAYOUT_PULL_FEE_PCT = 5          // percent of gross
+export const PAYOUT_PULL_RATE_LIMIT_DAYS = 7  // cooldown between consecutive pulls
+
+export function calculateScheduledPayout(grossUnsettled: number): {
+  fee: number
+  amountPaid: number
+} {
+  if (grossUnsettled < PAYOUT_MIN_AMOUNT) {
+    return { fee: 0, amountPaid: 0 }
+  }
+  const fee = PAYOUT_SCHEDULED_FEE
+  const amountPaid = Math.round((grossUnsettled - fee) * 100) / 100
+  return { fee, amountPaid }
+}
+
+export function calculatePullPayout(grossUnsettled: number): {
+  fee: number
+  amountPaid: number
+} {
+  if (grossUnsettled < PAYOUT_MIN_AMOUNT) {
+    return { fee: 0, amountPaid: 0 }
+  }
+  const fee = Math.round(grossUnsettled * (PAYOUT_PULL_FEE_PCT / 100) * 100) / 100
+  const amountPaid = Math.round((grossUnsettled - fee) * 100) / 100
+  return { fee, amountPaid }
+}
+
 export function calculatePriceBreakdown(total: number): {
   creatorAmount: number
   platformFee: number

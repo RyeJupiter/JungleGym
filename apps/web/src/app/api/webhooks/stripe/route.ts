@@ -32,6 +32,27 @@ export async function POST(req: Request) {
 
   const supabase = createServiceSupabaseClient()
 
+  // ── audit log + idempotency ────────────────────────────────────────────────
+  // Insert the event into stripe_events FIRST. The PK on Stripe's event id
+  // makes duplicate deliveries a no-op: if Stripe retries (network blip,
+  // 5xx on our side, etc.) the second insert hits the unique violation and
+  // we short-circuit without re-processing — preventing double-credits.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: auditErr } = await (supabase as any).from('stripe_events').insert({
+    id: event.id,
+    type: event.type,
+    payload: event,
+  })
+  if (auditErr) {
+    if (auditErr.code === '23505') {
+      // Duplicate delivery — Stripe is just retrying. We've already processed it.
+      return NextResponse.json({ received: true, duplicate: true })
+    }
+    // Audit insert failed for some other reason. Don't drop the event —
+    // process it anyway so we don't lose webhooks if the audit log is wedged.
+    console.error('[stripe webhook] stripe_events insert failed:', auditErr)
+  }
+
   // ── helpers ─────────────────────────────────────────────────────────────────
 
   function subPeriodEnd(sub: Stripe.Subscription): string {
@@ -190,7 +211,8 @@ export async function POST(req: Request) {
 
       if (meta.type === 'wallet_topup') {
         // Safety net — confirm route usually handles this first.
-        // Unique index on description prevents double-credit even under race conditions.
+        // The unique index on stripe_payment_intent_id prevents double-credit
+        // even under race conditions.
         const walletAmount = Number(meta.wallet_amount)
         if (walletAmount > 0 && meta.user_id) {
           await supabase
@@ -209,13 +231,15 @@ export async function POST(req: Request) {
           const currentBalance = wallet?.balance ?? 0
           const newBalance = Math.round((currentBalance + walletAmount) * 100) / 100
 
-          // Insert transaction first — unique index catches duplicates
-          const { error: txError } = await supabase.from('wallet_transactions').insert({
+          // Insert transaction first — uq_wallet_tx_pi catches duplicates
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { error: txError } = await (supabase as any).from('wallet_transactions').insert({
             user_id: meta.user_id,
             type: 'topup',
             amount: walletAmount,
             balance_after: newBalance,
             description: `topup:${pi.id}`,
+            stripe_payment_intent_id: pi.id,
           })
 
           // Only update balance if the insert succeeded (not a duplicate)
@@ -226,6 +250,31 @@ export async function POST(req: Request) {
               .eq('user_id', meta.user_id)
           }
         }
+      }
+      break
+    }
+
+    // ── Charge succeeded — backfill provenance + Stripe-side fee ─────────────
+    case 'charge.succeeded': {
+      // Fires alongside payment_intent.succeeded but carries balance_transaction
+      // and the actual Stripe-side fee. We use it to enrich the matching
+      // wallet_transactions row (if it's a topup) for audit/reconciliation.
+      const charge = event.data.object as Stripe.Charge
+      const piId = typeof charge.payment_intent === 'string'
+        ? charge.payment_intent
+        : (charge.payment_intent as Stripe.PaymentIntent | null)?.id ?? null
+      const balanceTxId = typeof charge.balance_transaction === 'string'
+        ? charge.balance_transaction
+        : (charge.balance_transaction as Stripe.BalanceTransaction | null)?.id ?? null
+      if (piId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
+          .from('wallet_transactions')
+          .update({
+            stripe_charge_id: charge.id,
+            stripe_balance_tx_id: balanceTxId,
+          })
+          .eq('stripe_payment_intent_id', piId)
       }
       break
     }
@@ -328,6 +377,69 @@ export async function POST(req: Request) {
       break
     }
 
+    // ── Transfer reversed (creator payout clawed back) ───────────────────────
+    case 'transfer.reversed': {
+      // Stripe issued (or we triggered) a reversal on a creator payout.
+      // Roll back the gift settlement so the balance becomes withdrawable
+      // again, mark the creator_payouts row, and surface to admin.
+      const transfer = event.data.object as Stripe.Transfer
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
+        .from('gifts')
+        .update({ settled_at: null, transfer_id: null, settlement_fee: null, settlement_mode: null })
+        .eq('transfer_id', transfer.id)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
+        .from('creator_payouts')
+        .update({ status: 'reversed', failure_reason: 'transfer.reversed webhook' })
+        .eq('transfer_id', transfer.id)
+      await recordAdminIssue({
+        kind: 'transfer_reversed',
+        severity: 'error',
+        title: 'Creator payout reversed',
+        description: `Transfer ${transfer.id} ($${(transfer.amount / 100).toFixed(2)}) was reversed. Gifts have been re-marked as unsettled and will be re-attempted on the next cycle. Investigate why.`,
+        context: {
+          transferId: transfer.id,
+          amount: transfer.amount / 100,
+          destination: typeof transfer.destination === 'string'
+            ? transfer.destination
+            : (transfer.destination as { id?: string } | null)?.id ?? null,
+        },
+      })
+      break
+    }
+
+    // ── Payout paid (informational — connected-account → bank) ───────────────
+    case 'payout.paid': {
+      // Forwarded from a creator's connected account when their bank settles.
+      // Pure informational — no DB action needed today. Useful future hook
+      // for "Your $X payout arrived in your bank" notifications.
+      break
+    }
+
+    // ── Radar early-fraud warning ────────────────────────────────────────────
+    case 'radar.early_fraud_warning.created': {
+      // Stripe Radar saw signals of likely fraud (often before the dispute
+      // hits). Treat as a high-priority issue — refunding now usually
+      // prevents the chargeback fee.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const warning = event.data.object as any
+      const chargeId = typeof warning.charge === 'string' ? warning.charge : warning.charge?.id ?? null
+      await recordAdminIssue({
+        kind: 'radar_early_fraud_warning',
+        severity: 'error',
+        title: 'Stripe Radar — early fraud warning',
+        description: `Charge ${chargeId} flagged for likely fraud (${warning.fraud_type ?? 'unknown'}). Consider refunding to avoid the dispute fee.`,
+        context: {
+          warningId: warning.id,
+          chargeId,
+          fraudType: warning.fraud_type,
+          actionable: warning.actionable,
+        },
+      })
+      break
+    }
+
     // ── Stripe Connect: account onboarding status changes ──────────────
     case 'account.updated': {
       const account = event.data.object as Stripe.Account
@@ -345,11 +457,27 @@ export async function POST(req: Request) {
       // Unhandled event — return 200 so Stripe doesn't retry
       break
   }
+
+  // Mark the audit row as processed so we can distinguish successful
+  // handling from events that were received but failed mid-processing.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any)
+    .from('stripe_events')
+    .update({ processed_at: new Date().toISOString() })
+    .eq('id', event.id)
   } catch (err) {
     // Any case threw while processing — record for admin attention and
     // return 500 so Stripe retries (we'd rather have a duplicate issue
     // than a permanently dropped event).
     const msg = err instanceof Error ? err.message : String(err)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from('stripe_events')
+      .update({
+        processed_at: new Date().toISOString(),
+        processing_error: msg.slice(0, 1000),
+      })
+      .eq('id', event.id)
     await recordAdminIssue({
       kind: 'webhook_handler_error',
       severity: 'error',

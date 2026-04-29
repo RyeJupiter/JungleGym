@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { PurchaseToast } from '@/components/studio/PurchaseToast'
 import { Navbar } from '@/components/Navbar'
 import { FooterCompact } from '@/components/FooterCompact'
-import { StudioSessionsSkeleton, StudioVideosSkeleton } from '@/components/skeletons'
+import { GiftsReceivedSkeleton, StudioSessionsSkeleton, StudioVideosSkeleton } from '@/components/skeletons'
 import { StudioSessions, StudioVideos } from './StudioContent'
+import { GiftsReceivedSection } from '@/components/studio/GiftsReceivedSection'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Studio' }
@@ -63,6 +64,11 @@ export default async function StudioPage() {
             <StudioSessions userId={authUser.id} />
           </Suspense>
         </section>
+
+        {/* Gifts received — section + heading collapse if no history */}
+        <Suspense fallback={<GiftsReceivedSkeleton />}>
+          <GiftsReceivedSection userId={authUser.id} />
+        </Suspense>
 
         {/* Videos */}
         <section className="mb-12">
